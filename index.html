@@ -168,6 +168,8 @@ function sdbPut(url,field,value,data){return fetch(url+'/'+field+'/'+encodeURICo
 async function saveV(){
   var ber=g('v_ber');
   if(!ber){toast('กรุณากรอกเบอร์รถ');return}
+  var ber = g('v_ber');
+  if(!ber || ber.length < 3){toast('กรุณากรอกเบอร์รถให้ครบ 3 หลัก');return}
   var data={
     'เบอร์รถ':ber,'จังหวัด':g('v_province'),'ทะเบียนหัว':g('v_hua'),'ทะเบียนหาง':g('v_hang'),
     'ธพน.2 วันออกบัตร':g('v_tho_i'),'ธพน.2 หมดอายุบัตร':g('v_tho_e'),
@@ -198,6 +200,8 @@ async function saveV(){
 async function saveD(){
   var name=g('d_name');
   if(!name){toast('กรุณากรอกชื่อ');return}
+  var ber = g('d_ber');
+  if(ber && ber.length < 3){toast('กรุณากรอกเบอร์รถให้ครบ 3 หลัก');return}
   var phone=g('d_phone');
   var data={
     'เบอร์รถ':g('d_ber'),'ชื่อ':name,'เบอร์โทร':phone,
