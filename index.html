@@ -211,7 +211,8 @@ function fmtDateBlur(el){
 
 window.addEventListener('DOMContentLoaded',function(){
   document.querySelectorAll('input[maxlength="10"]').forEach(function(el){
-    el.addEventListener('blur',function(){fmtDateBlur(this)});
+    if(el.getAttribute('oninput')&&el.getAttribute('oninput').indexOf('fmtDate')>=0)
+      el.addEventListener('blur',function(){fmtDateBlur(this)});
   });
 });
 
