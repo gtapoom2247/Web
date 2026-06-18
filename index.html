@@ -77,7 +77,7 @@ input:focus,select:focus{outline:none;border-color:#38bdf8}
       <div><label>ทะเบียนหัว</label>
         <div style="display:flex;gap:6px">
           <select id="v_fmt_hua" onchange="updatePlateFmt()" style="width:90px;flex-shrink:0;padding:10px 6px;font-size:13px">
-            <option value="2">2ตัวหน้า-</option><option value="3">3ตัวหน้า</option>
+            <option value="2">2 ตัวหน้า</option><option value="3">3 ตัวหน้า</option>
           </select>
           <input id="v_hua" placeholder="00-0000" oninput="fmtPlate(this)" maxlength="8" style="flex:1">
         </div>
@@ -85,7 +85,7 @@ input:focus,select:focus{outline:none;border-color:#38bdf8}
       <div><label>ทะเบียนหาง</label>
         <div style="display:flex;gap:6px">
           <select id="v_fmt_hang" onchange="updatePlateFmt()" style="width:90px;flex-shrink:0;padding:10px 6px;font-size:13px">
-            <option value="2">2ตัวหน้า-</option><option value="3">3ตัวหน้า</option>
+            <option value="2">2 ตัวหน้า</option><option value="3">3 ตัวหน้า</option>
           </select>
           <input id="v_hang" placeholder="00-0000" oninput="fmtPlate(this)" maxlength="8" style="flex:1">
         </div>
@@ -184,6 +184,36 @@ function updatePlateFmt(){
 function fmtBer(el){el.value=el.value.replace(/[^0-9]/g,'').slice(0,3)}
 function fmtPhone(el){el.value=el.value.replace(/[^0-9]/g,'').slice(0,10)}
 function fmtDate(el){el.value=el.value.replace(/[^0-9]/g,'').replace(/^(\d{2})(\d)/,'$1/$2').replace(/^(\d{2}\/\d{2})(\d)/,'$1/$2').slice(0,10)}
+
+function normalizeDate(v){
+  if(!v||!(v=v.trim()))return '';
+  var p=v.split('/');
+  if(p.length!==3)return v;
+  var d=parseInt(p[0]),m=parseInt(p[1]),y=parseInt(p[2]);
+  if(isNaN(d)||isNaN(m)||isNaN(y))return '';
+  if(d<1||d>31||m<1||m>12)return '';
+  var dd=d<10?'0'+d:''+d;
+  var mm=m<10?'0'+m:''+m;
+  if(y<100)y+=2500;      // 2-digit → พ.ศ.
+  else if(y>1000&&y<2500)y+=543; // ค.ศ. → พ.ศ.
+  return dd+'/'+mm+'/'+y;
+}
+
+function fmtDateBlur(el){
+  var v=el.value.trim();
+  if(!v){el.value='';return}
+  var p=v.split('/');
+  if(p.length<3){toast('❌ กรุณากรอกวันเดือนปีให้ครบ (วว/ดด/ปปปป)');el.value='';el.focus();return}
+  var n=normalizeDate(v);
+  if(!n){toast('❌ รูปแบบวันที่ไม่ถูกต้อง');el.value='';return}
+  el.value=n;
+}
+
+window.addEventListener('DOMContentLoaded',function(){
+  document.querySelectorAll('input[maxlength="10"]').forEach(function(el){
+    el.addEventListener('blur',function(){fmtDateBlur(this)});
+  });
+});
 
 function clr(){
   ['v_ber','v_hua','v_hang','v_tho_e','v_pasi_e',
@@ -1243,15 +1273,15 @@ async function saveV(){
   });
   var data={
     'เบอร์รถ':ber,'จังหวัด':g('v_province'),'ทะเบียนหัว':g('v_hua'),'ทะเบียนหาง':g('v_hang'),
-    'ธพน.2 หมดอายุบัตร':g('v_tho_e'),
-    'ภาษี หมดอายุบัตร':g('v_pasi_e'),
-    'Thaioil SRC หมดอายุบัตร':g('v_c1_e'),
-    'Esso SRC หมดอายุบัตร':g('v_c2_e'),
-    'PTT-GC หมดอายุบัตร':g('v_c3_e'),
-    'LLK Thappline หมดอายุบัตร':g('v_c4_e'),
-    'SRB Thappline หมดอายุบัตร':g('v_c5_e'),
-    'SPRC หมดอายุบัตร':g('v_c6_e'),
-    'IRPC IRY & AU หมดอายุบัตร':g('v_c7_e')
+    'ธพน.2 หมดอายุบัตร':normalizeDate(g('v_tho_e')),
+    'ภาษี หมดอายุบัตร':normalizeDate(g('v_pasi_e')),
+    'Thaioil SRC หมดอายุบัตร':normalizeDate(g('v_c1_e')),
+    'Esso SRC หมดอายุบัตร':normalizeDate(g('v_c2_e')),
+    'PTT-GC หมดอายุบัตร':normalizeDate(g('v_c3_e')),
+    'LLK Thappline หมดอายุบัตร':normalizeDate(g('v_c4_e')),
+    'SRB Thappline หมดอายุบัตร':normalizeDate(g('v_c5_e')),
+    'SPRC หมดอายุบัตร':normalizeDate(g('v_c6_e')),
+    'IRPC IRY & AU หมดอายุบัตร':normalizeDate(g('v_c7_e'))
   };
   try{
     var res=await apiPost({sheet:'รถ',data:data});
@@ -1274,14 +1304,14 @@ async function saveD(){
   if(!phone||phone.length<10){toast('กรุณากรอกเบอร์โทรให้ครบ 10 หลัก');btn.disabled=false;btn.innerHTML='💾 บันทึกข้อมูลพนักงาน';return}
   if(PHONE_LIST.indexOf(phone)<0){toast('\u274c เบอร์ '+phone+' \u0e44\u0e21\u0e48\u0e21\u0e35\u0e43\u0e19\u0e23\u0e30\u0e1a\u0e1a');btn.disabled=false;btn.innerHTML='\uD83D\uDCBE \u0E1A\u0E31\u0E19\u0E17\u0E36\u0E01\u0E02\u0E49\u0E2D\u0E21\u0E39\u0E25\u0E1E\u0E19\u0E31\u0E01\u0E07\u0E32\u0E19';return}
   var data={
-    'เบอร์รถ':ber,'ชื่อ':name,'เบอร์โทร':phone,
-    'Esso SRC หมดอายุบัตร':g('d_c1_e'),
-    'PTT-GC หมดอายุบัตร':g('d_c2_e'),
-    'LLK Thappline หมดอายุบัตร':g('d_c3_e'),
-    'SRB Thappline หมดอายุบัตร':g('d_c4_e'),
-    'SPRC หมดอายุบัตร':g('d_c5_e'),
-    'Thaioil SRC หมดอายุบัตร':g('d_c6_e'),
-    'IRPC IRY & AU หมดอายุบัตร':g('d_c7_e')
+    'เบอร์รถ':ber,'ชื่อ':name,'เบอร์โทรศัพท์':phone,
+    'Esso SRC หมดอายุบัตร':normalizeDate(g('d_c1_e')),
+    'PTT-GC หมดอายุบัตร':normalizeDate(g('d_c2_e')),
+    'LLK Thappline หมดอายุบัตร':normalizeDate(g('d_c3_e')),
+    'SRB Thappline หมดอายุบัตร':normalizeDate(g('d_c4_e')),
+    'SPRC หมดอายุบัตร':normalizeDate(g('d_c5_e')),
+    'Thaioil SRC หมดอายุบัตร':normalizeDate(g('d_c6_e')),
+    'IRPC IRY & AU หมดอายุบัตร':normalizeDate(g('d_c7_e'))
   };
   try{
     var res=await apiPost({sheet:'คน',data:data});
@@ -1305,7 +1335,7 @@ async function loadR(){
       v.slice(-5).reverse().forEach(function(r){
         var b=r['เบอร์รถ']||'';
         var exp='';
-        Object.keys(r).forEach(function(k){if(k.indexOf('หมดอายุ')>=0&&r[k])exp=r[k]});
+        Object.keys(r).forEach(function(k){if(k.indexOf('หมดอายุ')>=0&&r[k])exp=normalizeDate(r[k])});
         var bs=b.replace(/\\/g,'\\\\').replace(/'/g,"\\'");
         html+='<div class="list-item" onclick="(\''+bs+'\')"><div><div class="main">'+b+'</div><div class="sub">'+(r['ทะเบียนหัว']||'')+'</div></div><span style="font-size:11px;color:#64748b">'+exp+'</span></div>';
       });
@@ -1317,7 +1347,7 @@ async function loadR(){
     if(d&&d.length){
       html+='<div><div style="font-size:13px;font-weight:600;color:#64748b;margin-bottom:8px">🧑 คน</div>';
       d.slice(-5).reverse().forEach(function(r){
-        var n=r['ชื่อ']||'',p=r['เบอร์โทร']||'';
+        var n=r['ชื่อ']||'',p=r['เบอร์โทรศัพท์']||'';
         var ps=p.replace(/\\/g,'\\\\').replace(/'/g,"\\'");
         html+='<div class="list-item" onclick="(\''+ps+'\')"><div><div class="main">'+n+'</div><div class="sub">'+p+'</div></div></div>';
       });
@@ -1340,15 +1370,15 @@ function editV(ber){
     $('v_ber').value=r['เบอร์รถ']||'';
     $('v_province').value=(r['จังหวัด']||'').indexOf('กทม')>=0?'กทม':'อื่น ๆ';
     $('v_hua').value=r['ทะเบียนหัว']||'';$('v_hang').value=r['ทะเบียนหาง']||'';
-    $('v_tho_e').value=r['ธพน.2 หมดอายุบัตร']||'';
-    $('v_pasi_e').value=r['ภาษี หมดอายุบัตร']||'';
-    $('v_c1_e').value=r['Thaioil SRC หมดอายุบัตร']||'';
-    $('v_c2_e').value=r['Esso SRC หมดอายุบัตร']||'';
-    $('v_c3_e').value=r['PTT-GC หมดอายุบัตร']||'';
-    $('v_c4_e').value=r['LLK Thappline หมดอายุบัตร']||'';
-    $('v_c5_e').value=r['SRB Thappline หมดอายุบัตร']||'';
-    $('v_c6_e').value=r['SPRC หมดอายุบัตร']||'';
-    $('v_c7_e').value=r['IRPC IRY & AU หมดอายุบัตร']||'';
+    $('v_tho_e').value=normalizeDate(r['ธพน.2 หมดอายุบัตร']||'');
+    $('v_pasi_e').value=normalizeDate(r['ภาษี หมดอายุบัตร']||'');
+    $('v_c1_e').value=normalizeDate(r['Thaioil SRC หมดอายุบัตร']||'');
+    $('v_c2_e').value=normalizeDate(r['Esso SRC หมดอายุบัตร']||'');
+    $('v_c3_e').value=normalizeDate(r['PTT-GC หมดอายุบัตร']||'');
+    $('v_c4_e').value=normalizeDate(r['LLK Thappline หมดอายุบัตร']||'');
+    $('v_c5_e').value=normalizeDate(r['SRB Thappline หมดอายุบัตร']||'');
+    $('v_c6_e').value=normalizeDate(r['SPRC หมดอายุบัตร']||'');
+    $('v_c7_e').value=normalizeDate(r['IRPC IRY & AU หมดอายุบัตร']||'');
     $('vMode').textContent='แก้ไข เบอร์ '+ber;
     goV();window.scrollTo({top:0,behavior:'smooth'});
   });
@@ -1358,14 +1388,14 @@ function editV(ber){
 function editD(phone){
   apiGet({sheet:'คน',key:phone}).then(function(r){
     if(!r||r.error)return;
-    $('d_ber').value=r['เบอร์รถ']||'';$('d_name').value=r['ชื่อ']||'';$('d_phone').value=r['เบอร์โทร']||'';
-    $('d_c1_e').value=r['Esso SRC หมดอายุบัตร']||'';
-    $('d_c2_e').value=r['PTT-GC หมดอายุบัตร']||'';
-    $('d_c3_e').value=r['LLK Thappline หมดอายุบัตร']||'';
-    $('d_c4_e').value=r['SRB Thappline หมดอายุบัตร']||'';
-    $('d_c5_e').value=r['SPRC หมดอายุบัตร']||'';
-    $('d_c6_e').value=r['Thaioil SRC หมดอายุบัตร']||'';
-    $('d_c7_e').value=r['IRPC IRY & AU หมดอายุบัตร']||'';
+    $('d_ber').value=r['เบอร์รถ']||'';$('d_name').value=r['ชื่อ']||'';$('d_phone').value=r['เบอร์โทรศัพท์']||'';
+    $('d_c1_e').value=normalizeDate(r['Esso SRC หมดอายุบัตร']||'');
+    $('d_c2_e').value=normalizeDate(r['PTT-GC หมดอายุบัตร']||'');
+    $('d_c3_e').value=normalizeDate(r['LLK Thappline หมดอายุบัตร']||'');
+    $('d_c4_e').value=normalizeDate(r['SRB Thappline หมดอายุบัตร']||'');
+    $('d_c5_e').value=normalizeDate(r['SPRC หมดอายุบัตร']||'');
+    $('d_c6_e').value=normalizeDate(r['Thaioil SRC หมดอายุบัตร']||'');
+    $('d_c7_e').value=normalizeDate(r['IRPC IRY & AU หมดอายุบัตร']||'');
     $('dMode').textContent='แก้ไข '+(r['ชื่อ']||'');
     goD();window.scrollTo({top:0,behavior:'smooth'});
   });
