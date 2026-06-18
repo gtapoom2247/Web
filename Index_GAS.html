@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>ระบบติดตามบัตร พขร.</title>
+<link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:Prompt,Sarabun,sans-serif;background:#f1f5f9;color:#0f172a;padding:16px}
+.app{max-width:860px;margin:0 auto}
+.header{background:linear-gradient(135deg,#0f172a,#1e293b);padding:24px;border-radius:16px;margin-bottom:16px;text-align:center}
+.header h1{color:#fff;font-size:22px;font-weight:700}
+.header h1 span{color:#38bdf8}
+.header p{color:#94a3b8;font-size:13px;margin-top:4px}
+.page{display:none}.page.active{display:block}
+.card{background:#fff;border-radius:16px;padding:20px;margin-bottom:14px;box-shadow:0 1px 3px rgba(0,0,0,0.06)}
+.card-title{font-size:16px;font-weight:600;margin-bottom:16px;padding-bottom:10px;border-bottom:2px solid #f1f5f9}
+.menu-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px}
+.menu-card{background:#fff;border-radius:16px;padding:32px 20px;text-align:center;cursor:pointer;box-shadow:0 1px 3px rgba(0,0,0,0.06);border:2px solid transparent;user-select:none;transition:0.2s}
+.menu-card:hover{border-color:#38bdf8;transform:translateY(-2px)}
+.menu-card .icon{font-size:40px;display:block;margin-bottom:10px}
+.menu-card .name{font-size:17px;font-weight:600}
+.menu-card .desc{font-size:12px;color:#64748b;margin-top:4px}
+@media(max-width:500px){.menu-grid{grid-template-columns:1fr}}
+.top-bar{display:flex;align-items:center;gap:12px;margin-bottom:14px;background:#fff;border-radius:12px;padding:10px 16px;box-shadow:0 1px 3px rgba(0,0,0,0.06)}
+.top-bar .back{background:none;border:none;font-size:20px;cursor:pointer;color:#0f172a;padding:4px 8px;font-family:Prompt,sans-serif}
+.top-bar .title{font-size:16px;font-weight:600;flex:1}
+.row{display:grid;gap:10px;margin-bottom:12px}
+.r2{grid-template-columns:1fr 1fr}.r3{grid-template-columns:1fr 1fr 1fr}
+@media(max-width:600px){.r2,.r3{grid-template-columns:1fr 1fr}}
+@media(max-width:400px){.r2,.r3{grid-template-columns:1fr}}
+label{font-size:13px;font-weight:500;color:#475569;display:block;margin-bottom:4px}
+input,select{width:100%;padding:10px 12px;border:2px solid #e2e8f0;border-radius:10px;font-size:15px;font-family:Prompt,sans-serif;background:#fff}
+input:focus,select:focus{outline:none;border-color:#38bdf8}
+.btn{width:100%;padding:12px;border:none;border-radius:12px;font-size:16px;font-weight:600;font-family:Prompt,sans-serif;cursor:pointer;margin-bottom:14px}
+.btn-primary{background:#0f172a;color:#fff}.btn-success{background:#059669;color:#fff}
+.toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#0f172a;color:#fff;padding:12px 24px;border-radius:12px;font-size:14px;z-index:999;opacity:0;transition:0.3s;pointer-events:none}
+.toast.show{opacity:1}
+.list-item{display:flex;justify-content:space-between;align-items:center;padding:12px 0;border-bottom:1px solid #f1f5f9;cursor:pointer}
+.list-item:last-child{border-bottom:none}
+.list-item .main{font-size:15px;font-weight:500}
+.list-item .sub{font-size:12px;color:#64748b;margin-top:2px}
+.section-label{font-size:13px;font-weight:600;color:#64748b;margin:16px 0 10px;padding:6px 12px;background:#f1f5f9;border-radius:8px}
+</style>
+</head>
+<body>
+<div class="app">
+
+<div class="header">
+  <h1>ระบบติดตามบัตร <span>พขร.</span></h1>
+  <p>จัดการบัตรประจําตัวรถและพนักงานขับรถ</p>
+</div>
+
+<!-- MENU -->
+<div id="pageMenu" class="page active">
+  <div class="menu-grid">
+    <div class="menu-card" onclick="goV()"><span class="icon">🚚</span><div class="name">อัพบัตรรถ</div><div class="desc">จัดการบัตรประจําตัวรถ</div></div>
+    <div class="menu-card" onclick="goD()"><span class="icon">🧑‍✈️</span><div class="name">อัพบัตรคน</div><div class="desc">จัดการบัตรพนักงานขับรถ</div></div>
+  </div>
+  <div class="card"><div class="card-title">📋 รายการล่าสุด</div><div id="recentList"><div style="text-align:center;color:#94a3b8;padding:20px">กำลังโหลด...</div></div></div>
+</div>
+
+<!-- VEHICLE FORM -->
+<div id="pageV" class="page">
+  <div class="top-bar"><button class="back" onclick="goM()">‹</button><span class="title" id="vMode">อัพบัตรรถ</span></div>
+  <div class="card">
+    <div class="card-title">🚚 ข้อมูลรถ</div>
+    <div class="row r2">
+      <div><label>เบอร์รถ</label><input id="v_ber" placeholder="000" oninput="fmtBer(this)" maxlength="3"></div>
+      <div><label>จังหวัด</label><select id="v_province"><option>กทม</option><option>อื่น ๆ</option></select></div>
+    </div>
+    <div class="row r2">
+      <div><label>ทะเบียนหัว</label><input id="v_hua" placeholder="00-0000" oninput="fmtPlate(this)" maxlength="7"></div>
+      <div><label>ทะเบียนหาง</label><input id="v_hang" placeholder="00-0000" oninput="fmtPlate(this)" maxlength="7"></div>
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-title">📄 บัตรต่าง ๆ</div>
+    <div class="section-label">ธพน.2</div>
+    <div class="row"><div><label>ธพน.2 หมดอายุบัตร</label><input id="v_tho_e" placeholder="วัน/เดือน/ปี" oninput="fmtDate(this)" maxlength="10"></div></div>
+    <div class="section-label">ภาษี</div>
+    <div class="row"><div><label>ภาษี หมดอายุบัตร</label><input id="v_pasi_e" placeholder="วัน/เดือน/ปี" oninput="fmtDate(this)" maxlength="10"></div></div>
+    <div class="section-label">Thaioil SRC, Esso SRC, PTT-GC</div>
+    <div class="row r3">
+      <div><label>Thaioil SRC หมดอายุ</label><input id="v_c1_e" placeholder="วัน/เดือน/ปี" oninput="fmtDate(this)" maxlength="10"></div>
+      <div><label>Esso SRC หมดอายุ</label><input id="v_c2_e" placeholder="วัน/เดือน/ปี" oninput="fmtDate(this)" maxlength="10"></div>
+      <div><label>PTT-GC หมดอายุ</label><input id="v_c3_e" placeholder="วัน/เดือน/ปี" oninput="fmtDate(this)" maxlength="10"></div>
+    </div>
+    <div class="section-label">LLK Thappline, SRB Thappline, SPRC</div>
+    <div class="row r3">
+      <div><label>LLK Thappline หมดอายุ</label><input id="v_c4_e" placeholder="วัน/เดือน/ปี" oninput="fmtDate(this)" maxlength="10"></div>
+      <div><label>SRB Thappline หมดอายุ</label><input id="v_c5_e" placeholder="วัน/เดือน/ปี" oninput="fmtDate(this)" maxlength="10"></div>
+      <div><label>SPRC หมดอายุ</label><input id="v_c6_e" placeholder="วัน/เดือน/ปี" oninput="fmtDate(this)" maxlength="10"></div>
+    </div>
+    <div class="section-label">IRPC IRY & AU</div>
+    <div class="row"><div><label>IRPC IRY & AU หมดอายุบัตร</label><input id="v_c7_e" placeholder="วัน/เดือน/ปี" oninput="fmtDate(this)" maxlength="10"></div></div>
+  </div>
+  <button class="btn btn-primary" onclick="saveV()">💾 บันทึกข้อมูลรถ</button>
+</div>
+
+<!-- DRIVER FORM -->
+<div id="pageD" class="page">
+  <div class="top-bar"><button class="back" onclick="goM()">‹</button><span class="title" id="dMode">อัพบัตรคน</span></div>
+  <div class="card">
+    <div class="card-title">🧑‍✈️ ข้อมูลพนักงานขับรถ</div>
+    <div class="row r3">
+      <div><label>เบอร์รถ</label><input id="d_ber" placeholder="000" oninput="fmtBer(this)" maxlength="3"></div>
+      <div><label>ชื่อ</label><input id="d_name" placeholder="ชื่อ-นามสกุล"></div>
+      <div><label>เบอร์โทร</label><input id="d_phone" placeholder="เบอร์มือถือ" oninput="fmtPhone(this)" maxlength="10"></div>
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-title">📄 บัตรต่าง ๆ</div>
+    <div class="section-label">Esso SRC, PTT-GC, LLK Thappline</div>
+    <div class="row r3">
+      <div><label>Esso SRC หมดอายุ</label><input id="d_c1_e" placeholder="วัน/เดือน/ปี" oninput="fmtDate(this)" maxlength="10"></div>
+      <div><label>PTT-GC หมดอายุ</label><input id="d_c2_e" placeholder="วัน/เดือน/ปี" oninput="fmtDate(this)" maxlength="10"></div>
+      <div><label>LLK Thappline หมดอายุ</label><input id="d_c3_e" placeholder="วัน/เดือน/ปี" oninput="fmtDate(this)" maxlength="10"></div>
+    </div>
+    <div class="section-label">SRB Thappline, SPRC, Thaioil SRC, IRPC</div>
+    <div class="row r2">
+      <div><label>SRB Thappline หมดอายุ</label><input id="d_c4_e" placeholder="วัน/เดือน/ปี" oninput="fmtDate(this)" maxlength="10"></div>
+      <div><label>SPRC หมดอายุ</label><input id="d_c5_e" placeholder="วัน/เดือน/ปี" oninput="fmtDate(this)" maxlength="10"></div>
+      <div><label>Thaioil SRC หมดอายุ</label><input id="d_c6_e" placeholder="วัน/เดือน/ปี" oninput="fmtDate(this)" maxlength="10"></div>
+      <div><label>IRPC IRY & AU หมดอายุ</label><input id="d_c7_e" placeholder="วัน/เดือน/ปี" oninput="fmtDate(this)" maxlength="10"></div>
+    </div>
+  </div>
+  <button class="btn btn-success" onclick="saveD()">💾 บันทึกข้อมูลพนักงาน</button>
+</div>
+
+<div class="toast" id="toast"></div>
+</div>
+
+<script>
+// *** วาง URL จาก Apps Script Deploy ตรงนี้ ***
+const API = 'https://script.google.com/macros/s/AKfycbyJoDjvIFGfkSxfKJkjpGWvv3OgPAm31satc_KrskzUpKlGDBTth8pOwZOxob1D94BhBQ/exec';
+
+function $(id){return document.getElementById(id)}
+function goM(){$('pageMenu').className='page active';$('pageV').className='page';$('pageD').className='page';loadR()}
+function goV(){$('pageMenu').className='page';$('pageV').className='page active';$('pageD').className='page'}
+function goD(){$('pageMenu').className='page';$('pageV').className='page';$('pageD').className='page active'}
+function g(id){return $(id).value.trim()}
+function toast(m){var t=$('toast');t.textContent=m;t.className='toast show';setTimeout(function(){t.className='toast'},2500)}
+
+function fmtPlate(el){el.value=el.value.replace(/[^0-9]/g,'').replace(/^(\d{2})(\d)/,'$1-$2').slice(0,7)}
+function fmtBer(el){el.value=el.value.replace(/[^0-9]/g,'').slice(0,3)}
+function fmtPhone(el){el.value=el.value.replace(/[^0-9]/g,'').slice(0,10)}
+function fmtDate(el){el.value=el.value.replace(/[^0-9]/g,'').replace(/^(\d{2})(\d)/,'$1/$2').replace(/^(\d{2}\/\d{2})(\d)/,'$1/$2').slice(0,10)}
+
+function clr(){
+  ['v_ber','v_hua','v_hang','v_tho_e','v_pasi_e',
+   'v_c1_e','v_c2_e','v_c3_e','v_c4_e','v_c5_e','v_c6_e','v_c7_e'].forEach(function(id){$(id).value=''});
+  ['d_ber','d_name','d_phone',
+   'd_c1_e','d_c2_e','d_c3_e','d_c4_e','d_c5_e','d_c6_e','d_c7_e'].forEach(function(id){$(id).value=''});
+  $('vMode').textContent='อัพบัตรรถ';
+  $('dMode').textContent='อัพบัตรคน';
+}
+
+function apiGet(params){
+  var url=API+'?'+Object.keys(params).map(function(k){return encodeURIComponent(k)+'='+encodeURIComponent(params[k])}).join('&');
+  return fetch(url).then(function(r){return r.json()});
+}
+function apiPost(body){
+  return fetch(API,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)}).then(function(r){return r.json()});
+}
+
+// ==== SAVE VEHICLE ====
+async function saveV(){
+  var ber=g('v_ber');
+  if(!ber||ber.length<3){toast('กรุณากรอกเบอร์รถให้ครบ 3 หลัก');return}
+  var data={
+    'เบอร์รถ':ber,'จังหวัด':g('v_province'),'ทะเบียนหัว':g('v_hua'),'ทะเบียนหาง':g('v_hang'),
+    'ธพน.2 หมดอายุบัตร':g('v_tho_e'),
+    'ภาษี หมดอายุบัตร':g('v_pasi_e'),
+    'Thaioil SRC หมดอายุบัตร':g('v_c1_e'),
+    'Esso SRC หมดอายุบัตร':g('v_c2_e'),
+    'PTT-GC หมดอายุบัตร':g('v_c3_e'),
+    'LLK Thappline หมดอายุบัตร':g('v_c4_e'),
+    'SRB Thappline หมดอายุบัตร':g('v_c5_e'),
+    'SPRC หมดอายุบัตร':g('v_c6_e'),
+    'IRPC IRY & AU หมดอายุบัตร':g('v_c7_e')
+  };
+  try{
+    var res=await apiPost({sheet:'รถ',data:data});
+    toast(res.updated>0?'อัปเดตเบอร์ '+ber+' แล้ว':'บันทึกเบอร์ '+ber+' แล้ว');
+    clr();loadR();
+  }catch(e){toast('เกิดข้อผิดพลาด กรุณาลองใหม่')}
+}
+
+// ==== SAVE DRIVER ====
+async function saveD(){
+  var name=g('d_name');
+  if(!name){toast('กรุณากรอกชื่อ');return}
+  var ber=g('d_ber');
+  if(ber&&ber.length<3){toast('กรุณากรอกเบอร์รถให้ครบ 3 หลัก');return}
+  var phone=g('d_phone');
+  if(!phone||phone.length<10){toast('กรุณากรอกเบอร์โทรให้ครบ 10 หลัก');return}
+  var data={
+    'เบอร์รถ':ber,'ชื่อ':name,'เบอร์โทร':phone,
+    'Esso SRC หมดอายุบัตร':g('d_c1_e'),
+    'PTT-GC หมดอายุบัตร':g('d_c2_e'),
+    'LLK Thappline หมดอายุบัตร':g('d_c3_e'),
+    'SRB Thappline หมดอายุบัตร':g('d_c4_e'),
+    'SPRC หมดอายุบัตร':g('d_c5_e'),
+    'Thaioil SRC หมดอายุบัตร':g('d_c6_e'),
+    'IRPC IRY & AU หมดอายุบัตร':g('d_c7_e')
+  };
+  try{
+    var res=await apiPost({sheet:'คน',data:data});
+    toast(res.updated>0?'อัปเดต '+name+' แล้ว':'บันทึก '+name+' แล้ว');
+    clr();loadR();
+  }catch(e){toast('เกิดข้อผิดพลาด กรุณาลองใหม่')}
+}
+
+// ==== LOAD RECENT ====
+async function loadR(){
+  var el=$('recentList');
+  try{
+    var v=await apiGet({sheet:'รถ'});
+    var d=await apiGet({sheet:'คน'});
+    var html='<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">';
+
+    if(v&&v.length){
+      html+='<div><div style="font-size:13px;font-weight:600;color:#64748b;margin-bottom:8px">🚚 รถ</div>';
+      v.slice(-5).reverse().forEach(function(r){
+        var b=r['เบอร์รถ']||'';
+        var exp='';
+        Object.keys(r).forEach(function(k){if(k.indexOf('หมดอายุ')>=0&&r[k])exp=r[k]});
+        var bs=b.replace(/\\/g,'\\\\').replace(/'/g,"\\'");
+        html+='<div class="list-item" onclick="editV(\''+bs+'\')"><div><div class="main">'+b+'</div><div class="sub">'+(r['ทะเบียนหัว']||'')+'</div></div><span style="font-size:11px;color:#64748b">'+exp+'</span></div>';
+      });
+      html+='</div>';
+    }else{
+      html+='<div><div style="font-size:13px;color:#94a3b8">ยังไม่มีข้อมูลรถ</div></div>';
+    }
+
+    if(d&&d.length){
+      html+='<div><div style="font-size:13px;font-weight:600;color:#64748b;margin-bottom:8px">🧑 คน</div>';
+      d.slice(-5).reverse().forEach(function(r){
+        var n=r['ชื่อ']||'',p=r['เบอร์โทร']||'';
+        var ps=p.replace(/\\/g,'\\\\').replace(/'/g,"\\'");
+        html+='<div class="list-item" onclick="editD(\''+ps+'\')"><div><div class="main">'+n+'</div><div class="sub">'+p+'</div></div></div>';
+      });
+      html+='</div>';
+    }else{
+      html+='<div><div style="font-size:13px;color:#94a3b8">ยังไม่มีข้อมูลคน</div></div>';
+    }
+
+    html+='</div>';
+    el.innerHTML=html;
+  }catch(e){
+    el.innerHTML='<div style="text-align:center;color:#ef4444;padding:20px">⚠️ โหลดไม่ได้ ตรวจสอบการเชื่อมต่อ</div>';
+  }
+}
+
+// ==== EDIT VEHICLE ====
+function editV(ber){
+  apiGet({sheet:'รถ',key:ber}).then(function(r){
+    if(!r||r.error)return;
+    $('v_ber').value=r['เบอร์รถ']||'';
+    $('v_province').value=(r['จังหวัด']||'').indexOf('กทม')>=0?'กทม':'อื่น ๆ';
+    $('v_hua').value=r['ทะเบียนหัว']||'';$('v_hang').value=r['ทะเบียนหาง']||'';
+    $('v_tho_e').value=r['ธพน.2 หมดอายุบัตร']||'';
+    $('v_pasi_e').value=r['ภาษี หมดอายุบัตร']||'';
+    $('v_c1_e').value=r['Thaioil SRC หมดอายุบัตร']||'';
+    $('v_c2_e').value=r['Esso SRC หมดอายุบัตร']||'';
+    $('v_c3_e').value=r['PTT-GC หมดอายุบัตร']||'';
+    $('v_c4_e').value=r['LLK Thappline หมดอายุบัตร']||'';
+    $('v_c5_e').value=r['SRB Thappline หมดอายุบัตร']||'';
+    $('v_c6_e').value=r['SPRC หมดอายุบัตร']||'';
+    $('v_c7_e').value=r['IRPC IRY & AU หมดอายุบัตร']||'';
+    $('vMode').textContent='แก้ไข เบอร์ '+ber;
+    goV();window.scrollTo({top:0,behavior:'smooth'});
+  });
+}
+
+// ==== EDIT DRIVER ====
+function editD(phone){
+  apiGet({sheet:'คน',key:phone}).then(function(r){
+    if(!r||r.error)return;
+    $('d_ber').value=r['เบอร์รถ']||'';$('d_name').value=r['ชื่อ']||'';$('d_phone').value=r['เบอร์โทร']||'';
+    $('d_c1_e').value=r['Esso SRC หมดอายุบัตร']||'';
+    $('d_c2_e').value=r['PTT-GC หมดอายุบัตร']||'';
+    $('d_c3_e').value=r['LLK Thappline หมดอายุบัตร']||'';
+    $('d_c4_e').value=r['SRB Thappline หมดอายุบัตร']||'';
+    $('d_c5_e').value=r['SPRC หมดอายุบัตร']||'';
+    $('d_c6_e').value=r['Thaioil SRC หมดอายุบัตร']||'';
+    $('d_c7_e').value=r['IRPC IRY & AU หมดอายุบัตร']||'';
+    $('dMode').textContent='แก้ไข '+(r['ชื่อ']||'');
+    goD();window.scrollTo({top:0,behavior:'smooth'});
+  });
+}
+
+loadR();
+</script>
+</body>
+</html>
