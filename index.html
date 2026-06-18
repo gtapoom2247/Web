@@ -33,8 +33,11 @@ body{font-family:Prompt,Sarabun,sans-serif;background:#f1f5f9;color:#0f172a;padd
 label{font-size:13px;font-weight:500;color:#475569;display:block;margin-bottom:4px}
 input,select{width:100%;padding:10px 12px;border:2px solid #e2e8f0;border-radius:10px;font-size:15px;font-family:Prompt,sans-serif;background:#fff}
 input:focus,select:focus{outline:none;border-color:#38bdf8}
-.btn{width:100%;padding:12px;border:none;border-radius:12px;font-size:16px;font-weight:600;font-family:Prompt,sans-serif;cursor:pointer;margin-bottom:14px}
+.btn{width:100%;padding:12px;border:none;border-radius:12px;font-size:16px;font-weight:600;font-family:Prompt,sans-serif;cursor:pointer;margin-bottom:14px;transition:0.2s}
+.btn:disabled{opacity:0.6;cursor:not-allowed}
 .btn-primary{background:#0f172a;color:#fff}.btn-success{background:#059669;color:#fff}
+.spinner{display:inline-block;width:18px;height:18px;border:3px solid rgba(255,255,255,0.3);border-top-color:#fff;border-radius:50%;animation:spin .6s linear infinite;vertical-align:middle;margin-right:6px}
+@keyframes spin{to{transform:rotate(360deg)}}
 .toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#0f172a;color:#fff;padding:12px 24px;border-radius:12px;font-size:14px;z-index:999;opacity:0;transition:0.3s;pointer-events:none}
 .toast.show{opacity:1}
 .list-item{display:flex;justify-content:space-between;align-items:center;padding:12px 0;border-bottom:1px solid #f1f5f9;cursor:pointer}
@@ -126,7 +129,7 @@ input:focus,select:focus{outline:none;border-color:#38bdf8}
       <div><label>IRPC IRY & AU หมดอายุ</label><input id="d_c7_e" placeholder="วัน/เดือน/ปี" oninput="fmtDate(this)" maxlength="10"></div>
     </div>
   </div>
-  <button class="btn btn-success" onclick="saveD()">💾 บันทึกข้อมูลพนักงาน</button>
+  <button class="btn btn-success" id="btnSaveD" onclick="saveD()">💾 บันทึกข้อมูลพนักงาน</button>
 </div>
 
 <div class="toast" id="toast"></div>
@@ -171,8 +174,9 @@ function apiPost(body){
 
 // ==== SAVE VEHICLE ====
 async function saveV(){
+  var btn=$('btnSaveV');btn.disabled=true;btn.innerHTML='<span class="spinner"></span>กำลังบันทึก...';
   var ber=g('v_ber');
-  if(!ber||ber.length<3){toast('กรุณากรอกเบอร์รถให้ครบ 3 หลัก');return}
+  if(!ber||ber.length<3){toast('กรุณากรอกเบอร์รถให้ครบ 3 หลัก');btn.disabled=false;btn.innerHTML='💾 บันทึกข้อมูลรถ';return}
   var data={
     'เบอร์รถ':ber,'จังหวัด':g('v_province'),'ทะเบียนหัว':g('v_hua'),'ทะเบียนหาง':g('v_hang'),
     'ธพน.2 หมดอายุบัตร':g('v_tho_e'),
@@ -187,20 +191,23 @@ async function saveV(){
   };
   try{
     var res=await apiPost({sheet:'รถ',data:data});
-    if(res.error){toast('ผิดพลาด: '+res.error);return}
+    if(res.error){toast('ผิดพลาด: '+res.error);btn.disabled=false;btn.innerHTML='💾 บันทึกข้อมูลรถ';return}
     toast(res.updated>0?'อัปเดตเบอร์ '+ber+' แล้ว':'บันทึกเบอร์ '+ber+' แล้ว');
     clr();loadR();
   }catch(e){toast('เกิดข้อผิดพลาด กรุณาลองใหม่')}
+  btn.disabled=false;btn.innerHTML='💾 บันทึกข้อมูลรถ';
 }
 
 // ==== SAVE DRIVER ====
 async function saveD(){
+  var btn=$('btnSaveD');btn.disabled=true;btn.innerHTML='<span class="spinner"></span>กำลังบันทึก...';
   var name=g('d_name');
-  if(!name){toast('กรุณากรอกชื่อ');return}
-  var ber=g('d_ber');
-  if(ber&&ber.length<3){toast('กรุณากรอกเบอร์รถให้ครบ 3 หลัก');return}
+  if(!name){toast('กรุณากรอกชื่อ');btn.disabled=false;btn.innerHTML='💾 บันทึกข้อมูลพนักงาน';return}
   var phone=g('d_phone');
-  if(!phone||phone.length<10){toast('กรุณากรอกเบอร์โทรให้ครบ 10 หลัก');return}
+  if(phone&&phone.length==9){phone='0'+phone;g('d_phone').value=phone}
+  var ber=g('d_ber');
+  if(ber&&ber.length<3){toast('กรุณากรอกเบอร์รถให้ครบ 3 หลัก');btn.disabled=false;btn.innerHTML='💾 บันทึกข้อมูลพนักงาน';return}
+  if(!phone||phone.length<10){toast('กรุณากรอกเบอร์โทรให้ครบ 10 หลัก');btn.disabled=false;btn.innerHTML='💾 บันทึกข้อมูลพนักงาน';return}
   var data={
     'เบอร์รถ':ber,'ชื่อ':name,'เบอร์โทร':phone,
     'Esso SRC หมดอายุบัตร':g('d_c1_e'),
@@ -213,10 +220,11 @@ async function saveD(){
   };
   try{
     var res=await apiPost({sheet:'คน',data:data});
-    if(res.error){toast('ผิดพลาด: '+res.error);return}
+    if(res.error){toast('ผิดพลาด: '+res.error);btn.disabled=false;btn.innerHTML='💾 บันทึกข้อมูลพนักงาน';return}
     toast(res.updated>0?'อัปเดต '+name+' แล้ว':'บันทึก '+name+' แล้ว');
     clr();loadR();
   }catch(e){toast('เกิดข้อผิดพลาด กรุณาลองใหม่')}
+  btn.disabled=false;btn.innerHTML='💾 บันทึกข้อมูลพนักงาน';
 }
 
 // ==== LOAD RECENT ====
