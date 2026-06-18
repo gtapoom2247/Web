@@ -150,24 +150,27 @@ function fmtPlate(el){el.value=el.value.replace(/[^0-9]/g,'').replace(/^(\d{2})(
 function fmtBer(el){el.value=el.value.replace(/[^0-9]/g,'').slice(0,3)}
 function fmtPhone(el){el.value=el.value.replace(/[^0-9]/g,'').slice(0,10)}
 function fmtDate(el){
-  var v=el.value.replace(/[^0-9]/g,'');
-  if(v.length>2) v=v.slice(0,2)+'/'+v.slice(2);
-  if(v.length>5) v=v.slice(0,5)+'/'+v.slice(5);
-  v=v.slice(0,10);
-  el.value=v;
-  // เมื่อกรอกครบ 10 ตัว → แปลงปีเป็น พ.ศ. ให้อัตโนมัติ
-  if(v.length===10){
-    var p=v.split('/');
-    var y=parseInt(p[2],10);
-    if(y<100){                // 2 หลัก เช่น 27 → 2570
-      p[2]=String(y+2543);
-      el.value=p.join('/');
-    }else if(y<2500){         // ค.ศ. 4 หลัก เช่น 2027 → 2570
-      p[2]=String(y+543);
-      el.value=p.join('/');
-    }                         // >=2500 → เป็น พ.ศ. อยู่แล้ว
+  var v=el.value.replace(/[^0-9/]/g,'');
+  if(v.indexOf('/')===-1){
+    if(v.length>2) v=v.slice(0,2)+'/'+v.slice(2);
+    if(v.length>5) v=v.slice(0,5)+'/'+v.slice(5);
   }
+  el.value=v.slice(0,10);
 }
+function fmtDateBlur(el){
+  var raw=el.value.trim();if(!raw)return;
+  var p=raw.split('/'),d,m,y='';
+  if(p.length>=3){d=(p[0]||'').padStart(2,'0');m=(p[1]||'').padStart(2,'0');y=(p[2]||'').trim()}
+  else if(p.length===2){d=(p[0]||'').padStart(2,'0');m=(p[1]||'').padStart(2,'0')}
+  else{var dig=raw.replace(/[^0-9]/g,'');d=dig.slice(0,2).padStart(2,'0');m=dig.slice(2,4).padStart(2,'0');y=dig.slice(4,8)}
+  if(y){var yn=parseInt(y,10)
+    if(yn<100){var be=yn+2500,ce=yn+2543;y=String(Math.abs(be-2569)<=Math.abs(ce-2569)?be:ce)}
+    else if(yn<2500) y=String(yn+543)
+    y=y.padStart(4,'0')}
+  el.value=d+'/'+m+(y?'/'+y:'')
+}
+// ผูก blur กับช่องวันที่
+(function(){var a=document.querySelectorAll('input[id$="_e"]');for(var i=0;i<a.length;i++)a[i].addEventListener('blur',function(){fmtDateBlur(this)})})()
 
 function clr(){
   ['v_ber','v_hua','v_hang','v_tho_e','v_pasi_e',
