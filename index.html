@@ -156,8 +156,11 @@ function fmtDate(el){
   el.value=d;
 }
 function fmtDateBlur(el){
-  // ถ้าไม่ตรง format dd/mm/yyyy (10 ตัว) → เคลียร์ทิ้ง ให้กรอกใหม่
-  if(el.value.trim() && !/^\d{2}\/\d{2}\/\d{4}$/.test(el.value.trim())) el.value=''
+  var m=el.value.trim().match(/^(\d{2})\/(\d{2})\/(\d{4})$/);
+  if(!m){el.value='';return}
+  var y=parseInt(m[3],10);
+  if(y<2500) y+=543; // ค.ศ. → พ.ศ.
+  el.value=m[1]+'/'+m[2]+'/'+y;
 }
 // ผูก blur กับช่องวันที่
 (function(){var a=document.querySelectorAll('input[id$="_e"]');for(var i=0;i<a.length;i++)a[i].addEventListener('blur',function(){fmtDateBlur(this)})})()
