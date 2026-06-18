@@ -191,6 +191,9 @@ async function saveV(){
   var btn=$('btnSaveV');btn.disabled=true;btn.innerHTML='<span class="spinner"></span>กำลังบันทึก...';
   var ber=g('v_ber');
   if(!ber||ber.length<3){toast('กรุณากรอกเบอร์รถให้ครบ 3 หลัก');btn.disabled=false;btn.innerHTML='💾 บันทึกข้อมูลรถ';return}
+  // ตรวจวันที่ทุกช่องต้องครบ dd/mm/yyyy
+  var vIds=['v_tho_e','v_pasi_e','v_c1_e','v_c2_e','v_c3_e','v_c4_e','v_c5_e','v_c6_e','v_c7_e'];
+  for(var i=0;i<vIds.length;i++){var x=g(vIds[i]);if(x&&!/^\d{2}\/\d{2}\/\d{4}$/.test(x)){toast('กรุณากรอกวันที่ให้ครบ (dd/mm/yyyy)');btn.disabled=false;btn.innerHTML='💾 บันทึกข้อมูลรถ';return}}
   var data={
     'เบอร์รถ':ber,'จังหวัด':g('v_province'),'ทะเบียนหัว':g('v_hua'),'ทะเบียนหาง':g('v_hang'),
     'ธพน.2 หมดอายุบัตร':g('v_tho_e'),
@@ -222,6 +225,9 @@ async function saveD(){
   var ber=g('d_ber');
   if(ber&&ber.length<3){toast('กรุณากรอกเบอร์รถให้ครบ 3 หลัก');btn.disabled=false;btn.innerHTML='💾 บันทึกข้อมูลพนักงาน';return}
   if(!phone||phone.length<10){toast('กรุณากรอกเบอร์โทรให้ครบ 10 หลัก');btn.disabled=false;btn.innerHTML='💾 บันทึกข้อมูลพนักงาน';return}
+  // ตรวจวันที่ทุกช่องต้องครบ dd/mm/yyyy
+  var dIds=['d_c1_e','d_c2_e','d_c3_e','d_c4_e','d_c5_e','d_c6_e','d_c7_e'];
+  for(var i=0;i<dIds.length;i++){var x=g(dIds[i]);if(x&&!/^\d{2}\/\d{2}\/\d{4}$/.test(x)){toast('กรุณากรอกวันที่ให้ครบ (dd/mm/yyyy)');btn.disabled=false;btn.innerHTML='💾 บันทึกข้อมูลพนักงาน';return}}
   var data={
     'เบอร์รถ':ber,'ชื่อ':name,'เบอร์โทร':phone,
     'Esso SRC หมดอายุบัตร':g('d_c1_e'),
