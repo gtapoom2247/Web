@@ -1338,7 +1338,7 @@ async function loadR(){
         var exp='';
         Object.keys(r).forEach(function(k){if(k.indexOf('หมดอายุ')>=0&&r[k])exp=normalizeDate(r[k])});
         var bs=b.replace(/\\/g,'\\\\').replace(/'/g,"\\'");
-        html+='<div class="list-item" onclick="(\''+bs+'\')"><div><div class="main">'+b+'</div><div class="sub">'+(r['ทะเบียนหัว']||'')+'</div></div><span style="font-size:11px;color:#64748b">'+exp+'</span></div>';
+        html+='<div class="list-item" onclick="(\''+bs+'\')"><div><div class="main">'+b+'</div></div><span style="font-size:11px;color:#64748b">'+exp+'</span></div>';
       });
       html+='</div>';
     }else{
@@ -1350,7 +1350,7 @@ async function loadR(){
       d.slice(-5).reverse().forEach(function(r){
         var n=r['ชื่อ']||'',p=r['เบอร์โทร']||'';
         var ps=p.replace(/\\/g,'\\\\').replace(/'/g,"\\'");
-        html+='<div class="list-item" onclick="(\''+ps+'\')"><div><div class="main">'+n+'</div><div class="sub">'+p+'</div></div></div>';
+        html+='<div class="list-item" onclick="(\''+ps+'\')"><div><div class="main">'+n+'</div></div></div>';
       });
       html+='</div>';
     }else{
