@@ -157,7 +157,7 @@ function fmtDate(el){
 }
 function fmtDateBlur(el){
   var m=el.value.trim().match(/^(\d{2})\/(\d{2})\/(\d{4})$/);
-  if(!m){el.value='';return}
+  if(!m){if(el.value.trim()){el.value='';toast('กรุณากรอกวันที่ให้ครบ (วัน/เดือน/ปี)')}return}
   var y=parseInt(m[3],10);
   if(y<2500) y+=543; // ค.ศ. → พ.ศ.
   el.value=m[1]+'/'+m[2]+'/'+y;
