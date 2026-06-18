@@ -157,12 +157,16 @@ function clr(){
   $('dMode').textContent='อัพบัตรคน';
 }
 
+// ส่ง GET/POST ผ่าน query string เพื่อแก้ปัญหา CORS
 function apiGet(params){
-  var url=API+'?'+Object.keys(params).map(function(k){return encodeURIComponent(k)+'='+encodeURIComponent(params[k])}).join('&');
+  var url=API+'?'+Object.keys(params).map(function(k){
+    return encodeURIComponent(k)+'='+encodeURIComponent(params[k]);
+  }).join('&');
   return fetch(url).then(function(r){return r.json()});
 }
 function apiPost(body){
-  return fetch(API,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)}).then(function(r){return r.json()});
+  var url=API+'?payload='+encodeURIComponent(JSON.stringify(body));
+  return fetch(url).then(function(r){return r.json()});
 }
 
 // ==== SAVE VEHICLE ====
@@ -183,6 +187,7 @@ async function saveV(){
   };
   try{
     var res=await apiPost({sheet:'รถ',data:data});
+    if(res.error){toast('ผิดพลาด: '+res.error);return}
     toast(res.updated>0?'อัปเดตเบอร์ '+ber+' แล้ว':'บันทึกเบอร์ '+ber+' แล้ว');
     clr();loadR();
   }catch(e){toast('เกิดข้อผิดพลาด กรุณาลองใหม่')}
@@ -208,6 +213,7 @@ async function saveD(){
   };
   try{
     var res=await apiPost({sheet:'คน',data:data});
+    if(res.error){toast('ผิดพลาด: '+res.error);return}
     toast(res.updated>0?'อัปเดต '+name+' แล้ว':'บันทึก '+name+' แล้ว');
     clr();loadR();
   }catch(e){toast('เกิดข้อผิดพลาด กรุณาลองใหม่')}
