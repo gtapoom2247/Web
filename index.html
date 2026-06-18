@@ -151,7 +151,7 @@ input:focus,select:focus{outline:none;border-color:#38bdf8}
 
 <script>
 // *** วาง URL จาก Apps Script Deploy ตรงนี้ ***
-const API = 'https://script.google.com/macros/s/AKfycbyUloPLdZZFqasRx0jrvr-c2CfzmVH6I-8NXm3pbXyjsWaNrJCGGLwVTjYF-NQy9UbVnA/exec';
+const API = 'https://script.google.com/macros/s/AKfycbydLFZsq-xY3Hna3avukXlkOD0lfBsjmIbwKWa7gSlikzXgCaEiGoxUtXlZV5e_8lzVmw/exec';
 
 function $(id){return document.getElementById(id)}
 function goM(){$('pageMenu').className='page active';$('pageV').className='page';$('pageD').className='page';loadR()}
@@ -1305,7 +1305,7 @@ async function saveD(){
   if(!phone||phone.length<10){toast('กรุณากรอกเบอร์โทรให้ครบ 10 หลัก');btn.disabled=false;btn.innerHTML='💾 บันทึกข้อมูลพนักงาน';return}
   if(PHONE_LIST.indexOf(phone)<0){toast('\u274c เบอร์ '+phone+' \u0e44\u0e21\u0e48\u0e21\u0e35\u0e43\u0e19\u0e23\u0e30\u0e1a\u0e1a');btn.disabled=false;btn.innerHTML='\uD83D\uDCBE \u0E1A\u0E31\u0E19\u0E17\u0E36\u0E01\u0E02\u0E49\u0E2D\u0E21\u0E39\u0E25\u0E1E\u0E19\u0E31\u0E01\u0E07\u0E32\u0E19';return}
   var data={
-    'เบอร์รถ':ber,'ชื่อ':name,'เบอร์โทรศัพท์':phone,
+    'เบอร์รถ':ber,'ชื่อ':name,'เบอร์โทร':phone.replace(/^0+/, ''),
     'Esso SRC หมดอายุบัตร':normalizeDate(g('d_c1_e')),
     'PTT-GC หมดอายุบัตร':normalizeDate(g('d_c2_e')),
     'LLK Thappline หมดอายุบัตร':normalizeDate(g('d_c3_e')),
@@ -1348,7 +1348,7 @@ async function loadR(){
     if(d&&d.length){
       html+='<div><div style="font-size:13px;font-weight:600;color:#64748b;margin-bottom:8px">🧑 คน</div>';
       d.slice(-5).reverse().forEach(function(r){
-        var n=r['ชื่อ']||'',p=r['เบอร์โทรศัพท์']||'';
+        var n=r['ชื่อ']||'',p=r['เบอร์โทร']||'';
         var ps=p.replace(/\\/g,'\\\\').replace(/'/g,"\\'");
         html+='<div class="list-item" onclick="(\''+ps+'\')"><div><div class="main">'+n+'</div><div class="sub">'+p+'</div></div></div>';
       });
@@ -1389,7 +1389,7 @@ function editV(ber){
 function editD(phone){
   apiGet({sheet:'คน',key:phone}).then(function(r){
     if(!r||r.error)return;
-    $('d_ber').value=r['เบอร์รถ']||'';$('d_name').value=r['ชื่อ']||'';$('d_phone').value=r['เบอร์โทรศัพท์']||'';
+    $('d_ber').value=r['เบอร์รถ']||'';$('d_name').value=r['ชื่อ']||'';$('d_phone').value=r['เบอร์โทร']||'';
     $('d_c1_e').value=normalizeDate(r['Esso SRC หมดอายุบัตร']||'');
     $('d_c2_e').value=normalizeDate(r['PTT-GC หมดอายุบัตร']||'');
     $('d_c3_e').value=normalizeDate(r['LLK Thappline หมดอายุบัตร']||'');
