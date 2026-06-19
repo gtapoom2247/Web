@@ -1358,8 +1358,8 @@ async function saveV(){
   try{
     var res=await apiPost({sheet:'รถ',data:data,editKey:editKeyV});
     if(res.error){toast('ผิดพลาด: '+res.error);btn.disabled=false;btn.innerHTML='💾 บันทึกข้อมูลรถ';return}
-    toast((res.status==='updated'?'อัปเดตเบอร์ '+ber:'บันทึกเบอร์ '+ber)+' | รูป: '+(res.imgData||'บันทึก'));
-    clr();loadR();
+    toast((res.updated?'อัปเดตเบอร์ '+ber:'บันทึกเบอร์ '+ber)+' | รูป: '+((res.created||res.updated)?'ok':'บันทึก'));
+    clr();setTimeout(loadR,100);
   }catch(e){toast('เกิดข้อผิดพลาด กรุณาลองใหม่')}
   btn.disabled=false;btn.innerHTML='💾 บันทึกข้อมูลรถ';
 }
@@ -1391,8 +1391,8 @@ async function saveD(){
   try{
     var res=await apiPost({sheet:'คน',data:data,editKey:editKeyD});
     if(res.error){toast('ผิดพลาด: '+res.error);btn.disabled=false;btn.innerHTML='💾 บันทึกข้อมูลพนักงาน';return}
-    toast((res.status==='updated'?'อัปเดต '+name:'บันทึก '+name)+' | รูป: '+(res.imgData||'ไม่มี'));
-    clr();loadR();
+    toast((res.updated?'อัปเดต '+name:'บันทึก '+name)+' | รูป: '+((res.created||res.updated)?'ok':'บันทึก'));
+    clr();setTimeout(loadR,100);
   }catch(e){toast('เกิดข้อผิดพลาด กรุณาลองใหม่')}
   btn.disabled=false;btn.innerHTML='💾 บันทึกข้อมูลพนักงาน';
 }
@@ -1401,8 +1401,8 @@ async function saveD(){
 async function loadR(){
   var el=$('recentList');
   try{
-    var v=await apiGet({sheet:'รถ'});v=v.data||[];
-    var d=await apiGet({sheet:'คน'});d=d.data||[];
+    var v=await apiGet({sheet:'รถ'});v=Array.isArray(v)?v:v.data||[];
+    var d=await apiGet({sheet:'คน'});d=Array.isArray(d)?d:d.data||[];
     var html='<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">';
 
     if(v&&v.length){
@@ -1444,7 +1444,8 @@ async function loadR(){
 function editV(ber){
   editKeyV=ber;
   apiGet({sheet:'รถ',key:ber}).then(function(r){
-    if(!r||r.error||!r.data||!r.data[0])return;r=r.data[0];
+    if(!r||r.error)return;if(Array.isArray(r)){r=r[0]}else{r=r.data&&r.data[0]?r.data[0]:r}
+    if(!r||!r['เบอร์รถ'])return;
     $('v_ber').value=r['เบอร์รถ']||'';
     $('v_province').value=(r['จังหวัด']||'').indexOf('กทม')>=0?'กทม':'อื่น ๆ';
     $('v_hua').value=r['ทะเบียนหัว']||'';$('v_hang').value=r['ทะเบียนหาง']||'';
@@ -1467,7 +1468,8 @@ function editV(ber){
 function editD(phone){
   editKeyD=phone;
   apiGet({sheet:'คน',key:phone}).then(function(r){
-    if(!r||r.error||!r.data||!r.data[0])return;r=r.data[0];
+    if(!r||r.error)return;if(Array.isArray(r)){r=r[0]}else{r=r.data&&r.data[0]?r.data[0]:r}
+    if(!r||!r['เบอร์โทร'])return;
     $('d_ber').value=r['เบอร์รถ']||'';$('d_name').value=r['ชื่อ']||'';$('d_phone').value=r['เบอร์โทร']||'';
     $('d_c1_e').value=normalizeDate(r['Esso SRC หมดอายุบัตร']||'');
     $('d_c2_e').value=normalizeDate(r['PTT-GC หมดอายุบัตร']||'');
@@ -1504,4 +1506,3 @@ loadR();
 </script>
 </body>
 </html>
-
