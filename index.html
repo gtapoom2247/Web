@@ -1,1554 +1,870 @@
-<!DOCTYPE html>
-<html lang="th">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>ระบบติดตามบัตร พขร.</title>
-<link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-<style>
-*{box-sizing:border-box;margin:0;padding:0}
-body{font-family:Prompt,Sarabun,sans-serif;background:#f1f5f9;color:#0f172a;padding:16px}
-.app{max-width:860px;margin:0 auto}
-.header{background:linear-gradient(135deg,#0f172a,#1e293b);padding:24px;border-radius:16px;margin-bottom:16px;text-align:center}
-.header h1{color:#fff;font-size:22px;font-weight:700}
-.header h1 span{color:#38bdf8}
-.header p{color:#94a3b8;font-size:13px;margin-top:4px}
-.page{display:none}.page.active{display:block}
-.card{background:#fff;border-radius:16px;padding:20px;margin-bottom:14px;box-shadow:0 1px 3px rgba(0,0,0,0.06)}
-.card-title{font-size:16px;font-weight:600;margin-bottom:16px;padding-bottom:10px;border-bottom:2px solid #f1f5f9}
-.menu-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px}
-.menu-card{background:#fff;border-radius:16px;padding:32px 20px;text-align:center;cursor:pointer;box-shadow:0 1px 3px rgba(0,0,0,0.06);border:2px solid transparent;user-select:none;transition:0.2s}
-.menu-card:hover{border-color:#38bdf8;transform:translateY(-2px)}
-.menu-card .icon{font-size:40px;display:block;margin-bottom:10px}
-.menu-card .name{font-size:17px;font-weight:600}
-.menu-card .desc{font-size:12px;color:#64748b;margin-top:4px}
-@media(max-width:500px){.menu-grid{grid-template-columns:1fr}}
-.top-bar{display:flex;align-items:center;gap:12px;margin-bottom:14px;background:#fff;border-radius:12px;padding:10px 16px;box-shadow:0 1px 3px rgba(0,0,0,0.06)}
-.top-bar .back{background:none;border:none;font-size:20px;cursor:pointer;color:#0f172a;padding:4px 8px;font-family:Prompt,sans-serif}
-.top-bar .title{font-size:16px;font-weight:600;flex:1}
-.row{display:grid;gap:10px;margin-bottom:12px}
-.r2{grid-template-columns:1fr 1fr}.r3{grid-template-columns:1fr 1fr 1fr}
-@media(max-width:600px){.r2,.r3{grid-template-columns:1fr 1fr}}
-@media(max-width:400px){.r2,.r3{grid-template-columns:1fr}}
-label{font-size:13px;font-weight:500;color:#475569;display:block;margin-bottom:4px}
-input,select{width:100%;padding:10px 12px;border:2px solid #e2e8f0;border-radius:10px;font-size:15px;font-family:Prompt,sans-serif;background:#fff}
-input:focus,select:focus{outline:none;border-color:#38bdf8}
-.btn{width:100%;padding:12px;border:none;border-radius:12px;font-size:16px;font-weight:600;font-family:Prompt,sans-serif;cursor:pointer;margin-bottom:14px;transition:0.2s}
-.btn:disabled{opacity:0.6;cursor:not-allowed}
-.btn-primary{background:#0f172a;color:#fff}.btn-success{background:#059669;color:#fff}
-.spinner{display:inline-block;width:18px;height:18px;border:3px solid rgba(255,255,255,0.3);border-top-color:#fff;border-radius:50%;animation:spin .6s linear infinite;vertical-align:middle;margin-right:6px}
-@keyframes spin{to{transform:rotate(360deg)}}
-.toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#0f172a;color:#fff;padding:12px 24px;border-radius:12px;font-size:14px;z-index:999;opacity:0;transition:0.3s;pointer-events:none}
-.toast.show{opacity:1}
-.list-item{display:flex;justify-content:space-between;align-items:center;padding:12px 0;border-bottom:1px solid #f1f5f9;cursor:pointer}
-.list-item:last-child{border-bottom:none}
-.list-item .main{font-size:15px;font-weight:500}
-.list-item .sub{font-size:12px;color:#64748b;margin-top:2px}
-.section-label{font-size:13px;font-weight:600;color:#64748b;margin:16px 0 10px;padding:6px 12px;background:#f1f5f9;border-radius:8px}
-.upload-zone{border:2px dashed #cbd5e1;border-radius:12px;padding:20px;text-align:center;cursor:pointer;transition:0.2s;background:#fafafa;margin-bottom:8px}
-.upload-zone:hover{border-color:#38bdf8;background:#f0f9ff}
-.upload-zone .icn{font-size:28px;display:block;margin-bottom:4px}
-.upload-zone .txt{color:#94a3b8;font-size:13px}
-.preview-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(90px,1fr));gap:6px}
-.preview-item{position:relative;border-radius:8px;overflow:hidden;aspect-ratio:1;border:1px solid #e2e8f0}
-.preview-item img{width:100%;height:100%;object-fit:cover}
-.preview-item .del{position:absolute;top:2px;right:2px;width:20px;height:20px;background:rgba(0,0,0,0.55);color:#fff;border:none;border-radius:50%;font-size:12px;cursor:pointer;line-height:20px;text-align:center;font-family:Prompt,sans-serif}
-.preview-count{font-size:12px;color:#64748b;margin-top:4px}
-</style>
-</head>
-<body>
-<div class="app">
+  <!DOCTYPE html>
+  <html lang="th">
+  <head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1.0">
+  <title>ระบบติดตามบัตร พขร.</title>
+  <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:Prompt,Sarabun,sans-serif;background:#f1f5f9;color:#0f172a;padding:16px}
+  .admin-btn{position:absolute;top:12px;right:14px;background:rgba(255,255,255,0.1);border:none;color:#94a3b8;font-size:16px;cursor:pointer;padding:6px 10px;border-radius:8px;transition:0.2s;font-family:Prompt,sans-serif}
+  .admin-btn:hover{background:rgba(255,255,255,0.2);color:#fff}
+  .admin-btn.ok{color:#4ade80}
+  .modal-overlay{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);z-index:999;display:none;align-items:center;justify-content:center}
+  .modal-overlay.show{display:flex}
+  .modal-box{background:#fff;border-radius:16px;padding:24px;width:90%;max-width:400px;max-height:90vh;overflow-y:auto}
+  .modal-box h3{font-size:18px;font-weight:600;margin-bottom:16px}
+  .modal-box label{display:block;font-size:13px;color:#64748b;margin-bottom:4px;margin-top:12px}
+  .modal-box input[type=text],.modal-box input[type=password]{width:100%;padding:10px 14px;border:2px solid #e2e8f0;border-radius:10px;font-size:15px;font-family:Prompt,sans-serif;outline:none;transition:0.2s}
+  .modal-box input:focus{border-color:#38bdf8}
+  .modal-box .btn-primary{background:#0f172a;color:#fff;border:none;padding:12px;border-radius:10px;font-size:15px;font-weight:600;cursor:pointer;width:100%;margin-top:18px;font-family:Prompt,sans-serif}
+  .modal-box .btn-primary:hover{background:#1e293b}
+  .modal-box .btn-close{float:right;background:none;border:none;font-size:22px;cursor:pointer;color:#94a3b8;line-height:1}
+  .admin-panel{display:none}
+  .admin-panel.show{display:block}
+  .admin-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:14px}
+  .admin-card{background:#f8fafc;border:2px dashed #e2e8f0;border-radius:12px;padding:20px;text-align:center;cursor:pointer;transition:0.2s}
+  .admin-card:hover{border-color:#38bdf8;background:#f0f9ff}
+  .admin-card .icon{font-size:28px;display:block;margin-bottom:6px}
+  .admin-card .name{font-size:14px;font-weight:500;color:#0f172a}
+  .admin-logout{background:none;border:1px solid #e2e8f0;color:#ef4444;padding:8px 16px;border-radius:8px;cursor:pointer;font-size:13px;margin-top:16px;width:100%;font-family:Prompt,sans-serif}
+  .admin-logout:hover{background:#fef2f2}
+  .admin-list{max-height:300px;overflow-y:auto;margin-top:10px}
+  .admin-list-item{display:flex;align-items:center;justify-content:space-between;padding:8px 12px;border-bottom:1px solid #f1f5f9;font-size:14px}
+  .admin-list-item .del{color:#ef4444;cursor:pointer;font-size:18px;padding:0 6px}
+  .admin-add-row{display:flex;gap:8px;margin-top:10px}
+  .admin-add-row input{flex:1;padding:8px 12px;border:2px solid #e2e8f0;border-radius:8px;font-size:14px;font-family:Prompt,sans-serif;outline:none}
+  .admin-add-row input:focus{border-color:#38bdf8}
+  .admin-add-row button{background:#0f172a;color:#fff;border:none;padding:8px 16px;border-radius:8px;cursor:pointer;font-family:Prompt,sans-serif;font-weight:500}
+  .admin-add-row button:hover{background:#1e293b}
+  .admin-tabs{display:flex;gap:8px;margin-bottom:14px}
+  .admin-tab{padding:8px 16px;border-radius:8px;border:1px solid #e2e8f0;background:#fff;cursor:pointer;font-size:13px;font-family:Prompt,sans-serif;transition:0.2s}
+  .admin-tab.active{background:#0f172a;color:#fff;border-color:#0f172a}
+  .admin-tab:hover:not(.active){background:#f1f5f9}
+  .admin-section{display:none}
+  .admin-section.show{display:block}
+  .app{max-width:860px;margin:0 auto}
+  .header{background:linear-gradient(135deg,#0f172a,#1e293b);padding:24px;border-radius:16px;margin-bottom:16px;text-align:center}
+  .header{position:relative}.header h1{color:#fff;font-size:22px;font-weight:700}
+  .header h1 span{color:#38bdf8}
+  .header p{color:#94a3b8;font-size:13px;margin-top:4px}
+  .page{display:none}.page.active{display:block}
+  .card{background:#fff;border-radius:16px;padding:20px;margin-bottom:14px;box-shadow:0 1px 3px rgba(0,0,0,0.06)}
+  .card-title{font-size:16px;font-weight:600;margin-bottom:16px;padding-bottom:10px;border-bottom:2px solid #f1f5f9}
+  .menu-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px}
+  .menu-card{background:#fff;border-radius:16px;padding:32px 20px;text-align:center;cursor:pointer;box-shadow:0 1px 3px rgba(0,0,0,0.06);border:2px solid transparent;user-select:none;transition:0.2s}
+  .menu-card:hover{border-color:#38bdf8;transform:translateY(-2px)}
+  .menu-card .icon{font-size:40px;display:block;margin-bottom:10px}
+  .menu-card .name{font-size:17px;font-weight:600}
+  .menu-card .desc{font-size:12px;color:#64748b;margin-top:4px}
+  @media(max-width:500px){.menu-grid{grid-template-columns:1fr}}
+  .top-bar{display:flex;align-items:center;gap:12px;margin-bottom:14px;background:#fff;border-radius:12px;padding:10px 16px;box-shadow:0 1px 3px rgba(0,0,0,0.06)}
+  .top-bar .back{background:none;border:none;font-size:20px;cursor:pointer;color:#0f172a;padding:4px 8px;font-family:Prompt,sans-serif}
+  .top-bar .title{font-size:16px;font-weight:600;flex:1}
+  .row{display:grid;gap:10px;margin-bottom:12px}
+  .r2{grid-template-columns:1fr 1fr}.r3{grid-template-columns:1fr 1fr 1fr}
+  @media(max-width:600px){.r2,.r3{grid-template-columns:1fr 1fr}}
+  @media(max-width:400px){.r2,.r3{grid-template-columns:1fr}}
+  label{font-size:13px;font-weight:500;color:#475569;display:block;margin-bottom:4px}
+  input,select{width:100%;padding:10px 12px;border:2px solid #e2e8f0;border-radius:10px;font-size:15px;font-family:Prompt,sans-serif;background:#fff}
+  input:focus,select:focus{outline:none;border-color:#38bdf8}
+  .btn{width:100%;padding:12px;border:none;border-radius:12px;font-size:16px;font-weight:600;font-family:Prompt,sans-serif;cursor:pointer;margin-bottom:14px;transition:0.2s}
+  .btn:disabled{opacity:0.6;cursor:not-allowed}
+  .btn-primary{background:#0f172a;color:#fff}.btn-success{background:#059669;color:#fff}
+  .spinner{display:inline-block;width:18px;height:18px;border:3px solid rgba(255,255,255,0.3);border-top-color:#fff;border-radius:50%;animation:spin .6s linear infinite;vertical-align:middle;margin-right:6px}
+  @keyframes spin{to{transform:rotate(360deg)}}
+  .toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#0f172a;color:#fff;padding:12px 24px;border-radius:12px;font-size:14px;z-index:999;opacity:0;transition:0.3s;pointer-events:none}
+  .toast.show{opacity:1}
+  .list-item{display:flex;justify-content:space-between;align-items:center;padding:12px 0;border-bottom:1px solid #f1f5f9;cursor:pointer}
+  .list-item:last-child{border-bottom:none}
+  .list-item .main{font-size:15px;font-weight:500}
+  .list-item .sub{font-size:12px;color:#64748b;margin-top:2px}
+  .section-label{font-size:13px;font-weight:600;color:#64748b;margin:16px 0 10px;padding:6px 12px;background:#f1f5f9;border-radius:8px}
+  .upload-zone{border:2px dashed #cbd5e1;border-radius:12px;padding:20px;text-align:center;cursor:pointer;transition:0.2s;background:#fafafa;margin-bottom:8px}
+  .upload-zone:hover{border-color:#38bdf8;background:#f0f9ff}
+  .upload-zone .icn{font-size:28px;display:block;margin-bottom:4px}
+  .upload-zone .txt{color:#94a3b8;font-size:13px}
+  .preview-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(90px,1fr));gap:6px}
+  .preview-item{position:relative;border-radius:8px;overflow:hidden;aspect-ratio:1;border:1px solid #e2e8f0}
+  .preview-item img{width:100%;height:100%;object-fit:cover}
+  .preview-item .del{position:absolute;top:2px;right:2px;width:20px;height:20px;background:rgba(0,0,0,0.55);color:#fff;border:none;border-radius:50%;font-size:12px;cursor:pointer;line-height:20px;text-align:center;font-family:Prompt,sans-serif}
+  .preview-count{font-size:12px;color:#64748b;margin-top:4px}
+  </style>
+  </head>
+  <body>
+  <div class="app">
 
-<div class="header">
-  <h1>ระบบติดตามบัตร <span>พขร.</span></h1>
-  <p>จัดการบัตรประจําตัวรถและพนักงานขับรถ</p>
-</div>
-
-<!-- MENU -->
-<div id="pageMenu" class="page active">
-  <div class="menu-grid">
-    <div class="menu-card" onclick="goV()"><span class="icon">🚚</span><div class="name">อัพบัตรรถ</div><div class="desc">จัดการบัตรประจําตัวรถ</div></div>
-    <div class="menu-card" onclick="goD()"><span class="icon">🧑‍✈️</span><div class="name">อัพบัตรคน</div><div class="desc">จัดการบัตรพนักงานขับรถ</div></div>
-  </div>
-  <div class="card"><div class="card-title">📋 รายการล่าสุด</div><div id="recentList"><div style="text-align:center;color:#94a3b8;padding:20px">กำลังโหลด...</div></div></div>
-</div>
-
-<!-- VEHICLE FORM -->
-<div id="pageV" class="page">
-  <div class="top-bar"><button class="back" onclick="goM()">‹</button><span class="title" id="vMode">อัพบัตรรถ</span></div>
-  <div class="card">
-    <div class="card-title">🚚 ข้อมูลรถ</div>
-    <div class="row r2">
-      <div><label>เบอร์รถ</label><input id="v_ber" placeholder="000" oninput="fmtBer(this)" maxlength="3"></div>
-      <div><label>จังหวัด</label><select id="v_province"><option>กทม</option><option>อื่น ๆ</option></select></div>
+  <div class="header">
+    <h1>ระบบติดตามบัตร <span>พขร.</span></h1>
+    <p>จัดการบัตรประจําตัวรถและพนักงานขับรถ</p>
+    <button class="admin-btn" id="adminBtn" onclick="showLogin()">🔐</button>
+  
+  <!-- === Admin Login Modal === -->
+  <div class="modal-overlay" id="loginModal">
+    <div class="modal-box">
+      <button class="btn-close" onclick="hide('loginModal')">&times;</button>
+      <h3>🔐 แอดมิน</h3>
+      <label>Username</label>
+      <input type="text" id="adminUser" placeholder="username" onkeydown="if(event.key==='Enter')doLogin()">
+      <label>Password</label>
+      <input type="password" id="adminPass" placeholder="password" onkeydown="if(event.key==='Enter')doLogin()">
+      <button class="btn-primary" onclick="doLogin()">เข้าสู่ระบบ</button>
     </div>
-    <div class="row r2">
-      <div><label>ทะเบียนหัว</label>
-        <div style="display:flex;gap:6px">
-          <select id="v_fmt_hua" onchange="updatePlateFmt()" style="width:90px;flex-shrink:0;padding:10px 6px;font-size:13px">
-            <option value="2">2 ตัวหน้า</option><option value="3">3 ตัวหน้า</option>
-          </select>
-          <input id="v_hua" placeholder="00-0000" oninput="fmtPlate(this)" maxlength="8" style="flex:1">
+  </div>
+
+  <!-- === Admin Panel === -->
+  <div class="card admin-panel" id="adminPanel">
+    <div class="card-title">🛠️ แผงควบคุม</div>
+    <div class="admin-tabs">
+      <button class="admin-tab active" onclick="switchAdminTab('veh',this)">🚛 เบอร์รถ</button>
+      <button class="admin-tab" onclick="switchAdminTab('emp',this)">👤 รหัสพนักงาน</button>
+      <button class="admin-tab" onclick="switchAdminTab('data',this)">📋 ข้อมูล</button>
+    </div>
+
+    <!-- Vehicle management -->
+    <div class="admin-section show" id="adminVeh">
+      <div style="font-size:13px;color:#64748b;margin-bottom:8px">เพิ่มเบอร์รถและทะเบียน</div>
+      <div class="admin-add-row">
+        <input id="aVehNum" placeholder="เบอร์รถ (3 หลัก)" maxlength="3" oninput="this.value=this.value.replace(/[^0-9]/g,'').slice(0,3)">
+        <input id="aVehFront" placeholder="ป้ายหน้า" style="max-width:120px">
+        <input id="aVehBack" placeholder="ป้ายหลัง" style="max-width:120px">
+        <button onclick="addVehicle()">+</button>
+      </div>
+      <div class="admin-list" id="adminVehList"></div>
+    </div>
+
+    <!-- Employee management -->
+    <div class="admin-section" id="adminEmp">
+      <div style="font-size:13px;color:#64748b;margin-bottom:8px">เพิ่มรหัสพนักงาน</div>
+      <div class="admin-add-row">
+        <input id="aEmpCode" placeholder="เลข 4 หลัก" maxlength="4" oninput="this.value=this.value.replace(/[^0-9]/g,'').slice(0,4)">
+        <button onclick="addEmpCode()">+</button>
+      </div>
+      <div class="admin-list" id="adminEmpList"></div>
+    </div>
+
+    
+    <!-- Data view -->
+    <div class="admin-section" id="adminData">
+      <div style="font-size:13px;color:#64748b;margin-bottom:8px">ข้อมูลที่บันทึกแล้ว</div>
+      <div style="display:flex;gap:8px;margin-bottom:10px">
+        <button class="admin-tab" onclick="switchAdminDataTab('รถ',this)" style="background:#fff;border:1px solid #e2e8f0;padding:6px 14px;border-radius:8px;cursor:pointer;font-size:13px;font-family:Prompt,sans-serif">🚚 รถ</button>
+        <button class="admin-tab active" onclick="switchAdminDataTab('คน',this)" style="background:#fff;border:1px solid #e2e8f0;padding:6px 14px;border-radius:8px;cursor:pointer;font-size:13px;font-family:Prompt,sans-serif;background:#0f172a;color:#fff">🧑 คน</button>
+      </div>
+      <div class="admin-list" id="adminDataList" style="max-height:400px"></div>
+    </div>
+
+    <button class="admin-logout" onclick="doLogout()">🚪 ออกจากระบบ</button>
+  </div>
+
+</div>
+
+  <!-- MENU -->
+  <div id="pageMenu" class="page active">
+    <div class="menu-grid">
+      <div class="menu-card" onclick="goV()"><span class="icon">🚚</span><div class="name">อัพบัตรรถ</div><div class="desc">จัดการบัตรประจําตัวรถ</div></div>
+      <div class="menu-card" onclick="goD()"><span class="icon">🧑‍✈️</span><div class="name">อัพบัตรคน</div><div class="desc">จัดการบัตรพนักงานขับรถ</div></div>
+    </div>
+    <div class="card"><div class="card-title">📋 รายการล่าสุด</div><div id="recentList"><div style="text-align:center;color:#94a3b8;padding:20px">กำลังโหลด...</div></div></div>
+  </div>
+
+  <!-- VEHICLE FORM -->
+  <div id="pageV" class="page">
+    <div class="top-bar"><button class="back" onclick="goM()">‹</button><span class="title" id="vMode">อัพบัตรรถ</span></div>
+    <div class="card">
+      <div class="card-title">🚚 ข้อมูลรถ</div>
+      <div class="row r2">
+        <div><label>เบอร์รถ</label><input id="v_ber" placeholder="000" oninput="fmtBer(this)" maxlength="3"></div>
+        <div><label>จังหวัด</label><select id="v_province"><option>กทม</option><option>อื่น ๆ</option></select></div>
+      </div>
+      <div class="row r2">
+        <div><label>ทะเบียนหัว</label>
+          <div style="display:flex;gap:6px">
+            <select id="v_fmt_hua" onchange="updatePlateFmt()" style="width:90px;flex-shrink:0;padding:10px 6px;font-size:13px">
+              <option value="2">2 ตัวหน้า</option><option value="3">3 ตัวหน้า</option>
+            </select>
+            <input id="v_hua" placeholder="00-0000" oninput="fmtPlate(this)" maxlength="8" style="flex:1">
+          </div>
+        </div>
+        <div><label>ทะเบียนหาง</label>
+          <div style="display:flex;gap:6px">
+            <select id="v_fmt_hang" onchange="updatePlateFmt()" style="width:90px;flex-shrink:0;padding:10px 6px;font-size:13px">
+              <option value="2">2 ตัวหน้า</option><option value="3">3 ตัวหน้า</option>
+            </select>
+            <input id="v_hang" placeholder="00-0000" oninput="fmtPlate(this)" maxlength="8" style="flex:1">
+          </div>
         </div>
       </div>
-      <div><label>ทะเบียนหาง</label>
-        <div style="display:flex;gap:6px">
-          <select id="v_fmt_hang" onchange="updatePlateFmt()" style="width:90px;flex-shrink:0;padding:10px 6px;font-size:13px">
-            <option value="2">2 ตัวหน้า</option><option value="3">3 ตัวหน้า</option>
-          </select>
-          <input id="v_hang" placeholder="00-0000" oninput="fmtPlate(this)" maxlength="8" style="flex:1">
-        </div>
+    </div>
+    <div class="card">
+      <div class="card-title">📄 บัตรต่าง ๆ</div>
+      <div class="section-label">ธพน.2</div>
+      <div class="row"><div><label>ธพน.2 หมดอายุบัตร</label><input id="v_tho_e" placeholder="วัน/เดือน/ปี" oninput="fmtDate(this)" maxlength="10"></div></div>
+      <div class="section-label">ภาษี</div>
+      <div class="row"><div><label>ภาษี หมดอายุบัตร</label><input id="v_pasi_e" placeholder="วัน/เดือน/ปี" oninput="fmtDate(this)" maxlength="10"></div></div>
+      <div class="section-label">Thaioil SRC, Esso SRC, PTT-GC</div>
+      <div class="row r3">
+        <div><label>Thaioil SRC หมดอายุ</label><input id="v_c1_e" placeholder="วัน/เดือน/ปี" oninput="fmtDate(this)" maxlength="10"></div>
+        <div><label>Esso SRC หมดอายุ</label><input id="v_c2_e" placeholder="วัน/เดือน/ปี" oninput="fmtDate(this)" maxlength="10"></div>
+        <div><label>PTT-GC หมดอายุ</label><input id="v_c3_e" placeholder="วัน/เดือน/ปี" oninput="fmtDate(this)" maxlength="10"></div>
+      </div>
+      <div class="section-label">LLK Thappline, SRB Thappline, SPRC</div>
+      <div class="row r3">
+        <div><label>LLK Thappline หมดอายุ</label><input id="v_c4_e" placeholder="วัน/เดือน/ปี" oninput="fmtDate(this)" maxlength="10"></div>
+        <div><label>SRB Thappline หมดอายุ</label><input id="v_c5_e" placeholder="วัน/เดือน/ปี" oninput="fmtDate(this)" maxlength="10"></div>
+        <div><label>SPRC หมดอายุ</label><input id="v_c6_e" placeholder="วัน/เดือน/ปี" oninput="fmtDate(this)" maxlength="10"></div>
+      </div>
+      <div class="section-label">IRPC IRY & AU</div>
+      <div class="row"><div><label>IRPC IRY & AU หมดอายุบัตร</label><input id="v_c7_e" placeholder="วัน/เดือน/ปี" oninput="fmtDate(this)" maxlength="10"></div></div>
+      <div class="section-label">รูปเอกสาร</div>
+      <div class="upload-zone" onclick="document.getElementById('v_img').click()">
+        <span class="icn">📁</span>
+        <div class="txt">คลิกเลือกรูปหลายไฟล์</div>
+      </div>
+      <input type="file" id="v_img" accept="image/*" multiple style="display:none" onchange="onImg('v')">
+      <div id="v_preview" class="preview-grid"></div>
+      <div id="v_imgCount" class="preview-count"></div>
+    </div>
+    <button class="btn btn-primary" id="btnSaveV" onclick="saveV()">💾 บันทึกข้อมูลรถ</button>
+  </div>
+
+  <!-- DRIVER FORM -->
+  <div id="pageD" class="page">
+    <div class="top-bar"><button class="back" onclick="goM()">‹</button><span class="title" id="dMode">อัพบัตรคน</span></div>
+    <div class="card">
+      <div class="card-title">🧑‍✈️ ข้อมูลพนักงานขับรถ</div>
+      <div class="row r2">
+        <div><label>รหัสพนักงาน</label><input id="d_code" placeholder="เลข 4 ตัว" oninput="fmtCode(this)" maxlength="4"></div>
+        <div><label>เบอร์รถ</label><input id="d_ber" placeholder="000" oninput="fmtBer(this)" maxlength="3"></div>
+      </div>
+      <div class="row r2">
+        <div><label>ชื่อ</label><input id="d_name" placeholder="ชื่อ-นามสกุล"></div>
+        <div><label>เบอร์โทร</label><input id="d_phone" placeholder="เบอร์มือถือ" oninput="fmtPhone(this)" maxlength="10"></div>
       </div>
     </div>
+    <div class="card">
+      <div class="card-title">📄 บัตรต่าง ๆ</div>
+      <div class="section-label">Esso SRC, PTT-GC, LLK Thappline</div>
+      <div class="row r3">
+        <div><label>Esso SRC หมดอายุ</label><input id="d_c1_e" placeholder="วัน/เดือน/ปี" oninput="fmtDate(this)" maxlength="10"></div>
+        <div><label>PTT-GC หมดอายุ</label><input id="d_c2_e" placeholder="วัน/เดือน/ปี" oninput="fmtDate(this)" maxlength="10"></div>
+        <div><label>LLK Thappline หมดอายุ</label><input id="d_c3_e" placeholder="วัน/เดือน/ปี" oninput="fmtDate(this)" maxlength="10"></div>
+      </div>
+      <div class="section-label">SRB Thappline, SPRC, Thaioil SRC, IRPC</div>
+      <div class="row r2">
+        <div><label>SRB Thappline หมดอายุ</label><input id="d_c4_e" placeholder="วัน/เดือน/ปี" oninput="fmtDate(this)" maxlength="10"></div>
+        <div><label>SPRC หมดอายุ</label><input id="d_c5_e" placeholder="วัน/เดือน/ปี" oninput="fmtDate(this)" maxlength="10"></div>
+        <div><label>Thaioil SRC หมดอายุ</label><input id="d_c6_e" placeholder="วัน/เดือน/ปี" oninput="fmtDate(this)" maxlength="10"></div>
+        <div><label>IRPC IRY & AU หมดอายุ</label><input id="d_c7_e" placeholder="วัน/เดือน/ปี" oninput="fmtDate(this)" maxlength="10"></div>
+      </div>
+      <div class="section-label">รูปเอกสาร</div>
+      <div class="upload-zone" onclick="document.getElementById('d_img').click()">
+        <span class="icn">📁</span>
+        <div class="txt">คลิกเลือกรูปหลายไฟล์</div>
+      </div>
+      <input type="file" id="d_img" accept="image/*" multiple style="display:none" onchange="onImg('d')">
+      <div id="d_preview" class="preview-grid"></div>
+      <div id="d_imgCount" class="preview-count"></div>
+    </div>
+    <button class="btn btn-success" id="btnSaveD" onclick="saveD()">💾 บันทึกข้อมูลพนักงาน</button>
   </div>
-  <div class="card">
-    <div class="card-title">📄 บัตรต่าง ๆ</div>
-    <div class="section-label">ธพน.2</div>
-    <div class="row"><div><label>ธพน.2 หมดอายุบัตร</label><input id="v_tho_e" placeholder="วัน/เดือน/ปี" oninput="fmtDate(this)" maxlength="10"></div></div>
-    <div class="section-label">ภาษี</div>
-    <div class="row"><div><label>ภาษี หมดอายุบัตร</label><input id="v_pasi_e" placeholder="วัน/เดือน/ปี" oninput="fmtDate(this)" maxlength="10"></div></div>
-    <div class="section-label">Thaioil SRC, Esso SRC, PTT-GC</div>
-    <div class="row r3">
-      <div><label>Thaioil SRC หมดอายุ</label><input id="v_c1_e" placeholder="วัน/เดือน/ปี" oninput="fmtDate(this)" maxlength="10"></div>
-      <div><label>Esso SRC หมดอายุ</label><input id="v_c2_e" placeholder="วัน/เดือน/ปี" oninput="fmtDate(this)" maxlength="10"></div>
-      <div><label>PTT-GC หมดอายุ</label><input id="v_c3_e" placeholder="วัน/เดือน/ปี" oninput="fmtDate(this)" maxlength="10"></div>
-    </div>
-    <div class="section-label">LLK Thappline, SRB Thappline, SPRC</div>
-    <div class="row r3">
-      <div><label>LLK Thappline หมดอายุ</label><input id="v_c4_e" placeholder="วัน/เดือน/ปี" oninput="fmtDate(this)" maxlength="10"></div>
-      <div><label>SRB Thappline หมดอายุ</label><input id="v_c5_e" placeholder="วัน/เดือน/ปี" oninput="fmtDate(this)" maxlength="10"></div>
-      <div><label>SPRC หมดอายุ</label><input id="v_c6_e" placeholder="วัน/เดือน/ปี" oninput="fmtDate(this)" maxlength="10"></div>
-    </div>
-    <div class="section-label">IRPC IRY & AU</div>
-    <div class="row"><div><label>IRPC IRY & AU หมดอายุบัตร</label><input id="v_c7_e" placeholder="วัน/เดือน/ปี" oninput="fmtDate(this)" maxlength="10"></div></div>
-    <div class="section-label">รูปเอกสาร</div>
-    <div class="upload-zone" onclick="document.getElementById('v_img').click()">
-      <span class="icn">📁</span>
-      <div class="txt">คลิกเลือกรูปหลายไฟล์</div>
-    </div>
-    <input type="file" id="v_img" accept="image/*" multiple style="display:none" onchange="onImg('v')">
-    <div id="v_preview" class="preview-grid"></div>
-    <div id="v_imgCount" class="preview-count"></div>
+
+  <div class="toast" id="toast"></div>
   </div>
-  <button class="btn btn-primary" id="btnSaveV" onclick="saveV()">💾 บันทึกข้อมูลรถ</button>
-</div>
 
-<!-- DRIVER FORM -->
-<div id="pageD" class="page">
-  <div class="top-bar"><button class="back" onclick="goM()">‹</button><span class="title" id="dMode">อัพบัตรคน</span></div>
-  <div class="card">
-    <div class="card-title">🧑‍✈️ ข้อมูลพนักงานขับรถ</div>
-    <div class="row r3">
-      <div><label>เบอร์รถ</label><input id="d_ber" placeholder="000" oninput="fmtBer(this)" maxlength="3"></div>
-      <div><label>ชื่อ</label><input id="d_name" placeholder="ชื่อ-นามสกุล"></div>
-      <div><label>เบอร์โทร</label><input id="d_phone" placeholder="เบอร์มือถือ" oninput="fmtPhone(this)" maxlength="10"></div>
-    </div>
-  </div>
-  <div class="card">
-    <div class="card-title">📄 บัตรต่าง ๆ</div>
-    <div class="section-label">Esso SRC, PTT-GC, LLK Thappline</div>
-    <div class="row r3">
-      <div><label>Esso SRC หมดอายุ</label><input id="d_c1_e" placeholder="วัน/เดือน/ปี" oninput="fmtDate(this)" maxlength="10"></div>
-      <div><label>PTT-GC หมดอายุ</label><input id="d_c2_e" placeholder="วัน/เดือน/ปี" oninput="fmtDate(this)" maxlength="10"></div>
-      <div><label>LLK Thappline หมดอายุ</label><input id="d_c3_e" placeholder="วัน/เดือน/ปี" oninput="fmtDate(this)" maxlength="10"></div>
-    </div>
-    <div class="section-label">SRB Thappline, SPRC, Thaioil SRC, IRPC</div>
-    <div class="row r2">
-      <div><label>SRB Thappline หมดอายุ</label><input id="d_c4_e" placeholder="วัน/เดือน/ปี" oninput="fmtDate(this)" maxlength="10"></div>
-      <div><label>SPRC หมดอายุ</label><input id="d_c5_e" placeholder="วัน/เดือน/ปี" oninput="fmtDate(this)" maxlength="10"></div>
-      <div><label>Thaioil SRC หมดอายุ</label><input id="d_c6_e" placeholder="วัน/เดือน/ปี" oninput="fmtDate(this)" maxlength="10"></div>
-      <div><label>IRPC IRY & AU หมดอายุ</label><input id="d_c7_e" placeholder="วัน/เดือน/ปี" oninput="fmtDate(this)" maxlength="10"></div>
-    </div>
-    <div class="section-label">รูปเอกสาร</div>
-    <div class="upload-zone" onclick="document.getElementById('d_img').click()">
-      <span class="icn">📁</span>
-      <div class="txt">คลิกเลือกรูปหลายไฟล์</div>
-    </div>
-    <input type="file" id="d_img" accept="image/*" multiple style="display:none" onchange="onImg('d')">
-    <div id="d_preview" class="preview-grid"></div>
-    <div id="d_imgCount" class="preview-count"></div>
-  </div>
-  <button class="btn btn-success" id="btnSaveD" onclick="saveD()">💾 บันทึกข้อมูลพนักงาน</button>
-</div>
+  <script>
+  // *** วาง URL จาก Apps Script Deploy ตรงนี้ ***
+  const API = 'https://script.google.com/macros/s/AKfycbyuU-gGfMhIMKlEHbiRTd01Tcd2JGeXIDybGkg9VWPCEMJl6OsUf2qrCAgVudJ_Bg6v1A/exec';
 
-<div class="toast" id="toast"></div>
-</div>
+  function $(id){return document.getElementById(id)}
+  function goM(){$('pageMenu').className='page active';$('pageV').className='page';$('pageD').className='page';loadR()}
+  function goV(){$('pageMenu').className='page';$('pageV').className='page active';$('pageD').className='page'}
+  function goD(){$('pageMenu').className='page';$('pageV').className='page';$('pageD').className='page active'}
+  function g(id){return $(id).value.trim()}
+  function toast(m){var t=$('toast');t.textContent=m;t.className='toast show';setTimeout(function(){t.className='toast'},2500)}
 
-<script>
-// *** วาง URL จาก Apps Script Deploy ตรงนี้ ***
-const API = 'https://script.google.com/macros/s/AKfycbyuU-gGfMhIMKlEHbiRTd01Tcd2JGeXIDybGkg9VWPCEMJl6OsUf2qrCAgVudJ_Bg6v1A/exec';
-
-function $(id){return document.getElementById(id)}
-function goM(){$('pageMenu').className='page active';$('pageV').className='page';$('pageD').className='page';loadR()}
-function goV(){$('pageMenu').className='page';$('pageV').className='page active';$('pageD').className='page'}
-function goD(){$('pageMenu').className='page';$('pageV').className='page';$('pageD').className='page active'}
-function g(id){return $(id).value.trim()}
-function toast(m){var t=$('toast');t.textContent=m;t.className='toast show';setTimeout(function(){t.className='toast'},2500)}
-
-function fmtPlate(el){
-  var fmt=$(el.id.replace('v_h','v_fmt_h'));
-  var n=fmt&&fmt.value==='3'?3:2;
-  var v=el.value.replace(/[^0-9]/g,'').slice(0,n+4);
-  if(v.length>n) v=v.slice(0,n)+'-'+v.slice(n);
-  el.value=v;
-}
-function updatePlateFmt(){
-  ['v_hua','v_hang'].forEach(function(id){
-    var el=$(id);
-    if(!el)return;
-    var fmt=$(id.replace('v_h','v_fmt_h'));
-    if(!fmt)return;
-    var n=fmt.value==='3'?3:2;
-    el.maxLength=n+5;
-    el.placeholder=n===3?'000-0000':'00-0000';
+  function fmtPlate(el){
+    var fmt=$(el.id.replace('v_h','v_fmt_h'));
+    var n=fmt&&fmt.value==='3'?3:2;
     var v=el.value.replace(/[^0-9]/g,'').slice(0,n+4);
     if(v.length>n) v=v.slice(0,n)+'-'+v.slice(n);
     el.value=v;
-  });
-}
-function fmtBer(el){el.value=el.value.replace(/[^0-9]/g,'').slice(0,3)}
-function fmtPhone(el){el.value=el.value.replace(/[^0-9]/g,'').slice(0,10)}
-function fmtDate(el){el.value=el.value.replace(/[^0-9]/g,'').replace(/^(\d{2})(\d)/,'$1/$2').replace(/^(\d{2}\/\d{2})(\d)/,'$1/$2').slice(0,10)}
-
-function normalizeDate(v){
-  if(!v||!(v=v.trim()))return '';
-  var p=v.split('/');
-  if(p.length!==3)return v;
-  var d=parseInt(p[0]),m=parseInt(p[1]),y=parseInt(p[2]);
-  if(isNaN(d)||isNaN(m)||isNaN(y))return '';
-  if(d<1||d>31||m<1||m>12)return '';
-  var dd=d<10?'0'+d:''+d;
-  var mm=m<10?'0'+m:''+m;
-  if(y<100) y+=y>=60?2500:2543; // ≥60 → พ.ศ. 2 หลัก (2560-2599), &lt;60 → ค.ศ. 2 หลัก (25+2543=2568)
-  else if(y>1000&&y<2500)y+=543; // ค.ศ. → พ.ศ.
-  return dd+'/'+mm+'/'+y;
-}
-
-function fmtDateBlur(el){
-  var v=el.value.trim();
-  if(!v){el.value='';return}
-  var p=v.split('/');
-  if(p.length<3){toast('❌ กรุณากรอกวันเดือนปีให้ครบ (วว/ดด/ปปปป)');el.value='';el.focus();return}
-  var n=normalizeDate(v);
-  if(!n){toast('❌ รูปแบบวันที่ไม่ถูกต้อง');el.value='';return}
-  el.value=n;
-}
-
-window.addEventListener('DOMContentLoaded',function(){
-  document.querySelectorAll('input[maxlength="10"]').forEach(function(el){
-    if(el.getAttribute('oninput')&&el.getAttribute('oninput').indexOf('fmtDate')>=0)
-      el.addEventListener('blur',function(){fmtDateBlur(this)});
-  });
-});
-
-var editKeyV='',editKeyD='',editImgsV='',editImgsD='';
-
-function clr(){
-  ['v_ber','v_hua','v_hang','v_tho_e','v_pasi_e',
-   'v_c1_e','v_c2_e','v_c3_e','v_c4_e','v_c5_e','v_c6_e','v_c7_e'].forEach(function(id){$(id).value=''});
-  ['d_ber','d_name','d_phone',
-   'd_c1_e','d_c2_e','d_c3_e','d_c4_e','d_c5_e','d_c6_e','d_c7_e'].forEach(function(id){$(id).value=''});
-  $('vMode').textContent='อัพบัตรรถ';
-  $('dMode').textContent='อัพบัตรคน';
-  editKeyV='';editKeyD='';editImgsV='';editImgsD='';
-  removeImgs('v');removeImgs('d');
-}
-function apiGet(params){
-  var url=API+'?'+Object.keys(params).map(function(k){
-    return encodeURIComponent(k)+'='+encodeURIComponent(params[k]);
-  }).join('&');
-  return fetch(url).then(function(r){return r.json()});
-}
-function apiPost(body){
-  var payload=JSON.stringify(body);
-  // ถ้า payload มี base64 หรือใหญ่เกินไป ใช้ POST โดยตรง (GET+payload URL จะยาวเกินไป)
-  if (payload.length > 5000 || payload.indexOf('data:image') >= 0 || payload.indexOf(';base64,') >= 0) {
-    return new Promise(function(resolve){
-      var x=new XMLHttpRequest();
-      x.open('POST',API);
-      x.onload=function(){
-        try{
-          var d=JSON.parse(x.responseText);
-          resolve(Array.isArray(d)?{created:1,updated:0}:d);
-        }catch(e){resolve({created:1,updated:0})}
-      };
-      x.onerror=function(){resolve({error:'network error'})};
-      x.send(payload);
+  }
+  function updatePlateFmt(){
+    ['v_hua','v_hang'].forEach(function(id){
+      var el=$(id);
+      if(!el)return;
+      var fmt=$(id.replace('v_h','v_fmt_h'));
+      if(!fmt)return;
+      var n=fmt.value==='3'?3:2;
+      el.maxLength=n+5;
+      el.placeholder=n===3?'000-0000':'00-0000';
+      var v=el.value.replace(/[^0-9]/g,'').slice(0,n+4);
+      if(v.length>n) v=v.slice(0,n)+'-'+v.slice(n);
+      el.value=v;
     });
   }
-  // payload เล็ก → ใช้ GET+payload (เลี่ยง 302 redirect, ได้ response จริงจาก doPost)
-  return fetch(API+'?payload='+encodeURIComponent(payload)).then(function(r){
-    return r.json();
-  }).then(function(res){
-    if(res&&res.error) return res;
-    if(Array.isArray(res)) return {created:1,updated:0};
-    return res;
-  }).catch(function(){
-    return new Promise(function(resolve){
-      var x=new XMLHttpRequest();
-      x.open('POST',API);
-      x.onload=function(){
-        try{
-          var d=JSON.parse(x.responseText);
-          resolve(Array.isArray(d)?{created:1,updated:0}:d);
-        }catch(e){resolve({created:1,updated:0})}
-      };
-      x.onerror=function(){resolve({error:'network error'})};
-      x.send(payload);
+  function fmtBer(el){el.value=el.value.replace(/[^0-9]/g,'').slice(0,3)}
+  function fmtPhone(el){el.value=el.value.replace(/[^0-9]/g,'').slice(0,10)}
+  function fmtCode(el){el.value=el.value.replace(/[^0-9]/g,'').slice(0,4)}
+  function fmtDate(el){el.value=el.value.replace(/[^0-9]/g,'').replace(/^(\d{2})(\d)/,'$1/$2').replace(/^(\d{2}\/\d{2})(\d)/,'$1/$2').slice(0,10)}
+
+  function normalizeDate(v){
+    if(!v||!(v=v.trim()))return '';
+    var p=v.split('/');
+    if(p.length!==3)return v;
+    var d=parseInt(p[0]),m=parseInt(p[1]),y=parseInt(p[2]);
+    if(isNaN(d)||isNaN(m)||isNaN(y))return '';
+    if(d<1||d>31||m<1||m>12)return '';
+    var dd=d<10?'0'+d:''+d;
+    var mm=m<10?'0'+m:''+m;
+    if(y<100) y+=y>=60?2500:2543; // ≥60 → พ.ศ. 2 หลัก (2560-2599), &lt;60 → ค.ศ. 2 หลัก (25+2543=2568)
+    else if(y>1000&&y<2500)y+=543; // ค.ศ. → พ.ศ.
+    return dd+'/'+mm+'/'+y;
+  }
+
+  function fmtDateBlur(el){
+    var v=el.value.trim();
+    if(!v){el.value='';return}
+    var p=v.split('/');
+    if(p.length<3){toast('❌ กรุณากรอกวันเดือนปีให้ครบ (วว/ดด/ปปปป)');el.value='';el.focus();return}
+    var n=normalizeDate(v);
+    if(!n){toast('❌ รูปแบบวันที่ไม่ถูกต้อง');el.value='';return}
+    el.value=n;
+  }
+
+  window.addEventListener('DOMContentLoaded',function(){
+    document.querySelectorAll('input[maxlength="10"]').forEach(function(el){
+      if(el.getAttribute('oninput')&&el.getAttribute('oninput').indexOf('fmtDate')>=0)
+        el.addEventListener('blur',function(){fmtDateBlur(this)});
     });
   });
-}
 
-// ====== Plate whitelist ======
-var PLATE_RAW = `62-0923
-62-0925
-62-0927
-62-0929
-62-0931
-62-2723
-62-2725
-62-2727
-62-2729
-62-2731
-62-3120
-62-3122
-62-3124
-62-3308
-62-3310
-62-3312
-62-3314
-62-3316
-62-3318
-62-3320
-62-3628
-62-3630
-62-3632
-62-3634
-62-3638
-62-3894
-62-3896
-62-3898
-62-3900
-62-3902
-62-3904
-62-3906
-62-3908
-62-3910
-62-3912
-62-5404
-62-5406
-62-5408
-62-8717
-62-8719
-62-8721
-62-8723
-62-8725
-62-9542
-62-9545
-62-9547
-62-9549
-62-9551
-62-9553
-62-9556
-62-9560
-62-9562
-62-9564
-63-0685
-63-0687
-63-0689
-63-0692
-63-0693
-63-0695
-63-0697
-63-0699
-63-0701
-63-0703
-63-1139
-63-1141
-63-1143
-63-1146
-63-1148
-63-1150
-63-1152
-63-1689
-63-1691
-63-1693
-63-1696
-63-1698
-63-1721
-63-1723
-63-1725
-63-1727
-63-1729
-63-3890
-63-3892
-63-3896
-63-3898
-63-3900
-63-3904
-63-3906
-63-3908
-63-3910
-63-3912
-63-3914
-63-3916
-63-3918
-63-3920
-63-3922
-63-4961
-63-4963
-63-4965
-63-4967
-63-4969
-63-6560
-63-6562
-63-6564
-63-6568
-63-6570
-63-6572
-63-6574
-63-6576
-63-6578
-63-6580
-63-7193
-63-7194
-63-7196
-63-7198
-63-7200
-63-7202
-63-7204
-63-7206
-63-7208
-63-7210
-63-8230
-63-8232
-63-8234
-63-8236
-63-8238
-63-9112
-63-9114
-63-9116
-63-9118
-63-9120
-63-9122
-63-9124
-63-9126
-63-9128
-63-9130
-63-0393
-64-0670
-64-0672
-64-0674
-64-0676
-64-0679
-64-0681
-64-0683
-64-0685
-64-0687
-64-0689
-64-1014
-64-1016
-64-1018
-64-1021
-64-1023
-64-9126
-65-0293
-65-0295
-65-0297
-65-0299
-65-0301
-65-0303
-65-0305
-65-0307
-65-0309
-65-0311
-65-3829
-65-3831
-65-3833
-65-3835
-65-3837
-65-3841
-65-3844
-65-3847
-65-3850
-65-3852
-65-4570
-65-4573
-65-4575
-65-4577
-65-4579
-65-4582
-65-4584
-65-4586
-65-4588
-65-4592
-65-6415
-65-6417
-65-6419
-65-6421
-65-6423
-65-6425
-65-6427
-65-6429
-65-6431
-65-6433
-65-7536
-65-7538
-65-7540
-65-7542
-65-7544
-65-7546
-65-7548
-65-7550
-65-7552
-65-7554
-65-8444
-65-8446
-65-8448
-65-8450
-65-8452
-65-8454
-65-8456
-65-8458
-65-8460
-65-8462
-65-8614
-65-8616
-65-8618
-65-8620
-65-8622
-66-2512
-66-2514
-66-2516
-66-2518
-66-2520
-66-2522
-66-2524
-66-2526
-66-2528
-66-2530
-66-2921
-66-2927
-66-2932
-66-2935
-66-2938
-66-2942
-66-2945
-66-2949
-66-2953
-66-2958
-67-0228
-67-0229
-67-0231
-67-0232
-67-0234
-67-0637
-67-0640
-67-0641
-67-0642
-67-0643
-67-0947
-67-0948
-67-0949
-67-0950
-67-0951
-67-0952
-67-0953
-67-0954
-67-0955
-67-0956
-68-8661
-68-8662
-68-8663
-68-8664
-68-8665
-68-8666
-68-8667
-68-8669
-68-8670
-68-8671
-69-3761
-69-3762
-69-3763
-69-3764
-69-3765
-69-3766
-69-3767
-69-3768
-69-3769
-69-3770
-69-3897
-69-3899
-69-3901
-69-3903
-69-3905
-69-3907
-69-3909
-69-3911
-69-3913
-69-3915
-69-3917
-69-3919
-69-3921
-69-3923
-69-3924
-69-4685
-69-4686
-69-4687
-69-4688
-69-4689
-69-4690
-69-4691
-69-4692
-69-4693
-69-4694
-69-4695
-69-4696
-69-4697
-69-4698
-69-4699
-69-9717
-700-2196
-700-2197
-700-2198
-700-2199
-700-2200
-700-2201
-700-2202
-700-2203
-700-2204
-700-2205
-700-2206
-700-2207
-700-2208
-700-2210
-700-2211
-700-2212
-700-2214
-700-2215
-700-2216
-700-2217
-700-2218
-700-2219
-700-2220
-700-2221
-700-2223
-700-2225
-700-2226
-700-2227
-700-2228
-700-2230`;
+  var editKeyV='',editKeyD='',editImgsV='',editImgsD='';
 
-var PLATE_LIST = PLATE_RAW.split('\n').map(function(s){return s.replace(/[^0-9-]/g,'')}).filter(function(s,i,a){return s&&a.indexOf(s)===i});
+  function clr(){
+    ['v_ber','v_hua','v_hang','v_tho_e','v_pasi_e',
+    'v_c1_e','v_c2_e','v_c3_e','v_c4_e','v_c5_e','v_c6_e','v_c7_e'].forEach(function(id){$(id).value=''});
+    ['d_code','d_ber','d_name','d_phone',
+    'd_c1_e','d_c2_e','d_c3_e','d_c4_e','d_c5_e','d_c6_e','d_c7_e'].forEach(function(id){$(id).value=''});
+    $('vMode').textContent='อัพบัตรรถ';
+    $('dMode').textContent='อัพบัตรคน';
+    editKeyV='';editKeyD='';editImgsV='';editImgsD='';
+    removeImgs('v');removeImgs('d');
+  }
+  function apiGet(params){
+    var url=API+'?'+Object.keys(params).map(function(k){
+      return encodeURIComponent(k)+'='+encodeURIComponent(params[k]);
+    }).join('&');
+    return fetch(url).then(function(r){return r.json()});
+  }
+  function apiPost(body){
+    var payload=JSON.stringify(body);
+    // ถ้า payload มี base64 หรือใหญ่เกินไป ใช้ POST โดยตรง (GET+payload URL จะยาวเกินไป)
+    if (payload.length > 5000 || payload.indexOf('data:image') >= 0 || payload.indexOf(';base64,') >= 0) {
+      return new Promise(function(resolve){
+        var x=new XMLHttpRequest();
+        x.open('POST',API);
+        x.onload=function(){
+          try{
+            var d=JSON.parse(x.responseText);
+            resolve(Array.isArray(d)?{created:1,updated:0}:d);
+          }catch(e){resolve({created:1,updated:0})}
+        };
+        x.onerror=function(){resolve({error:'network error'})};
+        x.send(payload);
+      });
+    }
+    // payload เล็ก → ใช้ GET+payload (เลี่ยง 302 redirect, ได้ response จริงจาก doPost)
+    return fetch(API+'?payload='+encodeURIComponent(payload)).then(function(r){
+      return r.json();
+    }).then(function(res){
+      if(res&&res.error) return res;
+      if(Array.isArray(res)) return {created:1,updated:0};
+      return res;
+    }).catch(function(){
+      return new Promise(function(resolve){
+        var x=new XMLHttpRequest();
+        x.open('POST',API);
+        x.onload=function(){
+          try{
+            var d=JSON.parse(x.responseText);
+            resolve(Array.isArray(d)?{created:1,updated:0}:d);
+          }catch(e){resolve({created:1,updated:0})}
+        };
+        x.onerror=function(){resolve({error:'network error'})};
+        x.send(payload);
+      });
+    });
+  }
 
-// ====== Phone whitelist auth ======
-var PHONE_RAW = `092-9716201
-098-1109445
-085-6975885
-064-9342187
-095-1160303
-087-8310203
-096-9727578
-063-9219976
-062-2046880
-098-5033495
-063-1837865
-091-8860851
-081-0911067
-086-2454353
-088-6503630
-080-7541260
-085-3875421
-097-2739592
-098-5749736
-095-5042085
-082-9945366
-093-2167105
-065-6264762
-062-7620967
-061-1404003
-096-6634159
-082-9136463
-081-3570171
-063-4087277
-099-2783495
-065-2377663
-087-8338896
-090-9566361
-062-5736136
-065-5982598
-065-2271606
-084-3569148
-087-0535950
-082-9549229
-061-9947949
-063-4251646
-094-0592106
-063-8670300
-063-8744565
-098-8407540
-093-6664652
-061-1124023
-092-3212648
-085-4347882
-082-4642578
-097-1188132
-061-8138771
-063-5965637
-093-5415041
-095-2466138
-088-3139685
-083-0196850
-094-3304422
-065-1166688
-097-3313220
-081-2863294
-092-2561139
-086-4438497
-082-0566570
-092-4810537
-097-2325534
-088-9739496
-085-5077151
-062-7573469
-081-8726499
-096-7747276
-092-8628337
-061-3126029
-062-5548668
-080-3360800
-093-4436990
-091-8671016
-095-5581739
-092-2765758
-085-1251230
-080-0616899
-062-9083490
-094-8811039
-098-8282292
-065-4874136
-084-7727372
-080-1568957
-083-5273592
-061-4369767
-093-5254094
-095-1841458
-062-8141531
-097-1087264
-095-5717415
-095-1277486
-084-9299082
-093-2876922
-061-2928651
-084-9072210
-063-1184665
-092-6519592
-098-6159166
-087-1142696
-097-2811613
-083-3846008
-090-1869451
-095-4785853
-091-7906327
-089-9949475
-080-9345346
-065-5684614
-098-6859468
-094-4657045
-086-8907004
-093-1198927
-082-9522450
-098-9580924
-095-0161324
-097-2061074
-098-3573719
-064-0977888
-063-8902266
-092-3522905
-092-3872931
-090-2971644
-080-6259053
-083-0409894
-098-9712409
-095-9195234
-098-7422264
-090-3868332
-088-2999594
-098-8857792
-062-2644619
-095-4970460
-094-4429652
-095-1186485
-062-7104695
-096-1849819
-084-7844300
-061-4850781
-093-6524164
-098-1275620
-080-5004653
-085-2872539
-065-3676999
-092-2876263
-093-0938739
-093-7262508
-091-3381826
-061-3531309
-092-4672276
-083-0820032
-063-1452473
-061-3909202
-098-2769022
-096-8574433
-061-8655687
-062-4422565
-062-9325328
-095-7204451
-092-7855155
-094-6350721
-088-0782410
-080-4832053
-080-6346523
-065-9586646
-083-8906815
-097-2926659
-092-9974529
-086-7882451
-096-9230417
-097-2916437
-085-5616619
-062-3208323
-080-2608157
-083-4804320
-096-2701099
-096-7035728
-086-0268623
-092-9607375
-062-5163031
-061-3671348
-083-0436579
-065-5290048
-096-1400758
-061-6582824
-087-1655515
-062-5178381
-097-1264824
-095-6584736
-064-9914966
-085-1877400
-097-3601512
-092-3793411
-061-6217742
-089-2244114
-084-8360753
-092-7840188
-085-6978596
-090-4267206
-089-8196074
-065-4473189
-063-1206672
-080-1630859
-096-6876505
-084-3250273
-095-8397768
-082-5345891
-081-2575945
-094-8471095
-087-9633664
-098-8257475
-087-5189346
-092-8263136
-065-5913718
-094-9304956
-097-0541795
-087-6131001
-093-4319811
-063-4012538
-093-4983598
-095-2617325
-088-6123119
-099-9582779
-084-9453227
-084-8263395
-095-8422346
-065-4946743
-062-5521578
-064-5611195
-093-5179721
-085-2003449
-062-0019522
-094-6292643
-097-0652249
-092-6787711
-061-9292596
-065-0865797
-098-9018897
-096-9133547
-084-8651898
-094-8537069
-095-7614543
-092-7951327
-080-0980424
-098-6527150
-091-8455150
-088-6845917
-089-2131318
-063-6070421
-098-9038815
-083-2269568
-081-6405929
-064-2586884
-081-1366927
-065-2595896
-098-2672920
-061-0828395
-099-1984481
-094-1276463
-087-5870903
-085-3373900
-087-2622324
-065-4638971
-085-4244719
-085-2092994
-088-9091730
-099-6252532
-097-0962929
-080-3921514
-093-4606559
-086-2343472
-089-2181729
-080-0472529
-081-1496720
-085-0755745
-061-8614900
-087-0354186
-092-9179523
-081-2969419
-094-7956113
-098-5471453
-062-1273325
-096-7353690
-085-9047146
-084-3103512
-093-3643447
-098-7359888
-097-7907864
-065-6087593
-097-0798610
-081-1853700
-092-3234624
-065-6399761
-087-2662071
-093-7943595
-093-0831997
-082-1915575
-064-3520060
-062-0840030
-092-7481084
-082-4734426
-089-0999808
-083-9476798
-080-3399382
-099-4939414
-063-2688191
-090-4282451
-085-2336535
-084-7275809
-084-0692478
-098-2855449
-064-9472632
-064-2562639
-086-1482914
-092-8137326
-095-8877871
-062-5729786
-064-6197683
-095-5420898
-082-0073075
-091-8405974
-096-4410713
-081-4878934
-093-5583997
-098-4845346
-098-2754270
-089-3183318
-092-6196269
-081-6804834
-064-6758603
-093-3285545
-094-3219992
-081-1366927
-090-4112537
-092-7915689
-087-6524753
-091-7721812
-097-9959396
-093-1519159
-096-8092797
-061-1418340
-094-7910932
-080-0051664
-062-5820191
-095-0495502
-094-6825011
-066-1034384
-062-8267139
-094-7194585
-065-5757899
-061-6481608
-085-0626347
-092-7936837
-065-4069724
-088-5443419
-063-3856076
-061-5944730
-080-8923005
-061-5214542
-089-0793575
-086-0542213
-087-9266753
-098-5698500
-098-5173156
-087-9600875
-089-7460775
-098-6562524
-085-4842133
-064-6267314
-061-0958593
-087-9456365
-087-9213155
-082-5205904
-063-1474888
-092-4623687
-093-0985665
-095-7208238
-065-7566082
-081-8566849
-063-9396660
-098-7591657
-080-1598759
-064-7480130
-062-5136317
-090-2814689
-062-3080371
-063-6475593
-090-7655123
-065-7012589
-064-4100949
-061-6093955
-065-6572030
-097-9265411
-098-9741837
-093-4892172
-062-3382423
-081-2582087
-082-5579007
-065-2120177
-084-5058575
-082-3172289
-098-3918446
-097-9454515
-065-5816841
-099-3109421
-061-1157106
-064-4527836
-092-6457999
-098-5508555
-089-2455607
-062-4382448
-093-5645640
-098-9135489
-080-9909353
-093-6659886
-092-9424697
-080-6083921
-065-9511987
-087-7840816
-081-9933759
-092-2940218
-085-5366747
-063-7350634
-093-5028565
-081-2812149
-065-0303934
-089-0396988
-061-2491382
-065-3026244
-080-9385683
-094-4050987
-092-9357554
-092-6915641
-063-0098237
-099-7945746
-092-4176556
-095-1861929
-092-6288179
-093-2812948
-082-3570928
-061-6309513
-098-4499681
-064-6528649
-088-2193637
-096-0100613
-083-9637071
-095-9019497
-063-7849379
-087-0000385
-090-2188881
-098-0281150
-098-0489579
-064-0518205
-084-8441663
-062-1510654
-093-3763471
-098-6473987
-093-1365080
-061-7745566
-089-0628411
-061-5608905
-098-4080100
-065-5382861
-097-1244606
-089-6923655
-063-6680705
-094-9191181
-092-9644711
-064-8038230
-064-6755394
-092-6866029
-090-7687495
-085-5039362
-098-2856151
-095-4423766
-062-8814326
-061-8625709
-094-2151679
-062-8395539
-091-1817132
-061-5520967
-095-6793314
-080-8955428
-086-1592500
-091-2363989
-094-6453226
-062-2648748
-082-5626562
-083-9045338
-061-7813303
-095-8536764
-089-2335884
-097-0193736
-099-2586399
-096-4075001
-085-8059367
-061-5613491
-064-2070908
-099-1694651
-064-6565560
-064-3297830
-065-3257958
-065-3285026
-084-6223638
-093-6480362
-086-7032309
-062-5573700
-083-4163926
-092-0255128
-091-8379414
-094-7197424
-092-3757123
-093-8629060
-085-3229301
-095-7578859
-094-6566703
-098-5658530
-092-5696145
-096-9290996
-064-5203494
-062-4655237
-095-7102141
-092-9366889
-081-0735378
-0816406634
-092-5564033
-081-3835245
-065-6285496
-080-5252943
-092-5260244
-065-5397059
-097-1130818
-061-4056072
-095-5536741
-098-9012633
-061-4853238
-089-9320795
-081-5916450
-085-0198987
-098-8437303
-089-7478859
-085-2662594
-086-0731246
-064-9891663
-081-6549322
-092-2586309
-096-1120441
-061-8476169
-092-6136698
-092-6493408
-081-4411811
-081-4181172
-081-4182753
-064-5737875
-080-7840128
-086-7666841
-065-5369028
-096-1122288
-096-8062950
-098-1575731
-062-2581872
-083-7693370
-063-3285135
-082-8613852
-096-0676342
-062-8137782
-092-8763002
-080-1162954
-083-8659356
-061-4271905
-061-8123773
-080-7162066
-089-0922173
-080-0239752
-061-5063203
-095-2728146
-098-2525591
-094-9128602
-061-4537160
-061-3502877
-061-6911414
-065-0748812
-064-5297359
-098-0280856
-083-2620847
-063-1715976
-098-3765154
-098-3527549
-084-1975510
-085-8842839
-092-6588654
-061-3849360
-094-6813928
-080-7726920
-098-9013790
-062-1490724
-085-2968635
-098-6513541
-099-3677762
-061-9878199
-064-6293084
-098-7138024
-093-0868786
-064-9466714
-083-6227002
-096-9305389
-082-5744790
-092-8910886
-065-5869120
-062-8721889
-062-6760978
-092-2584724
-065-7532482
-063-7279326
-092-3498233
-063-5953668
-085-2232450
-098-4289002
-095-9312920
-092-5369818
-081-7637443
-087-0466558
-089-6074936
-097-5565985
-085-2484641
-066-1242438
-091-7256660
-098-3714647
-090-8924586
-063-1211812
-080-6761798
-061-3806497
-063-9340187
-064-4387526
-098-8845822
-062-5528953
-099-1341161
-065-4230900
-096-1544639
-094-3067932
-092-8537971
-093-0033638
-082-2949476
-061-0816682
-081-3677901
-093-3597701
-088-0455631
-097-3219712
-099-3543149
-098-4309090
-084-3597532
-082-1818699
-098-6142665
-063-6721413
-096-9239578
-093-1576733
-065-9523404
-092-7860964
-091-7366131
-094-3658804
-065-6867001
-085-5683957
-080-1594109
-081-1524717
-095-1489671
-093-2489165
-094-4722324
-088-5677671
-096-2545810
-082-2759894
-064-2431028
-093-6746318
-098-2833261
-090-2434854
-093-3596711`;
+  // ====== Vehicle plate data ======
+  // Map of vehicle number -> {h: front plate, b: back plate}
+  // 339 vehicles total. 298 have both front & back, 40 have front only (NO.238-277)
+  var VEHICLE_DATA = {
+"01":{h:"62-0923",b:"62-0924"},"02":{h:"62-0925",b:"62-0926"},"03":{h:"62-0927",b:"62-0928"},"04":{h:"62-0929",b:"62-0930"},"05":{h:"62-0931",b:"62-0932"},
+"06":{h:"62-2723",b:"62-2724"},"07":{h:"62-2725",b:"62-2726"},"08":{h:"62-2727",b:"62-2728"},"09":{h:"62-2729",b:"62-2730"},"10":{h:"62-2731",b:"62-2732"},
+"11":{h:"62-3120",b:"62-3121"},"12":{h:"62-3122",b:"62-3123"},"13":{h:"62-3124",b:"62-3125"},"14":{h:"62-3308",b:"62-3309"},"15":{h:"62-3310",b:"62-3311"},
+"16":{h:"62-3312",b:"62-3313"},"17":{h:"62-3314",b:"62-3315"},"18":{h:"62-3316",b:"62-3317"},"19":{h:"62-3318",b:"62-3319"},"20":{h:"62-3320",b:"62-3321"},
+"21":{h:"62-3628",b:"62-3629"},"22":{h:"62-3630",b:"62-3631"},"23":{h:"62-3632",b:"62-3633"},"24":{h:"62-3634",b:"62-3635"},"25":{h:"62-3638",b:"62-3639"},
+"26":{h:"62-3894",b:"62-3895"},"27":{h:"62-3896",b:"62-3897"},"28":{h:"62-3898",b:"62-3899"},"29":{h:"62-3900",b:"62-3901"},"30":{h:"62-3902",b:"62-3903"},
+"31":{h:"62-3904",b:"62-3905"},"32":{h:"62-3906",b:"62-3907"},"33":{h:"62-3908",b:"62-3909"},"34":{h:"62-3910",b:"62-3911"},"35":{h:"62-3912",b:"62-3913"},
+"36":{h:"62-5404",b:"62-5405"},"37":{h:"62-5406",b:"62-5407"},"38":{h:"62-5408",b:"62-5409"},"39":{h:"62-8717",b:"62-8718"},"40":{h:"62-8719",b:"62-8720"},
+"41":{h:"62-8721",b:"62-8722"},"42":{h:"62-8723",b:"62-8724"},"43":{h:"62-8725",b:"62-8726"},"44":{h:"62-9542",b:"62-9543"},"45":{h:"62-9545",b:"62-9546"},
+"46":{h:"62-9547",b:"62-9548"},"47":{h:"62-9549",b:"62-9550"},"48":{h:"62-9551",b:"62-9552"},"49":{h:"62-9553",b:"62-9554"},"50":{h:"62-9556",b:"62-9557"},
+"51":{h:"62-9560",b:"62-9561"},"52":{h:"62-9562",b:"62-9563"},"53":{h:"62-9564",b:"62-9565"},"54":{h:"63-0695",b:"63-0696"},"55":{h:"63-0685",b:"63-0686"},
+"56":{h:"63-0697",b:"63-0698"},"57":{h:"63-0699",b:"63-0700"},"58":{h:"63-0701",b:"63-0702"},"59":{h:"63-0703",b:"63-0704"},"60":{h:"63-0687",b:"63-0688"},
+"61":{h:"63-0689",b:"63-0690"},"62":{h:"63-0693",b:"63-0694"},"63":{h:"63-0692",b:"63-0691"},"64":{h:"63-1139",b:"63-1140"},"65":{h:"63-1141",b:"63-1142"},
+"66":{h:"63-1143",b:"63-1145"},"67":{h:"63-1146",b:"63-1147"},"68":{h:"63-1148",b:"63-1149"},"69":{h:"63-1150",b:"63-1151"},"70":{h:"63-1152",b:"63-1153"},
+"71":{h:"63-1689",b:"63-1690"},"72":{h:"63-1691",b:"63-1692"},"73":{h:"63-1693",b:"63-1695"},"74":{h:"63-1696",b:"63-1697"},"75":{h:"63-1698",b:"63-1699"},
+"76":{h:"63-1721",b:"63-1722"},"77":{h:"63-1723",b:"63-1724"},"78":{h:"63-1725",b:"63-1726"},"79":{h:"63-1727",b:"63-1728"},"80":{h:"63-1729",b:"63-1730"},
+"81":{h:"63-3890",b:"63-3891"},"82":{h:"63-3892",b:"63-3895"},"83":{h:"63-3896",b:"63-3897"},"84":{h:"63-3898",b:"63-3899"},"85":{h:"63-3900",b:"63-3901"},
+"86":{h:"63-3904",b:"63-3905"},"87":{h:"63-3906",b:"63-3907"},"88":{h:"63-3908",b:"63-3909"},"89":{h:"63-3910",b:"63-3911"},"90":{h:"63-3912",b:"63-3913"},
+"91":{h:"63-3914",b:"63-3915"},"92":{h:"63-3916",b:"63-3917"},"93":{h:"63-3918",b:"63-3919"},"94":{h:"63-3920",b:"63-3921"},"95":{h:"63-3922",b:"63-3923"},
+"96":{h:"63-4961",b:"63-4962"},"97":{h:"63-4963",b:"63-4964"},"98":{h:"63-4965",b:"63-4966"},"99":{h:"63-4967",b:"63-4968"},"100":{h:"63-4969",b:"63-4971"},
+"101":{h:"63-6560",b:"63-6561"},"102":{h:"63-6562",b:"63-6563"},"103":{h:"63-6564",b:"63-6567"},"104":{h:"63-6568",b:"63-6569"},"105":{h:"63-6570",b:"63-6571"},
+"106":{h:"63-6572",b:"63-6573"},"107":{h:"63-6574",b:"63-6575"},"108":{h:"63-6576",b:"63-6577"},"109":{h:"63-6578",b:"63-6579"},"110":{h:"63-6580",b:"63-6581"},
+"111":{h:"63-7193",b:"63-7212"},"112":{h:"63-7194",b:"63-7195"},"113":{h:"63-7196",b:"63-7197"},"114":{h:"63-7198",b:"63-7199"},"115":{h:"63-7200",b:"63-7201"},
+"116":{h:"63-7202",b:"63-7203"},"117":{h:"63-7204",b:"63-7205"},"118":{h:"63-7206",b:"63-7207"},"119":{h:"63-7208",b:"63-7209"},"120":{h:"63-7210",b:"63-7211"},
+"121":{h:"63-8230",b:"63-8231"},"122":{h:"63-8232",b:"63-8233"},"123":{h:"63-8234",b:"63-8235"},"124":{h:"63-8236",b:"63-8237"},"125":{h:"63-8238",b:"63-8239"},
+"126":{h:"63-9112",b:"63-9113"},"127":{h:"63-9114",b:"63-9115"},"128":{h:"63-9116",b:"63-9117"},"129":{h:"63-9118",b:"63-9119"},"130":{h:"63-9120",b:"63-9121"},
+"131":{h:"63-9122",b:"63-9123"},"132":{h:"63-9124",b:"63-9125"},"133":{h:"63-9126",b:"63-9127"},"134":{h:"63-9128",b:"63-9129"},"135":{h:"63-9130",b:"63-9131"},
+"136":{h:"64-0670",b:"64-0671"},"137":{h:"64-0672",b:"64-0673"},"138":{h:"64-0674",b:"64-0675"},"139":{h:"64-0676",b:"64-0677"},"140":{h:"64-0679",b:"64-0680"},
+"141":{h:"64-0681",b:"64-0682"},"142":{h:"64-0683",b:"64-0684"},"143":{h:"64-0685",b:"64-0686"},"144":{h:"64-0687",b:"64-0688"},"145":{h:"64-0689",b:"64-0690"},
+"146":{h:"64-1014",b:"64-1015"},"147":{h:"64-1016",b:"64-1017"},"148":{h:"64-1018",b:"64-1020"},"149":{h:"64-1021",b:"64-1022"},"150":{h:"64-1023",b:"64-1024"},
+"SPARE_151":{h:"63-0393",b:"63-1147"},"152":{h:"64-9126",b:"64-9354"},"153":{h:"65-0293",b:"65-0294"},"154":{h:"65-0295",b:"65-0296"},"155":{h:"65-0297",b:"65-0298"},
+"156":{h:"65-0299",b:"65-0300"},"157":{h:"65-0301",b:"65-0302"},"158":{h:"65-0303",b:"65-0304"},"159":{h:"65-0305",b:"65-0306"},"160":{h:"65-0307",b:"65-0308"},
+"161":{h:"65-0309",b:"65-0310"},"162":{h:"65-0311",b:"65-0312"},"163":{h:"65-3829",b:"65-3830"},"164":{h:"65-3831",b:"65-3832"},"165":{h:"65-3833",b:"65-3834"},
+"166":{h:"65-3835",b:"65-3836"},"167":{h:"65-3837",b:"65-3840"},"168":{h:"65-3841",b:"65-3842"},"169":{h:"65-3844",b:"65-3846"},"170":{h:"65-3847",b:"65-3849"},
+"171":{h:"65-3850",b:"65-3851"},"172":{h:"65-3852",b:"65-3853"},"173":{h:"65-4570",b:"65-4571"},"174":{h:"65-4573",b:"65-4574"},"175":{h:"65-4575",b:"65-4576"},
+"176":{h:"65-4577",b:"65-4578"},"177":{h:"65-4579",b:"65-4580"},"178":{h:"65-4582",b:"65-4583"},"179":{h:"65-4584",b:"65-4585"},"180":{h:"65-4586",b:"65-4587"},
+"181":{h:"65-4588",b:"65-4591"},"182":{h:"65-4592",b:"65-4593"},"183":{h:"65-6415",b:"65-6416"},"184":{h:"65-6417",b:"65-6418"},"185":{h:"65-6419",b:"65-6420"},
+"186":{h:"65-6421",b:"65-6422"},"187":{h:"65-6423",b:"65-6424"},"188":{h:"65-6425",b:"65-6426"},"189":{h:"65-6427",b:"65-6428"},"190":{h:"65-6429",b:"65-6430"},
+"191":{h:"65-6431",b:"65-6432"},"192":{h:"65-6433",b:"65-6434"},"193":{h:"65-7536",b:"65-7537"},"194":{h:"65-7538",b:"65-7539"},"195":{h:"65-7540",b:"65-7541"},
+"196":{h:"65-7542",b:"65-7543"},"197":{h:"65-7544",b:"65-7545"},"198":{h:"65-7546",b:"65-7547"},"199":{h:"65-7548",b:"65-7549"},"200":{h:"65-7550",b:"65-7551"},
+"201":{h:"65-7552",b:"65-7553"},"202":{h:"65-7554",b:"65-7555"},"203":{h:"65-8444",b:"65-8445"},"204":{h:"65-8446",b:"65-8447"},"205":{h:"65-8448",b:"65-8449"},
+"206":{h:"65-8450",b:"65-8451"},"207":{h:"65-8452",b:"65-8453"},"208":{h:"65-8454",b:"65-8455"},"209":{h:"65-8458",b:"65-8457"},"210":{h:"65-8460",b:"65-8459"},
+"211":{h:"65-8462",b:"65-8461"},"212":{h:"65-8456",b:"65-8463"},"213":{h:"65-8614",b:"65-8615"},"214":{h:"65-8616",b:"65-8617"},"215":{h:"65-8618",b:"65-8619"},
+"216":{h:"65-8620",b:"65-8621"},"217":{h:"65-8622",b:"65-8623"},"218":{h:"66-2512",b:"66-2513"},"219":{h:"66-2514",b:"66-2515"},"220":{h:"66-2516",b:"66-2517"},
+"221":{h:"66-2518",b:"66-2519"},"222":{h:"66-2520",b:"66-2521"},"223":{h:"66-2522",b:"66-2523"},"224":{h:"66-2524",b:"66-2525"},"225":{h:"66-2526",b:"66-2527"},
+"226":{h:"66-2528",b:"66-2529"},"227":{h:"66-2530",b:"66-2531"},"228":{h:"66-2921",b:"66-2925"},"229":{h:"66-2927",b:"66-2930"},"230":{h:"66-2932",b:"66-2933"},
+"231":{h:"66-2935",b:"66-2936"},"232":{h:"66-2938",b:"66-2940"},"233":{h:"66-2942",b:"66-2944"},"234":{h:"66-2945",b:"66-2947"},"235":{h:"66-2949",b:"66-2951"},
+"236":{h:"66-2953",b:"66-2955"},"237":{h:"66-2958",b:"66-2960"},"238":{h:"67-0228",b:""},"239":{h:"67-0229",b:""},"240":{h:"67-0231",b:""},
+"241":{h:"67-0232",b:""},"242":{h:"67-0234",b:""},"243":{h:"67-0637",b:""},"244":{h:"67-0640",b:""},"245":{h:"67-0641",b:""},
+"246":{h:"67-0642",b:""},"247":{h:"67-0643",b:""},"248":{h:"67-0947",b:""},"249":{h:"67-0948",b:""},"250":{h:"67-0949",b:""},
+"251":{h:"67-0950",b:""},"252":{h:"67-0951",b:""},"253":{h:"67-0952",b:""},"254":{h:"67-0953",b:""},"255":{h:"67-0954",b:""},
+"256":{h:"67-0955",b:""},"257":{h:"67-0956",b:""},"258":{h:"68-8661",b:""},"259":{h:"68-8662",b:""},"260":{h:"68-8663",b:""},
+"261":{h:"68-8664",b:""},"262":{h:"68-8665",b:""},"263":{h:"68-8666",b:""},"264":{h:"68-8667",b:""},"265":{h:"68-8669",b:""},
+"266":{h:"68-8670",b:""},"267":{h:"68-8671",b:""},"268":{h:"69-3761",b:""},"269":{h:"69-3762",b:""},"270":{h:"69-3763",b:""},
+"271":{h:"69-3764",b:""},"272":{h:"69-3765",b:""},"273":{h:"69-3766",b:""},"274":{h:"69-3767",b:""},"275":{h:"69-3768",b:""},
+"276":{h:"69-3769",b:""},"277":{h:"69-3770",b:""},"278":{h:"69-3919",b:"63-0696"},"279":{h:"69-3921",b:"63-9127"},"280":{h:"69-3923",b:"69-3898"},
+"281":{h:"69-3924",b:"69-3900"},"282":{h:"69-3897",b:"69-3902"},"283":{h:"69-3899",b:"69-3904"},"284":{h:"69-3901",b:"69-3906"},"285":{h:"69-3903",b:"69-3908"},
+"286":{h:"69-3905",b:"69-3910"},"287":{h:"69-3907",b:"69-3912"},"288":{h:"69-3909",b:"69-3914"},"289":{h:"69-3911",b:"69-3916"},"290":{h:"69-3913",b:"69-3918"},
+"291":{h:"69-3915",b:"69-3920"},"292":{h:"69-3917",b:"69-3922"},"293":{h:"69-4685",b:"69-3946"},"294":{h:"69-4686",b:"69-3947"},"295":{h:"69-4687",b:"69-3948"},
+"296":{h:"69-4688",b:"69-3949"},"297":{h:"69-4689",b:"69-3950"},"298":{h:"69-4690",b:"69-3951"},"299":{h:"69-4691",b:"69-3952"},"300":{h:"69-4692",b:"69-3953"},
+"301":{h:"69-4693",b:"69-3954"},"302":{h:"69-4694",b:"69-3955"},"303":{h:"69-4695",b:"69-3956"},"304":{h:"69-4696",b:"69-3957"},"305":{h:"69-4697",b:"69-3958"},
+"306":{h:"69-4698",b:"69-3959"},"307":{h:"69-4699",b:"69-3960"},"308":{h:"69-9717",b:"65-7551"},"309":{h:"700-2196",b:"700-1361"},"310":{h:"700-2197",b:"700-1362"},
+"311":{h:"700-2198",b:"700-1363"},"312":{h:"700-2199",b:"700-1364"},"313":{h:"700-2200",b:"700-1365"},"314":{h:"700-2201",b:"700-1366"},"315":{h:"700-2202",b:"700-1367"},
+"316":{h:"700-2203",b:"700-1368"},"317":{h:"700-2204",b:"700-1369"},"318":{h:"700-2205",b:"700-1370"},"319":{h:"700-2206",b:"700-1371"},"320":{h:"700-2207",b:"700-1372"},
+"321":{h:"700-2208",b:"700-1373"},"322":{h:"700-2210",b:"700-1374"},"323":{h:"700-2211",b:"700-1375"},"324":{h:"700-2212",b:"700-1376"},"325":{h:"700-2214",b:"700-1377"},
+"326":{h:"700-2215",b:"700-1378"},"327":{h:"700-2216",b:"700-1379"},"328":{h:"700-2217",b:"700-1380"},"329":{h:"700-2218",b:"700-1382"},"330":{h:"700-2219",b:"700-1383"},
+"331":{h:"700-2220",b:"700-1384"},"332":{h:"700-2221",b:"700-1385"},"333":{h:"700-2223",b:"700-1386"},"334":{h:"700-2225",b:"700-1387"},"335":{h:"700-2226",b:"700-1388"},
+"336":{h:"700-2227",b:"700-1390"},"337":{h:"700-2228",b:"700-1400"},"338":{h:"700-2230",b:"700-1401"}
+};
+  var PLATE_LIST = [];
+  for(var k in VEHICLE_DATA){var d=VEHICLE_DATA[k];if(d.h)PLATE_LIST.push(d.h);if(d.b)PLATE_LIST.push(d.b);}
+  PLATE_LIST = PLATE_LIST.filter(function(s,i,a){return a.indexOf(s)===i});
 
-var PHONE_LIST = PHONE_RAW.split('\n').map(function(s){return s.replace(/[^0-9]/g,'')}).filter(function(s,i,a){return s.length===10&&a.indexOf(s)===i});
+  // ====== รหัสพนักงาน ======
+  var EMP_RAW = `
+1001,1002,1011,1016,1017,1020,1028,1034,1037,1039,1040,1041,1043,1046,1048
+1061,1063,1067,1074,1076,1078,1079,1086,1100,1101,1102,1107,1110,1115,1116
+1118,1122,1127,1128,1129,1131,1138,1141,1143,1144,1149,1161,1165,1167,1170
+1175,1180,1181,1184,1185,1187,1191,1194,1195,1197,1204,1205,1206,1207,1210
+1213,1218,1219,1229,1231,1232,1233,1235,1236,1237,1238,1244,1249,1254,1256
+1258,1259,1260,1262,1268,1269,1270,1272,1275,1279,1280,1283,1288,1291,1297
+1304,1305,1307,1310,1313,1317,1319,1320,1328,1330,1332,1333,1334,1337,1340
+1344,1349,1352,1353,1356,1359,1362,1363,1364,1365,1366,1368,1370,1371,1372
+1375,1376,1377,1378,1379,1381,1382,1383,1384,1385,1387,1388,1390,1392,1393
+1395,1406,1409,1410,1415,1417,1419,1420,1421,1423,1425,1428,1429,1433,1434
+1436,1437,1440,1441,1444,1446,1448,1449,1452,1455,1459,1460,1462,1464,1465
+1467,1468,1469,1471,1473,1475,1476,1477,1479,1480,1483,1485,1487,1489,1490
+1492,1494,1504,1505,1508,1509,1510,1511,1513,1514,1515,1517,1520,1521,1522
+1524,1525,1527,1530,1531,1535,1536,1537,1538,1541,1546,1549,1550,1551,1552
+1554,1557,1558,1560,1561,1563,1564,1565,1567,1570,1571,1572,1576,1577,1583
+1586,1589,1590,1591,1594,1595,1596,1599,1602,1603,1604,1605,1606,1608,1609
+1610,1612,1614,1615,1616,1617,1619,1620,1621,1622,1624,1626,1628,1629,1632
+1633,1635,1637,1640,1641,1642,1643,1644,1645,1646,1647,1649,1650,1652,1658
+1661,1662,1663,1664,1665,1667,1669,1670,1671,1674,1676,1679,1683,1686,1688
+1690,1692,1693,1694,1697,1698,1699,1702,1704,1706,1709,1710,1711,1712,1713
+1714,1715,1716,1717,1718,1719,1721,1722,1723,1724,1725,1726,1727,1728,1729
+1731,1736,1739,1740,1741,1744,1745,1746,1747,1749,1752,1753,1754,1755,1756
+1757,1758,1760,1761,1762,1763,1764,1766,1767,1768,1769,1770,1771,1772,1776
+1777,1781,1782,1784,1786,1787,1788,1789,1790,1792,1793,1794,1795,1796,1797
+1798,1799,1802,1803,1804,1806,1807,1811,1812,1813,1814,1816,1817,1818,1821
+1822,1823,1825,1827,1828,1829,1830,1831,1833,1834,1836,1838,1840,1841,1842
+1843,1845,1846,1847,1848,1849,1850,1851,1852,1853,1854,1856,1859,1860,1862
+1863,1864,1865,1866,1870,1871,1872,1873,1874,1876,1877,1878,1879,1880,1881
+1882,1883,1884,1885,1886,1887,1888,1889,1890,1892,1893,1894,1895,1896,1897
+1899,1900,1901,1902,1903,1904,1905,1906,1907,1908,1910,1911,1912,1913,1914
+1915,1916,1917,1918,1919,1920,1921,1922,1923,1924,1925,1926,1927,1928,1929
+1931,1932,1933,1934,1935,1936,1937,1938,1939,1940,1941,1942,1943,1944,1945
+1946,1947,1948,1949,1950,1951,1952,1953,1954,1955,1956,1957,1958,1959,1960
+1961,1962,1963,1964,1965,1966,1967,1968,1969,1970,1971,1972,1973,1974,1975
+1976,1992,1993,1999,2066,3011,3017,3018,3026,3032,3034,3040,3045,3057,3067
+3069,3074,3077,3079,3089,3091,3092,3097,3115,3118,3154,3158,3166,3175,3189
+3190,3193,3195,3199,3202,3214,3218,3223,3236,3265,3273,3297,3302,3312,3314
+3320,3321,3330,3331,3334,3338,3352,3363,3381,3382,3385,3401,3420,3424,3425
+3429,3443,3444,3449,3450,3451,3461,3467,3480,3487,3489,3491,3493,3506,3507
+3513,3515,3517,3526,3527,3528,3533,3534,3537,3543,3545,3546,3547,3552,3566
+3569,3570,3573,3579,3587,3590,3591,3594,3595,3606,3609,3611,3622,3626,3627
+3631,3632,3633,3635,3639,3643,3653,3666,3673,3677,3701,3709,3712,3724,3725
+3731,3735,3753,3757,3765,3770,3771,3782,3783,3784,3790,3792,3795,3799,3805
+3820,3822,3911,3921,3932,3938,3940,3944,3948,3952,3956,3957,3968,3976,3978
+3979,3980,3983,3989,3991,3995
+`;
 
-// ==== SAVE VEHICLE ====
-// ====== Image upload helpers ======
-function onImg(prefix){
-  var input=$(prefix+'_img');var files=input.files;
-  var container=$(prefix+'_preview');var count=$(prefix+'_imgCount');
-  container.innerHTML='';
-  if(!files||files.length===0){count.textContent='';return}
-  count.textContent='\u0E40\u0E25\u0E37\u0E2D\u0E01 '+files.length+' \u0E23\u0E39\u0E1B';
-  [].forEach.call(files,function(f,i){
-    if(!f.type.match('image.*'))return;
-    var reader=new FileReader();
-    reader.onload=function(e){
-      var div=document.createElement('div');div.className='preview-item';
-      div.innerHTML='<img src="'+e.target.result+'"><button class="del" onclick="removeImgs(\''+prefix+'\')">\u00D7</button>';
-      container.appendChild(div);
-    };
-    reader.readAsDataURL(f);
-  });
-}
-function removeImgs(prefix){
-  $(prefix+'_img').value='';$(prefix+'_preview').innerHTML='';$(prefix+'_imgCount').textContent='';
-}
+  var EMP_LIST = EMP_RAW.split(/[\s\n,]+/).filter(function(s){return s.trim()});
 
-function readImgs(prefix){
-  return new Promise(function(resolve){
+  // ==== SAVE VEHICLE ====
+  // ====== Image upload helpers ======
+  function onImg(prefix){
     var input=$(prefix+'_img');var files=input.files;
-    if(!files||files.length===0){resolve([]);return}
-    var results=[];
-
-    function readNext(idx){
-      if(idx>=files.length){resolve(results);return}
-      var r=new FileReader();
-      r.onload=function(e){
-        results.push(e.target.result);
-        readNext(idx+1);
+    var container=$(prefix+'_preview');var count=$(prefix+'_imgCount');
+    container.innerHTML='';
+    if(!files||files.length===0){count.textContent='';return}
+    count.textContent='\u0E40\u0E25\u0E37\u0E2D\u0E01 '+files.length+' \u0E23\u0E39\u0E1B';
+    [].forEach.call(files,function(f,i){
+      if(!f.type.match('image.*'))return;
+      var reader=new FileReader();
+      reader.onload=function(e){
+        var div=document.createElement('div');div.className='preview-item';
+        div.innerHTML='<img src="'+e.target.result+'"><button class="del" onclick="removeImgs(\''+prefix+'\')">\u00D7</button>';
+        container.appendChild(div);
       };
-      r.onerror=function(){readNext(idx+1)};
-      r.readAsDataURL(files[idx]);
-    }
-    readNext(0);
-  });
-}
-
-async function saveV(){
-  var btn=$('btnSaveV');btn.disabled=true;btn.innerHTML='<span class="spinner"></span>กำลังบันทึก...';
-  var ber=g('v_ber');
-  if(!ber||ber.length<3){toast('กรุณากรอกเบอร์รถให้ครบ 3 หลัก');btn.disabled=false;btn.innerHTML='💾 บันทึกข้อมูลรถ';return}
-  ['v_hua','v_hang'].forEach(function(id){
-    var el=$(id);if(!el||!el.value)return;
-    var fmt=$(id.replace('v_h','v_fmt_h'));var n=fmt&&fmt.value==='3'?3:2;
-    var raw=el.value.replace(/[^0-9]/g,'').slice(0,n+4);
-    if(raw.length>n) raw=raw.slice(0,n)+'-'+raw.slice(n);
-    if(PLATE_LIST.indexOf(raw)<0){toast('\u274c '+id.replace('v_','')+' \"'+el.value+'\" \u0e44\u0e21\u0e48\u0e21\u0e35\u0e43\u0e19\u0e23\u0e30\u0e1a\u0e1a');btn.disabled=false;btn.innerHTML='\uD83D\uDCBE \u0E1A\u0E31\u0E19\u0E17\u0E36\u0E01\u0E02\u0E49\u0E2D\u0E21\u0E39\u0E25\u0E23\u0E16';throw'stop'}
-  });
-  var data={
-    'เบอร์รถ':ber,'จังหวัด':g('v_province'),'ทะเบียนหัว':g('v_hua'),'ทะเบียนหาง':g('v_hang'),
-    'ธพน.2 หมดอายุบัตร':normalizeDate(g('v_tho_e')),
-    'ภาษี หมดอายุบัตร':normalizeDate(g('v_pasi_e')),
-    'Thaioil SRC หมดอายุบัตร':normalizeDate(g('v_c1_e')),
-    'Esso SRC หมดอายุบัตร':normalizeDate(g('v_c2_e')),
-    'PTT-GC หมดอายุบัตร':normalizeDate(g('v_c3_e')),
-    'LLK Thappline หมดอายุบัตร':normalizeDate(g('v_c4_e')),
-    'SRB Thappline หมดอายุบัตร':normalizeDate(g('v_c5_e')),
-    'SPRC หมดอายุบัตร':normalizeDate(g('v_c6_e')),
-    'IRPC IRY & AU หมดอายุบัตร':normalizeDate(g('v_c7_e'))
-  };
-  var newImgs=await readImgs('v');
-  if(newImgs.length) data['รูปเอกสาร_base64']=newImgs;
-  else if(editImgsV) data['รูปเอกสาร']=editImgsV;
-  try{
-    var res=await apiPost({sheet:'รถ',data:data,editKey:editKeyV});
-    if(res.error){toast('ผิดพลาด: '+res.error);btn.disabled=false;btn.innerHTML='💾 บันทึกข้อมูลรถ';return}
-    toast((res.updated?'อัปเดตเบอร์ '+ber:'บันทึกเบอร์ '+ber)+' | รูป: '+((res.created||res.updated)?'ok':'บันทึก'));
-    clr();setTimeout(loadR,100);
-  }catch(e){toast('เกิดข้อผิดพลาด กรุณาลองใหม่')}
-  btn.disabled=false;btn.innerHTML='💾 บันทึกข้อมูลรถ';
-}
-
-// ==== SAVE DRIVER ====
-async function saveD(){
-  var btn=$('btnSaveD');btn.disabled=true;btn.innerHTML='<span class="spinner"></span>กำลังบันทึก...';
-  var name=g('d_name');
-  if(!name){toast('กรุณากรอกชื่อ');btn.disabled=false;btn.innerHTML='💾 บันทึกข้อมูลพนักงาน';return}
-  var phone=g('d_phone');
-  if(phone&&phone.length==9){phone='0'+phone;g('d_phone').value=phone}
-  var ber=g('d_ber');
-  if(ber&&ber.length<3){toast('กรุณากรอกเบอร์รถให้ครบ 3 หลัก');btn.disabled=false;btn.innerHTML='💾 บันทึกข้อมูลพนักงาน';return}
-  if(!phone||phone.length<10){toast('กรุณากรอกเบอร์โทรให้ครบ 10 หลัก');btn.disabled=false;btn.innerHTML='💾 บันทึกข้อมูลพนักงาน';return}
-  if(PHONE_LIST.indexOf(phone)<0){toast('\u274c เบอร์ '+phone+' \u0e44\u0e21\u0e48\u0e21\u0e35\u0e43\u0e19\u0e23\u0e30\u0e1a\u0e1a');btn.disabled=false;btn.innerHTML='\uD83D\uDCBE \u0E1A\u0E31\u0E19\u0E17\u0E36\u0E01\u0E02\u0E49\u0E2D\u0E21\u0E39\u0E25\u0E1E\u0E19\u0E31\u0E01\u0E07\u0E32\u0E19';return}
-  var data={
-    'เบอร์รถ':ber,'ชื่อ':name,'เบอร์โทร':phone.replace(/^0+/, ''),
-    'Esso SRC หมดอายุบัตร':normalizeDate(g('d_c1_e')),
-    'PTT-GC หมดอายุบัตร':normalizeDate(g('d_c2_e')),
-    'LLK Thappline หมดอายุบัตร':normalizeDate(g('d_c3_e')),
-    'SRB Thappline หมดอายุบัตร':normalizeDate(g('d_c4_e')),
-    'SPRC หมดอายุบัตร':normalizeDate(g('d_c5_e')),
-    'Thaioil SRC หมดอายุบัตร':normalizeDate(g('d_c6_e')),
-    'IRPC IRY & AU หมดอายุบัตร':normalizeDate(g('d_c7_e'))
-  };
-  var newImgs=await readImgs('d');
-  if(newImgs.length) data['รูปเอกสาร_base64']=newImgs;
-  else if(editImgsD) data['รูปเอกสาร']=editImgsD;
-  try{
-    var res=await apiPost({sheet:'คน',data:data,editKey:editKeyD});
-    if(res.error){toast('ผิดพลาด: '+res.error);btn.disabled=false;btn.innerHTML='💾 บันทึกข้อมูลพนักงาน';return}
-    toast((res.updated?'อัปเดต '+name:'บันทึก '+name)+' | รูป: '+((res.created||res.updated)?'ok':'บันทึก'));
-    clr();setTimeout(loadR,100);
-  }catch(e){toast('เกิดข้อผิดพลาด กรุณาลองใหม่')}
-  btn.disabled=false;btn.innerHTML='💾 บันทึกข้อมูลพนักงาน';
-}
-
-// ==== LOAD RECENT ====
-async function loadR(){
-  var el=$('recentList');
-  try{
-    var v=await apiGet({sheet:'รถ'});v=Array.isArray(v)?v:v.data||[];
-    var d=await apiGet({sheet:'คน'});d=Array.isArray(d)?d:d.data||[];
-    var html='<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">';
-
-    if(v&&v.length){
-      html+='<div><div style="font-size:13px;font-weight:600;color:#64748b;margin-bottom:8px">🚚 รถ</div>';
-      v.slice(-5).reverse().forEach(function(r){
-        var b=r['เบอร์รถ']||'';
-        var exp='';
-        Object.keys(r).forEach(function(k){if(k.indexOf('หมดอายุ')>=0&&r[k])exp=normalizeDate(r[k])});
-        var bs=b.replace(/\\/g,'\\\\').replace(/'/g,"\\'");
-        var hasImg=r['รูปเอกสาร']||'';var gal='';
-        if(hasImg){
-          var imgCount=hasImg.split(/[\n,]+/).filter(function(x){return x.trim()}).length;
-          var escaped=hasImg.replace(/\\/g,'\\\\').replace(/'/g,"\\'").replace(/\n/g,'\\n');
-          gal=' <span onclick="event.stopPropagation();openImgs(\''+escaped+'\')" style="display:inline-flex;align-items:center;gap:3px;padding:2px 8px;background:#e0f2fe;color:#0284c7;border-radius:20px;font-size:11px;cursor:pointer;font-weight:500;margin-left:6px">📷 '+imgCount+'</span>';
-        }
-        html+='<div class="list-item" onclick="(\''+bs+'\')"><div><div class="main">'+b+gal+'</div></div><span style="font-size:11px;color:#64748b">'+exp+'</span></div>';
-      });
-      html+='</div>';
-    }else{
-      html+='<div><div style="font-size:13px;color:#94a3b8">ยังไม่มีข้อมูลรถ</div></div>';
-    }
-
-    if(d&&d.length){
-      html+='<div><div style="font-size:13px;font-weight:600;color:#64748b;margin-bottom:8px">🧑 คน</div>';
-      d.slice(-5).reverse().forEach(function(r){
-        var n=r['ชื่อ']||'',p=r['เบอร์โทร']||'';
-        var ps=p.replace(/\\/g,'\\\\').replace(/'/g,"\\'");
-        var hasImg=r['รูปเอกสาร']||'';var galD='';
-        if(hasImg){
-          var imgCount=hasImg.split(/[\n,]+/).filter(function(x){return x.trim()}).length;
-          var escaped=hasImg.replace(/\\/g,'\\\\').replace(/'/g,"\\'").replace(/\n/g,'\\n');
-          galD=' <span onclick="event.stopPropagation();openImgs(\''+escaped+'\')" style="display:inline-flex;align-items:center;gap:3px;padding:2px 8px;background:#e0f2fe;color:#0284c7;border-radius:20px;font-size:11px;cursor:pointer;font-weight:500;margin-left:6px">📷 '+imgCount+'</span>';
-        }
-        html+='<div class="list-item" onclick="(\''+ps+'\')"><div><div class="main">'+n+galD+'</div></div></div>';
-      });
-      html+='</div>';
-    }else{
-      html+='<div><div style="font-size:13px;color:#94a3b8">ยังไม่มีข้อมูลคน</div></div>';
-    }
-
-    html+='</div>';
-    el.innerHTML=html;
-  }catch(e){
-    el.innerHTML='<div style="text-align:center;color:#ef4444;padding:20px">⚠️ โหลดไม่ได้ ตรวจสอบการเชื่อมต่อ</div>';
+      reader.readAsDataURL(f);
+    });
   }
-}
+  function removeImgs(prefix){
+    $(prefix+'_img').value='';$(prefix+'_preview').innerHTML='';$(prefix+'_imgCount').textContent='';
+  }
 
-// ==== EDIT VEHICLE ====
-function editV(ber){
-  editKeyV=ber;
-  apiGet({sheet:'รถ',key:ber}).then(function(r){
-    if(!r||r.error)return;if(Array.isArray(r)){r=r[0]}else{r=r.data&&r.data[0]?r.data[0]:r}
-    if(!r||!r['เบอร์รถ'])return;
-    $('v_ber').value=r['เบอร์รถ']||'';
-    $('v_province').value=(r['จังหวัด']||'').indexOf('กทม')>=0?'กทม':'อื่น ๆ';
-    $('v_hua').value=r['ทะเบียนหัว']||'';$('v_hang').value=r['ทะเบียนหาง']||'';
-    $('v_tho_e').value=normalizeDate(r['ธพน.2 หมดอายุบัตร']||'');
-    $('v_pasi_e').value=normalizeDate(r['ภาษี หมดอายุบัตร']||'');
-    $('v_c1_e').value=normalizeDate(r['Thaioil SRC หมดอายุบัตร']||'');
-    $('v_c2_e').value=normalizeDate(r['Esso SRC หมดอายุบัตร']||'');
-    $('v_c3_e').value=normalizeDate(r['PTT-GC หมดอายุบัตร']||'');
-    $('v_c4_e').value=normalizeDate(r['LLK Thappline หมดอายุบัตร']||'');
-    $('v_c5_e').value=normalizeDate(r['SRB Thappline หมดอายุบัตร']||'');
-    $('v_c6_e').value=normalizeDate(r['SPRC หมดอายุบัตร']||'');
-    $('v_c7_e').value=normalizeDate(r['IRPC IRY & AU หมดอายุบัตร']||'');
-    editImgsV=r['รูปเอกสาร']||'';
-    $('vMode').textContent='แก้ไข เบอร์ '+ber;
-    goV();window.scrollTo({top:0,behavior:'smooth'});
-  });
-}
+  function readImgs(prefix){
+    return new Promise(function(resolve){
+      var input=$(prefix+'_img');var files=input.files;
+      if(!files||files.length===0){resolve([]);return}
+      var results=[];
 
-// ==== EDIT DRIVER ====
-function editD(phone){
-  editKeyD=phone;
-  apiGet({sheet:'คน',key:phone}).then(function(r){
-    if(!r||r.error)return;if(Array.isArray(r)){r=r[0]}else{r=r.data&&r.data[0]?r.data[0]:r}
-    if(!r||!r['เบอร์โทร'])return;
-    $('d_ber').value=r['เบอร์รถ']||'';$('d_name').value=r['ชื่อ']||'';$('d_phone').value=r['เบอร์โทร']||'';
-    $('d_c1_e').value=normalizeDate(r['Esso SRC หมดอายุบัตร']||'');
-    $('d_c2_e').value=normalizeDate(r['PTT-GC หมดอายุบัตร']||'');
-    $('d_c3_e').value=normalizeDate(r['LLK Thappline หมดอายุบัตร']||'');
-    $('d_c4_e').value=normalizeDate(r['SRB Thappline หมดอายุบัตร']||'');
-    $('d_c5_e').value=normalizeDate(r['SPRC หมดอายุบัตร']||'');
-    $('d_c6_e').value=normalizeDate(r['Thaioil SRC หมดอายุบัตร']||'');
-    $('d_c7_e').value=normalizeDate(r['IRPC IRY & AU หมดอายุบัตร']||'');
-    editImgsD=r['รูปเอกสาร']||'';
-    $('dMode').textContent='แก้ไข '+(r['ชื่อ']||'');
-    goD();window.scrollTo({top:0,behavior:'smooth'});
-  });
-}
+      function readNext(idx){
+        if(idx>=files.length){resolve(results);return}
+        var r=new FileReader();
+        r.onload=function(e){
+          results.push(e.target.result);
+          readNext(idx+1);
+        };
+        r.onerror=function(){readNext(idx+1)};
+        r.readAsDataURL(files[idx]);
+      }
+      readNext(0);
+    });
+  }
 
-// ==== IMAGE VIEWER ====
-function openImgs(urls){
-  var imgs=urls.split(/[\n,]+/);
-  var h='<div onclick="this.remove()" style="position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.92);z-index:9999;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:20px;overflow-y:auto">';
-  h+='<div onclick="event.stopPropagation();this.parentElement.remove()" style="position:fixed;top:16px;right:20px;color:#fff;font-size:28px;cursor:pointer;z-index:10">✕</div>';
-  h+='<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:12px;width:100%;max-width:900px">';
-  imgs.forEach(function(u){
-    u=u.trim();if(!u)return;
-    var src=u;
-    var idMatch=u.match(/[?&]id=([^&]+)/)||u.match(/\/file\/d\/([^/]+)/);
-    if(idMatch) src='https://drive.google.com/thumbnail?id='+idMatch[1]+'&sz=w800';
-    h+='<div style="background:#1e293b;border-radius:10px;overflow:hidden"><a href="'+u+'" target="_blank" rel="noopener"><img src="'+src+'" style="width:100%;display:block" loading="lazy"></a></div>';
-  });
-  h+='</div></div>';
-  var d=document.createElement('div');d.innerHTML=h;
-  document.body.appendChild(d.firstElementChild);
-}
+  async function saveV(){
+    var btn=$('btnSaveV');btn.disabled=true;btn.innerHTML='<span class="spinner"></span>กำลังบันทึก...';
+    var ber=g('v_ber');
+    if(!ber||ber.length<3){toast('กรุณากรอกเบอร์รถให้ครบ 3 หลัก');btn.disabled=false;btn.innerHTML='💾 บันทึกข้อมูลรถ';return}
+    var veh=VEHICLE_DATA[ber];
+    if(!veh){toast('❌ เบอร์ '+ber+' ไม่มีในระบบ');btn.disabled=false;btn.innerHTML='💾 บันทึกข้อมูลรถ';return}
+    ['v_hua','v_hang'].forEach(function(id){
+      var el=$(id);if(!el||!el.value)return;
+      var fmt=$(id.replace('v_h','v_fmt_h'));var n=fmt&&fmt.value==='3'?3:2;
+      var raw=el.value.replace(/[^0-9]/g,'').slice(0,n+4);
+      if(raw.length>n) raw=raw.slice(0,n)+'-'+raw.slice(n);
+      var isFront=id==='v_hua';
+      var expected=isFront?veh.h:veh.b;
+      if(expected&&raw!==expected){
+        toast('❌ ทะเบียน'+ (isFront?'หัว':'หาง') +' ไม่ตรงกับเบอร์ '+ber+' (ต้องเป็น '+expected+')');
+        btn.disabled=false;btn.innerHTML='💾 บันทึกข้อมูลรถ';throw'stop'
+      }
+    });
+    var data={
+      'เบอร์รถ':ber,'จังหวัด':g('v_province'),'ทะเบียนหัว':g('v_hua'),'ทะเบียนหาง':g('v_hang'),
+      'ธพน.2 หมดอายุบัตร':normalizeDate(g('v_tho_e')),
+      'ภาษี หมดอายุบัตร':normalizeDate(g('v_pasi_e')),
+      'Thaioil SRC หมดอายุบัตร':normalizeDate(g('v_c1_e')),
+      'Esso SRC หมดอายุบัตร':normalizeDate(g('v_c2_e')),
+      'PTT-GC หมดอายุบัตร':normalizeDate(g('v_c3_e')),
+      'LLK Thappline หมดอายุบัตร':normalizeDate(g('v_c4_e')),
+      'SRB Thappline หมดอายุบัตร':normalizeDate(g('v_c5_e')),
+      'SPRC หมดอายุบัตร':normalizeDate(g('v_c6_e')),
+      'IRPC IRY & AU หมดอายุบัตร':normalizeDate(g('v_c7_e'))
+    };
+    var newImgs=await readImgs('v');
+    if(newImgs.length) data['รูปเอกสาร_base64']=newImgs;
+    else if(editImgsV) data['รูปเอกสาร']=editImgsV;
+    try{
+      var res=await apiPost({sheet:'รถ',data:data,editKey:editKeyV});
+      if(res.error){toast('ผิดพลาด: '+res.error);btn.disabled=false;btn.innerHTML='💾 บันทึกข้อมูลรถ';return}
+      toast((res.updated?'อัปเดตเบอร์ '+ber:'บันทึกเบอร์ '+ber)+' | รูป: '+((res.created||res.updated)?'ok':'บันทึก'));
+      clr();setTimeout(loadR,100);
+    }catch(e){toast('เกิดข้อผิดพลาด กรุณาลองใหม่')}
+    btn.disabled=false;btn.innerHTML='💾 บันทึกข้อมูลรถ';
+  }
 
-loadR();
+  // ==== SAVE DRIVER ====
+  async function saveD(){
+    var btn=$('btnSaveD');btn.disabled=true;btn.innerHTML='<span class="spinner"></span>กำลังบันทึก...';
+    var name=g('d_name');
+    if(!name){toast('กรุณากรอกชื่อ');btn.disabled=false;btn.innerHTML='💾 บันทึกข้อมูลพนักงาน';return}
+    var phone=g('d_phone');
+    if(phone&&phone.length==9){phone='0'+phone;g('d_phone').value=phone}
+    var ber=g('d_ber');
+    if(ber&&ber.length<3){toast('กรุณากรอกเบอร์รถให้ครบ 3 หลัก');btn.disabled=false;btn.innerHTML='💾 บันทึกข้อมูลพนักงาน';return}
+    if(!ber&&!phone){toast('กรุณากรอกข้อมูล');btn.disabled=false;btn.innerHTML='💾 บันทึกข้อมูลพนักงาน';return}
+    var code=g('d_code');
+    if(!code||code.length<4){toast('กรุณากรอกรหัสพนักงาน 4 หลัก');btn.disabled=false;btn.innerHTML='💾 บันทึกข้อมูลพนักงาน';return}
+    if(EMP_LIST.indexOf(code)<0){toast('❌ รหัส '+code+' ไม่มีในระบบ');btn.disabled=false;btn.innerHTML='💾 บันทึกข้อมูลพนักงาน';return}
+    var data={
+      'รหัสพนักงาน':code,'เบอร์รถ':ber,'ชื่อ':name,'เบอร์โทร':phone.replace(/^0+/, ''),
+      'Esso SRC หมดอายุบัตร':normalizeDate(g('d_c1_e')),
+      'PTT-GC หมดอายุบัตร':normalizeDate(g('d_c2_e')),
+      'LLK Thappline หมดอายุบัตร':normalizeDate(g('d_c3_e')),
+      'SRB Thappline หมดอายุบัตร':normalizeDate(g('d_c4_e')),
+      'SPRC หมดอายุบัตร':normalizeDate(g('d_c5_e')),
+      'Thaioil SRC หมดอายุบัตร':normalizeDate(g('d_c6_e')),
+      'IRPC IRY & AU หมดอายุบัตร':normalizeDate(g('d_c7_e'))
+    };
+    var newImgs=await readImgs('d');
+    if(newImgs.length) data['รูปเอกสาร_base64']=newImgs;
+    else if(editImgsD) data['รูปเอกสาร']=editImgsD;
+    try{
+      var res=await apiPost({sheet:'คน',data:data,editKey:editKeyD});
+      if(res.error){toast('ผิดพลาด: '+res.error);btn.disabled=false;btn.innerHTML='💾 บันทึกข้อมูลพนักงาน';return}
+      toast((res.updated?'อัปเดต '+name:'บันทึก '+name)+' | รูป: '+((res.created||res.updated)?'ok':'บันทึก'));
+      clr();setTimeout(loadR,100);
+    }catch(e){toast('เกิดข้อผิดพลาด กรุณาลองใหม่')}
+    btn.disabled=false;btn.innerHTML='💾 บันทึกข้อมูลพนักงาน';
+  }
+
+  // ==== LOAD RECENT ====
+  async function loadR(){
+    var el=$('recentList');
+    try{
+      var v=await apiGet({sheet:'รถ'});v=Array.isArray(v)?v:v.data||[];
+      var d=await apiGet({sheet:'คน'});d=Array.isArray(d)?d:d.data||[];
+      var html='<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">';
+
+      if(v&&v.length){
+        html+='<div><div style="font-size:13px;font-weight:600;color:#64748b;margin-bottom:8px">🚚 รถ</div>';
+        v.slice(-5).reverse().forEach(function(r){
+          var b=r['เบอร์รถ']||'';
+          var exp='';
+          Object.keys(r).forEach(function(k){if(k.indexOf('หมดอายุ')>=0&&r[k])exp=normalizeDate(r[k])});
+          var bs=b.replace(/\\/g,'\\\\').replace(/'/g,"\\'");
+          var hasImg=r['รูปเอกสาร']||'';var gal='';
+          if(hasImg){
+            var imgCount=hasImg.split(/[\n,]+/).filter(function(x){return x.trim()}).length;
+            var escaped=hasImg.replace(/\\/g,'\\\\').replace(/'/g,"\\'").replace(/\n/g,'\\n');
+            gal=' <span onclick="event.stopPropagation();openImgs(\''+escaped+'\')" style="display:inline-flex;align-items:center;gap:3px;padding:2px 8px;background:#e0f2fe;color:#0284c7;border-radius:20px;font-size:11px;cursor:pointer;font-weight:500;margin-left:6px">📷 '+imgCount+'</span>';
+          }
+          html+='<div class="list-item" onclick="editV(\''+bs+'\')"><div><div class="main">'+b+gal+'</div></div><span style="font-size:11px;color:#64748b">'+exp+'</span></div>';
+        });
+        html+='</div>';
+      }else{
+        html+='<div><div style="font-size:13px;color:#94a3b8">ยังไม่มีข้อมูลรถ</div></div>';
+      }
+
+      if(d&&d.length){
+        html+='<div><div style="font-size:13px;font-weight:600;color:#64748b;margin-bottom:8px">🧑 คน</div>';
+        d.slice(-5).reverse().forEach(function(r){
+          var n=r['ชื่อ']||'',p=r['เบอร์โทร']||'',c=r['รหัสพนักงาน']||'';
+          var cs=c.replace(/\\/g,'\\\\').replace(/'/g,"\\'");
+          var hasImg=r['รูปเอกสาร']||'';var galD='';
+          if(hasImg){
+            var imgCount=hasImg.split(/[\n,]+/).filter(function(x){return x.trim()}).length;
+            var escaped=hasImg.replace(/\\/g,'\\\\').replace(/'/g,"\\'").replace(/\n/g,'\\n');
+            galD=' <span onclick="event.stopPropagation();openImgs(\''+escaped+'\')" style="display:inline-flex;align-items:center;gap:3px;padding:2px 8px;background:#e0f2fe;color:#0284c7;border-radius:20px;font-size:11px;cursor:pointer;font-weight:500;margin-left:6px">📷 '+imgCount+'</span>';
+          }
+          html+='<div class="list-item" onclick="editD(\''+cs+'\')"><div><div class="main">'+n+galD+'</div></div></div>';
+        });
+        html+='</div>';
+      }else{
+        html+='<div><div style="font-size:13px;color:#94a3b8">ยังไม่มีข้อมูลคน</div></div>';
+      }
+
+      html+='</div>';
+      el.innerHTML=html;
+    }catch(e){
+      el.innerHTML='<div style="text-align:center;color:#ef4444;padding:20px">⚠️ โหลดไม่ได้ ตรวจสอบการเชื่อมต่อ</div>';
+    }
+  }
+
+  // ==== EDIT VEHICLE ====
+  function editV(ber){
+    editKeyV=ber;
+    apiGet({sheet:'รถ',key:ber}).then(function(r){
+      if(!r||r.error)return;if(Array.isArray(r)){r=r[0]}else{r=r.data&&r.data[0]?r.data[0]:r}
+      if(!r||!r['เบอร์รถ'])return;
+      $('v_ber').value=r['เบอร์รถ']||'';
+      $('v_province').value=(r['จังหวัด']||'').indexOf('กทม')>=0?'กทม':'อื่น ๆ';
+      $('v_hua').value=r['ทะเบียนหัว']||'';$('v_hang').value=r['ทะเบียนหาง']||'';
+      $('v_tho_e').value=normalizeDate(r['ธพน.2 หมดอายุบัตร']||'');
+      $('v_pasi_e').value=normalizeDate(r['ภาษี หมดอายุบัตร']||'');
+      $('v_c1_e').value=normalizeDate(r['Thaioil SRC หมดอายุบัตร']||'');
+      $('v_c2_e').value=normalizeDate(r['Esso SRC หมดอายุบัตร']||'');
+      $('v_c3_e').value=normalizeDate(r['PTT-GC หมดอายุบัตร']||'');
+      $('v_c4_e').value=normalizeDate(r['LLK Thappline หมดอายุบัตร']||'');
+      $('v_c5_e').value=normalizeDate(r['SRB Thappline หมดอายุบัตร']||'');
+      $('v_c6_e').value=normalizeDate(r['SPRC หมดอายุบัตร']||'');
+      $('v_c7_e').value=normalizeDate(r['IRPC IRY & AU หมดอายุบัตร']||'');
+      editImgsV=r['รูปเอกสาร']||'';
+      $('vMode').textContent='แก้ไข เบอร์ '+ber;
+      goV();window.scrollTo({top:0,behavior:'smooth'});
+    });
+  }
+
+  // ==== EDIT DRIVER ====
+  function editD(code){
+    editKeyD=code;
+    apiGet({sheet:'คน',key:code}).then(function(r){
+      if(!r||r.error)return;if(Array.isArray(r)){r=r[0]}else{r=r.data&&r.data[0]?r.data[0]:r}
+      if(!r||!r['รหัสพนักงาน'])return;
+      $('d_code').value=r['รหัสพนักงาน']||'';$('d_ber').value=r['เบอร์รถ']||'';$('d_name').value=r['ชื่อ']||'';$('d_phone').value=r['เบอร์โทร']||'';
+      $('d_c1_e').value=normalizeDate(r['Esso SRC หมดอายุบัตร']||'');
+      $('d_c2_e').value=normalizeDate(r['PTT-GC หมดอายุบัตร']||'');
+      $('d_c3_e').value=normalizeDate(r['LLK Thappline หมดอายุบัตร']||'');
+      $('d_c4_e').value=normalizeDate(r['SRB Thappline หมดอายุบัตร']||'');
+      $('d_c5_e').value=normalizeDate(r['SPRC หมดอายุบัตร']||'');
+      $('d_c6_e').value=normalizeDate(r['Thaioil SRC หมดอายุบัตร']||'');
+      $('d_c7_e').value=normalizeDate(r['IRPC IRY & AU หมดอายุบัตร']||'');
+      editImgsD=r['รูปเอกสาร']||'';
+      $('dMode').textContent='แก้ไข '+(r['ชื่อ']||'');
+      goD();window.scrollTo({top:0,behavior:'smooth'});
+    });
+  }
+
+  // ==== IMAGE VIEWER ====
+  function openImgs(urls){
+    var imgs=urls.split(/[\n,]+/);
+    var h='<div onclick="this.remove()" style="position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.92);z-index:9999;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:20px;overflow-y:auto">';
+    h+='<div onclick="event.stopPropagation();this.parentElement.remove()" style="position:fixed;top:16px;right:20px;color:#fff;font-size:28px;cursor:pointer;z-index:10">✕</div>';
+    h+='<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:12px;width:100%;max-width:900px">';
+    imgs.forEach(function(u){
+      u=u.trim();if(!u)return;
+      var src=u;
+      var idMatch=u.match(/[?&]id=([^&]+)/)||u.match(/\/file\/d\/([^/]+)/);
+      if(idMatch) src='https://drive.google.com/thumbnail?id='+idMatch[1]+'&sz=w800';
+      h+='<div style="background:#1e293b;border-radius:10px;overflow:hidden"><a href="'+u+'" target="_blank" rel="noopener"><img src="'+src+'" style="width:100%;display:block" loading="lazy"></a></div>';
+    });
+    h+='</div></div>';
+    var d=document.createElement('div');d.innerHTML=h;
+    document.body.appendChild(d.firstElementChild);
+  }
+
+  loadR();
+  
+  // ==== ADMIN ====
+  function showLogin(){$('loginModal').classList.add('show');$('adminUser').focus()}
+  function hide(id){$(id).classList.remove('show')}
+  function doLogin(){
+    var u=$('adminUser').value.trim(),p=$('adminPass').value.trim();
+    if(u==='tha1234'&&p==='4858'){
+      hide('loginModal');$('adminPanel').classList.add('show');$('adminBtn').classList.add('ok');
+      renderAdminVeh();renderAdminEmp();
+    }else{toast('❌ Username หรือ Password ไม่ถูกต้อง')}
+  }
+  function doLogout(){$('adminPanel').classList.remove('show');$('adminBtn').classList.remove('ok')}
+  function switchAdminTab(tab,btn){
+    document.querySelectorAll('.admin-section').forEach(function(el){el.classList.remove('show')});
+    document.querySelectorAll('.admin-tab').forEach(function(el){el.classList.remove('active')});
+    btn.classList.add('active');
+    if(tab==='veh'){$('adminVeh').classList.add('show');renderAdminVeh()}
+    else if(tab==='emp'){$('adminEmp').classList.add('show');renderAdminEmp()}
+    else{$('adminData').classList.add('show');renderAdminData()}
+  }
+  
+  function renderAdminData(){
+    var type=window._adminDataType||'\u0e04\u0e19';
+    var el=$('adminDataList');el.innerHTML='<div style="color:#94a3b8;font-size:13px;padding:10px">\u0e01\u0e33\u0e25\u0e31\u0e07\u0e42\u0e2b\u0e25\u0e14...</div>';
+    apiGet({sheet:type}).then(function(data){
+      var arr=Array.isArray(data)?data:data&&data.data||[];
+      if(!arr||!arr.length){el.innerHTML='<div style="color:#94a3b8;font-size:13px;padding:10px">\u0e44\u0e21\u0e48\u0e21\u0e35\u0e02\u0e49\u0e2d\u0e21\u0e39\u0e25</div>';return}
+      var h='';
+      arr.slice().reverse().forEach(function(r){
+        var name=r['\u0e0a\u0e37\u0e48\u0e2d']||'',code=r['\u0e23\u0e2b\u0e31\u0e2a\u0e1e\u0e19\u0e31\u0e01\u0e07\u0e32\u0e19']||'',ber=r['\u0e40\u0e1a\u0e2d\u0e23\u0e4c\u0e23\u0e16']||'',phone=r['\u0e40\u0e1a\u0e2d\u0e23\u0e4c\u0e42\u0e17\u0e23']||'';
+        var imgs=r['\u0e23\u0e39\u0e1b\u0e40\u0e2d\u0e01\u0e2a\u0e32\u0e23']||'';var gal='';
+        if(imgs){
+          var cnt=imgs.split(/[\n,]+/).filter(function(x){return x.trim()}).length;
+          var esc=imgs.replace(/\\/g,'\\\\').replace(/'/g,"\\'").replace(/\n/g,'\\n');
+          gal=' <span onclick="event.stopPropagation();openImgs(\''+esc+'\')" style="display:inline-flex;align-items:center;gap:3px;padding:2px 8px;background:#e0f2fe;color:#0284c7;border-radius:20px;font-size:11px;cursor:pointer;font-weight:500">\uD83D\uDCF7 '+cnt+'</span>';
+        }
+        h+='<div class="list-item" style="cursor:default"><div><div class="main">'+(code?code+' | ':'')+name+gal+'</div><div style="font-size:11px;color:#64748b">'+(ber?'\uD83D\uDE9A '+ber:'')+(phone?' | \uD83D\uDCF1 '+phone:'')+'</div></div></div>';
+      });
+      el.innerHTML=h;
+    }).catch(function(){el.innerHTML='<div style="color:#ef4444;font-size:13px;padding:10px">\u0e42\u0e2b\u0e25\u0e14\u0e02\u0e49\u0e2d\u0e21\u0e39\u0e25\u0e25\u0e49\u0e21\u0e40\u0e2b\u0e25\u0e27</div>'});
+  }
+  function switchAdminDataTab(type,btn){
+    window._adminDataType=type;
+    var parent=btn.parentElement;
+    parent.querySelectorAll('.admin-tab').forEach(function(el){el.style.background='#fff';el.style.color='#0f172a'});
+    btn.style.background='#0f172a';btn.style.color='#fff';
+    renderAdminData();
+  }
+
+  function renderAdminVeh(){
+    var keys=Object.keys(VEHICLE_DATA).sort(function(a,b){return parseInt(a)-parseInt(b)});
+    var h='';
+    keys.forEach(function(k){
+      var v=VEHICLE_DATA[k];
+      h+='<div class="admin-list-item"><span>'+k+'. '+v.h+(v.b?' / '+v.b:'')+'</span><span class="del" onclick="delVehicle(\''+k+'\')">✕</span></div>';
+    });
+    $('adminVehList').innerHTML=h||'<div style="color:#94a3b8;font-size:13px;padding:10px">ไม่มีข้อมูล</div>';
+  }
+  function addVehicle(){
+    var num=$('aVehNum').value.trim(),f=$('aVehFront').value.trim(),b=$('aVehBack').value.trim();
+    if(!num){toast('กรุณากรอกเบอร์รถ');return}
+    if(!f&&!b){toast('กรุณากรอกทะเบียน');return}
+    VEHICLE_DATA[num]={h:f,b:b};
+    if(f&&PLATE_LIST.indexOf(f)<0)PLATE_LIST.push(f);
+    if(b&&PLATE_LIST.indexOf(b)<0)PLATE_LIST.push(b);
+    $('aVehNum').value='';$('aVehFront').value='';$('aVehBack').value='';
+    renderAdminVeh();
+    toast('✅ เพิ่มเบอร์ '+num+' เรียบร้อย');
+  }
+  function delVehicle(k){
+    if(!confirm('ลบเบอร์ '+k+'?'))return;
+    delete VEHICLE_DATA[k];
+    renderAdminVeh();
+  }
+  function renderAdminEmp(){
+    var h='';
+    EMP_LIST.forEach(function(c){
+      h+='<div class="admin-list-item"><span>'+c+'</span><span class="del" onclick="delEmpCode(\''+c+'\')">✕</span></div>';
+    });
+    $('adminEmpList').innerHTML=h||'<div style="color:#94a3b8;font-size:13px;padding:10px">ไม่มีข้อมูล</div>';
+  }
+  function addEmpCode(){
+    var code=$('aEmpCode').value.trim();
+    if(!code||code.length<4){toast('กรุณากรอกรหัส 4 หลัก');return}
+    if(EMP_LIST.indexOf(code)>=0){toast('❌ รหัส '+code+' มีอยู่แล้ว');return}
+    EMP_LIST.push(code);
+    EMP_LIST.sort(function(a,b){return parseInt(a)-parseInt(b)});
+    EMP_RAW = EMP_LIST.join('\n');
+    $('aEmpCode').value='';
+    renderAdminEmp();
+    toast('✅ เพิ่มรหัส '+code+' เรียบร้อย');
+  }
+  function delEmpCode(code){
+    if(!confirm('ลบรหัส '+code+'?'))return;
+    var idx=EMP_LIST.indexOf(code);
+    if(idx>=0){
+      EMP_LIST.splice(idx,1);
+      EMP_RAW = EMP_LIST.join('\n');
+      renderAdminEmp();
+    }
+  }
+
 </script>
-</body>
-</html>
+  </body>
+  </html>
