@@ -45,6 +45,15 @@ input:focus,select:focus{outline:none;border-color:#38bdf8}
 .list-item .main{font-size:15px;font-weight:500}
 .list-item .sub{font-size:12px;color:#64748b;margin-top:2px}
 .section-label{font-size:13px;font-weight:600;color:#64748b;margin:16px 0 10px;padding:6px 12px;background:#f1f5f9;border-radius:8px}
+.upload-zone{border:2px dashed #cbd5e1;border-radius:12px;padding:20px;text-align:center;cursor:pointer;transition:0.2s;background:#fafafa;margin-bottom:8px}
+.upload-zone:hover{border-color:#38bdf8;background:#f0f9ff}
+.upload-zone .icn{font-size:28px;display:block;margin-bottom:4px}
+.upload-zone .txt{color:#94a3b8;font-size:13px}
+.preview-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(90px,1fr));gap:6px}
+.preview-item{position:relative;border-radius:8px;overflow:hidden;aspect-ratio:1;border:1px solid #e2e8f0}
+.preview-item img{width:100%;height:100%;object-fit:cover}
+.preview-item .del{position:absolute;top:2px;right:2px;width:20px;height:20px;background:rgba(0,0,0,0.55);color:#fff;border:none;border-radius:50%;font-size:12px;cursor:pointer;line-height:20px;text-align:center;font-family:Prompt,sans-serif}
+.preview-count{font-size:12px;color:#64748b;margin-top:4px}
 </style>
 </head>
 <body>
@@ -112,6 +121,14 @@ input:focus,select:focus{outline:none;border-color:#38bdf8}
     </div>
     <div class="section-label">IRPC IRY & AU</div>
     <div class="row"><div><label>IRPC IRY & AU หมดอายุบัตร</label><input id="v_c7_e" placeholder="วัน/เดือน/ปี" oninput="fmtDate(this)" maxlength="10"></div></div>
+    <div class="section-label">รูปเอกสาร</div>
+    <div class="upload-zone" onclick="document.getElementById('v_img').click()">
+      <span class="icn">📁</span>
+      <div class="txt">คลิกเลือกรูปหลายไฟล์</div>
+    </div>
+    <input type="file" id="v_img" accept="image/*" multiple style="display:none" onchange="onImg('v')">
+    <div id="v_preview" class="preview-grid"></div>
+    <div id="v_imgCount" class="preview-count"></div>
   </div>
   <button class="btn btn-primary" id="btnSaveV" onclick="saveV()">💾 บันทึกข้อมูลรถ</button>
 </div>
@@ -142,6 +159,14 @@ input:focus,select:focus{outline:none;border-color:#38bdf8}
       <div><label>Thaioil SRC หมดอายุ</label><input id="d_c6_e" placeholder="วัน/เดือน/ปี" oninput="fmtDate(this)" maxlength="10"></div>
       <div><label>IRPC IRY & AU หมดอายุ</label><input id="d_c7_e" placeholder="วัน/เดือน/ปี" oninput="fmtDate(this)" maxlength="10"></div>
     </div>
+    <div class="section-label">รูปเอกสาร</div>
+    <div class="upload-zone" onclick="document.getElementById('d_img').click()">
+      <span class="icn">📁</span>
+      <div class="txt">คลิกเลือกรูปหลายไฟล์</div>
+    </div>
+    <input type="file" id="d_img" accept="image/*" multiple style="display:none" onchange="onImg('d')">
+    <div id="d_preview" class="preview-grid"></div>
+    <div id="d_imgCount" class="preview-count"></div>
   </div>
   <button class="btn btn-success" id="btnSaveD" onclick="saveD()">💾 บันทึกข้อมูลพนักงาน</button>
 </div>
@@ -151,7 +176,7 @@ input:focus,select:focus{outline:none;border-color:#38bdf8}
 
 <script>
 // *** วาง URL จาก Apps Script Deploy ตรงนี้ ***
-const API = 'https://script.google.com/macros/s/AKfycbzAuKwUgwhp2NqAwzyhxWmPH6woZ1WN51gPhLyyMMPOmPKs0hHkjiipIrxSQiTjoUaxAA/exec';
+const API = 'https://script.google.com/macros/s/AKfycbxd9JP3xb6yiqx_kb0_r_KBcu0iY-Rbz2LAe5TuDxPXwkSAecKg9jBNOGAsM7O0YLcJMw/exec';
 
 function $(id){return document.getElementById(id)}
 function goM(){$('pageMenu').className='page active';$('pageV').className='page';$('pageD').className='page';loadR()}
@@ -216,6 +241,8 @@ window.addEventListener('DOMContentLoaded',function(){
   });
 });
 
+var editKeyV='',editKeyD='',editImgsV='',editImgsD='';
+
 function clr(){
   ['v_ber','v_hua','v_hang','v_tho_e','v_pasi_e',
    'v_c1_e','v_c2_e','v_c3_e','v_c4_e','v_c5_e','v_c6_e','v_c7_e'].forEach(function(id){$(id).value=''});
@@ -223,9 +250,9 @@ function clr(){
    'd_c1_e','d_c2_e','d_c3_e','d_c4_e','d_c5_e','d_c6_e','d_c7_e'].forEach(function(id){$(id).value=''});
   $('vMode').textContent='อัพบัตรรถ';
   $('dMode').textContent='อัพบัตรคน';
+  editKeyV='';editKeyD='';editImgsV='';editImgsD='';
+  removeImgs('v');removeImgs('d');
 }
-
-// ส่ง GET/POST ผ่าน query string เพื่อแก้ปัญหา CORS
 function apiGet(params){
   var url=API+'?'+Object.keys(params).map(function(k){
     return encodeURIComponent(k)+'='+encodeURIComponent(params[k]);
@@ -233,8 +260,7 @@ function apiGet(params){
   return fetch(url).then(function(r){return r.json()});
 }
 function apiPost(body){
-  var url=API+'?payload='+encodeURIComponent(JSON.stringify(body));
-  return fetch(url).then(function(r){return r.json()});
+  return fetch(API,{method:'POST',body:JSON.stringify(body)}).then(function(r){return r.json()});
 }
 
 // ====== Plate whitelist ======
@@ -1261,6 +1287,48 @@ var PHONE_RAW = `092-9716201
 var PHONE_LIST = PHONE_RAW.split('\n').map(function(s){return s.replace(/[^0-9]/g,'')}).filter(function(s,i,a){return s.length===10&&a.indexOf(s)===i});
 
 // ==== SAVE VEHICLE ====
+// ====== Image upload helpers ======
+function onImg(prefix){
+  var input=$(prefix+'_img');var files=input.files;
+  var container=$(prefix+'_preview');var count=$(prefix+'_imgCount');
+  container.innerHTML='';
+  if(!files||files.length===0){count.textContent='';return}
+  count.textContent='\u0E40\u0E25\u0E37\u0E2D\u0E01 '+files.length+' \u0E23\u0E39\u0E1B';
+  [].forEach.call(files,function(f,i){
+    if(!f.type.match('image.*'))return;
+    var reader=new FileReader();
+    reader.onload=function(e){
+      var div=document.createElement('div');div.className='preview-item';
+      div.innerHTML='<img src="'+e.target.result+'"><button class="del" onclick="removeImgs(\''+prefix+'\')">\u00D7</button>';
+      container.appendChild(div);
+    };
+    reader.readAsDataURL(f);
+  });
+}
+function removeImgs(prefix){
+  $(prefix+'_img').value='';$(prefix+'_preview').innerHTML='';$(prefix+'_imgCount').textContent='';
+}
+
+function readImgs(prefix){
+  return new Promise(function(resolve){
+    var input=$(prefix+'_img');var files=input.files;
+    if(!files||files.length===0){resolve([]);return}
+    var results=[];
+
+    function readNext(idx){
+      if(idx>=files.length){resolve(results);return}
+      var r=new FileReader();
+      r.onload=function(e){
+        results.push(e.target.result);
+        readNext(idx+1);
+      };
+      r.onerror=function(){readNext(idx+1)};
+      r.readAsDataURL(files[idx]);
+    }
+    readNext(0);
+  });
+}
+
 async function saveV(){
   var btn=$('btnSaveV');btn.disabled=true;btn.innerHTML='<span class="spinner"></span>กำลังบันทึก...';
   var ber=g('v_ber');
@@ -1284,10 +1352,13 @@ async function saveV(){
     'SPRC หมดอายุบัตร':normalizeDate(g('v_c6_e')),
     'IRPC IRY & AU หมดอายุบัตร':normalizeDate(g('v_c7_e'))
   };
+  var newImgs=await readImgs('v');
+  if(newImgs.length) data['รูปเอกสาร_base64']=newImgs;
+  else if(editImgsV) data['รูปเอกสาร']=editImgsV;
   try{
-    var res=await apiPost({sheet:'รถ',data:data});
+    var res=await apiPost({sheet:'รถ',data:data,editKey:editKeyV});
     if(res.error){toast('ผิดพลาด: '+res.error);btn.disabled=false;btn.innerHTML='💾 บันทึกข้อมูลรถ';return}
-    toast(res.updated>0?'อัปเดตเบอร์ '+ber+' แล้ว':'บันทึกเบอร์ '+ber+' แล้ว');
+    toast((res.status==='updated'?'อัปเดตเบอร์ '+ber:'บันทึกเบอร์ '+ber)+' | รูป: '+(res.imgData||'ไม่มี'));
     clr();loadR();
   }catch(e){toast('เกิดข้อผิดพลาด กรุณาลองใหม่')}
   btn.disabled=false;btn.innerHTML='💾 บันทึกข้อมูลรถ';
@@ -1314,10 +1385,13 @@ async function saveD(){
     'Thaioil SRC หมดอายุบัตร':normalizeDate(g('d_c6_e')),
     'IRPC IRY & AU หมดอายุบัตร':normalizeDate(g('d_c7_e'))
   };
+  var newImgs=await readImgs('d');
+  if(newImgs.length) data['รูปเอกสาร_base64']=newImgs;
+  else if(editImgsD) data['รูปเอกสาร']=editImgsD;
   try{
-    var res=await apiPost({sheet:'คน',data:data});
+    var res=await apiPost({sheet:'คน',data:data,editKey:editKeyD});
     if(res.error){toast('ผิดพลาด: '+res.error);btn.disabled=false;btn.innerHTML='💾 บันทึกข้อมูลพนักงาน';return}
-    toast(res.updated>0?'อัปเดต '+name+' แล้ว':'บันทึก '+name+' แล้ว');
+    toast((res.status==='updated'?'อัปเดต '+name:'บันทึก '+name)+' | รูป: '+(res.imgData||'ไม่มี'));
     clr();loadR();
   }catch(e){toast('เกิดข้อผิดพลาด กรุณาลองใหม่')}
   btn.disabled=false;btn.innerHTML='💾 บันทึกข้อมูลพนักงาน';
@@ -1327,8 +1401,8 @@ async function saveD(){
 async function loadR(){
   var el=$('recentList');
   try{
-    var v=await apiGet({sheet:'รถ'});
-    var d=await apiGet({sheet:'คน'});
+    var v=await apiGet({sheet:'รถ'});v=v.data||[];
+    var d=await apiGet({sheet:'คน'});d=d.data||[];
     var html='<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">';
 
     if(v&&v.length){
@@ -1338,7 +1412,8 @@ async function loadR(){
         var exp='';
         Object.keys(r).forEach(function(k){if(k.indexOf('หมดอายุ')>=0&&r[k])exp=normalizeDate(r[k])});
         var bs=b.replace(/\\/g,'\\\\').replace(/'/g,"\\'");
-        html+='<div class="list-item" onclick="(\''+bs+'\')"><div><div class="main">'+b+'</div></div><span style="font-size:11px;color:#64748b">'+exp+'</span></div>';
+        var hasImg=r['รูปเอกสาร']||'';var gal=hasImg?' <span onclick="event.stopPropagation();openImgs(\''+hasImg.replace(/'/g,"\\'")+'\')" style="cursor:pointer;color:#38bdf8;font-size:12px">📷</span>':'';
+        html+='<div class="list-item" onclick="editV(\''+bs+'\')"><div><div class="main">'+b+gal+'</div></div><span style="font-size:11px;color:#64748b">'+exp+'</span></div>';
       });
       html+='</div>';
     }else{
@@ -1350,7 +1425,8 @@ async function loadR(){
       d.slice(-5).reverse().forEach(function(r){
         var n=r['ชื่อ']||'',p=r['เบอร์โทร']||'';
         var ps=p.replace(/\\/g,'\\\\').replace(/'/g,"\\'");
-        html+='<div class="list-item" onclick="(\''+ps+'\')"><div><div class="main">'+n+'</div></div></div>';
+        var hasImg=r['รูปเอกสาร']||'';var galD=hasImg?' <span onclick="event.stopPropagation();openImgs(\''+hasImg+'\')" style="cursor:pointer;color:#38bdf8;font-size:12px">📷</span>':'';
+        html+='<div class="list-item" onclick="editD(\''+ps+'\')"><div><div class="main">'+n+galD+'</div></div></div>';
       });
       html+='</div>';
     }else{
@@ -1366,8 +1442,9 @@ async function loadR(){
 
 // ==== EDIT VEHICLE ====
 function editV(ber){
+  editKeyV=ber;
   apiGet({sheet:'รถ',key:ber}).then(function(r){
-    if(!r||r.error)return;
+    if(!r||r.error||!r.data||!r.data[0])return;r=r.data[0];
     $('v_ber').value=r['เบอร์รถ']||'';
     $('v_province').value=(r['จังหวัด']||'').indexOf('กทม')>=0?'กทม':'อื่น ๆ';
     $('v_hua').value=r['ทะเบียนหัว']||'';$('v_hang').value=r['ทะเบียนหาง']||'';
@@ -1380,6 +1457,7 @@ function editV(ber){
     $('v_c5_e').value=normalizeDate(r['SRB Thappline หมดอายุบัตร']||'');
     $('v_c6_e').value=normalizeDate(r['SPRC หมดอายุบัตร']||'');
     $('v_c7_e').value=normalizeDate(r['IRPC IRY & AU หมดอายุบัตร']||'');
+    editImgsV=r['รูปเอกสาร']||'';
     $('vMode').textContent='แก้ไข เบอร์ '+ber;
     goV();window.scrollTo({top:0,behavior:'smooth'});
   });
@@ -1387,8 +1465,9 @@ function editV(ber){
 
 // ==== EDIT DRIVER ====
 function editD(phone){
+  editKeyD=phone;
   apiGet({sheet:'คน',key:phone}).then(function(r){
-    if(!r||r.error)return;
+    if(!r||r.error||!r.data||!r.data[0])return;r=r.data[0];
     $('d_ber').value=r['เบอร์รถ']||'';$('d_name').value=r['ชื่อ']||'';$('d_phone').value=r['เบอร์โทร']||'';
     $('d_c1_e').value=normalizeDate(r['Esso SRC หมดอายุบัตร']||'');
     $('d_c2_e').value=normalizeDate(r['PTT-GC หมดอายุบัตร']||'');
@@ -1397,9 +1476,28 @@ function editD(phone){
     $('d_c5_e').value=normalizeDate(r['SPRC หมดอายุบัตร']||'');
     $('d_c6_e').value=normalizeDate(r['Thaioil SRC หมดอายุบัตร']||'');
     $('d_c7_e').value=normalizeDate(r['IRPC IRY & AU หมดอายุบัตร']||'');
+    editImgsD=r['รูปเอกสาร']||'';
     $('dMode').textContent='แก้ไข '+(r['ชื่อ']||'');
     goD();window.scrollTo({top:0,behavior:'smooth'});
   });
+}
+
+// ==== IMAGE VIEWER ====
+function openImgs(urls){
+  var imgs=urls.split(',');
+  var h='<div onclick="this.remove()" style="position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.92);z-index:9999;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:20px;overflow-y:auto">';
+  h+='<div onclick="event.stopPropagation();this.parentElement.remove()" style="position:fixed;top:16px;right:20px;color:#fff;font-size:28px;cursor:pointer;z-index:10">✕</div>';
+  h+='<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:12px;width:100%;max-width:900px">';
+  imgs.forEach(function(u){
+    u=u.trim();if(!u)return;
+    var src=u;
+    var idMatch=u.match(/[?&]id=([^&]+)/)||u.match(/\/file\/d\/([^/]+)/);
+    if(idMatch) src='https://drive.google.com/thumbnail?id='+(idMatch[1]||idMatch[2])+'&sz=w800';
+    h+='<div style="background:#1e293b;border-radius:10px;overflow:hidden"><a href="'+u+'" target="_blank" rel="noopener"><img src="'+src+'" style="width:100%;display:block" loading="lazy"></a></div>';
+  });
+  h+='</div></div>';
+  var d=document.createElement('div');d.innerHTML=h;
+  document.body.appendChild(d.firstElementChild);
 }
 
 loadR();
