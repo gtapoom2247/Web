@@ -176,7 +176,7 @@ input:focus,select:focus{outline:none;border-color:#38bdf8}
 
 <script>
 // *** วาง URL จาก Apps Script Deploy ตรงนี้ ***
-const API = 'https://script.google.com/macros/s/AKfycby4m0Vs_FLxmTpyFHYHz6tlwzG-lFCjSFDfLPdpJGOZCE--ZfbdeYFn2IqQD1WKrOzytg/exec';
+const API = 'https://script.google.com/macros/s/AKfycbxijHTip_RmegoO4WoucIkwT0yBbAH06uWioYp-8_K9U3FEWfsBtEsLt9Iu6oS_1FtsXg/exec';
 
 function $(id){return document.getElementById(id)}
 function goM(){$('pageMenu').className='page active';$('pageV').className='page';$('pageD').className='page';loadR()}
@@ -260,21 +260,30 @@ function apiGet(params){
   return fetch(url).then(function(r){return r.json()});
 }
 function apiPost(body){
-  // GAS POST → 302 redirect → doGet response (array of rows)
-  // We send POST for processing, but accept the doGet array as success.
-  // We also try GET+payload (avoids redirect) — works for smaller payloads.
   var payload=JSON.stringify(body);
-  // Try GET+payload first (avoids 302 redirect, gets real doPost response)
+  // ถ้า payload มี base64 หรือใหญ่เกินไป ใช้ POST โดยตรง (GET+payload URL จะยาวเกินไป)
+  if (payload.length > 5000 || payload.indexOf('data:image') >= 0 || payload.indexOf(';base64,') >= 0) {
+    return new Promise(function(resolve){
+      var x=new XMLHttpRequest();
+      x.open('POST',API);
+      x.onload=function(){
+        try{
+          var d=JSON.parse(x.responseText);
+          resolve(Array.isArray(d)?{created:1,updated:0}:d);
+        }catch(e){resolve({created:1,updated:0})}
+      };
+      x.onerror=function(){resolve({error:'network error'})};
+      x.send(payload);
+    });
+  }
+  // payload เล็ก → ใช้ GET+payload (เลี่ยง 302 redirect, ได้ response จริงจาก doPost)
   return fetch(API+'?payload='+encodeURIComponent(payload)).then(function(r){
     return r.json();
   }).then(function(res){
-    // If response has created/updated, it's from doPost directly → success
-    // If it's an array (redirect fallback), treat as success too
     if(res&&res.error) return res;
     if(Array.isArray(res)) return {created:1,updated:0};
     return res;
   }).catch(function(){
-    // If GET fails (probably too large), try POST (data still saves, response lost to redirect)
     return new Promise(function(resolve){
       var x=new XMLHttpRequest();
       x.open('POST',API);
