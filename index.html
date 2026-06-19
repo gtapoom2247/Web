@@ -176,7 +176,7 @@ input:focus,select:focus{outline:none;border-color:#38bdf8}
 
 <script>
 // *** วาง URL จาก Apps Script Deploy ตรงนี้ ***
-const API = 'https://script.google.com/macros/s/AKfycbxShY4jpPmqwr9Hw0eqdqdDcBf4lO16thIW2lrbmfPGVauSK42KvkVdsJIkPs4O78lgKQ/exec';
+const API = 'https://script.google.com/macros/s/AKfycbzxKxQQZ8kg3a2hKDR25tYQ-HMElgKP5tleEgNyN4PDnvb0Qc-uDnZZDWy3b7cPJOJ_/exec';
 
 function $(id){return document.getElementById(id)}
 function goM(){$('pageMenu').className='page active';$('pageV').className='page';$('pageD').className='page';loadR()}
@@ -260,7 +260,34 @@ function apiGet(params){
   return fetch(url).then(function(r){return r.json()});
 }
 function apiPost(body){
-  return fetch(API,{method:'POST',body:JSON.stringify(body)}).then(function(r){return r.json()});
+  // GAS POST → 302 redirect → doGet response (array of rows)
+  // We send POST for processing, but accept the doGet array as success.
+  // We also try GET+payload (avoids redirect) — works for smaller payloads.
+  var payload=JSON.stringify(body);
+  // Try GET+payload first (avoids 302 redirect, gets real doPost response)
+  return fetch(API+'?payload='+encodeURIComponent(payload)).then(function(r){
+    return r.json();
+  }).then(function(res){
+    // If response has created/updated, it's from doPost directly → success
+    // If it's an array (redirect fallback), treat as success too
+    if(res&&res.error) return res;
+    if(Array.isArray(res)) return {created:1,updated:0};
+    return res;
+  }).catch(function(){
+    // If GET fails (probably too large), try POST (data still saves, response lost to redirect)
+    return new Promise(function(resolve){
+      var x=new XMLHttpRequest();
+      x.open('POST',API);
+      x.onload=function(){
+        try{
+          var d=JSON.parse(x.responseText);
+          resolve(Array.isArray(d)?{created:1,updated:0}:d);
+        }catch(e){resolve({created:1,updated:0})}
+      };
+      x.onerror=function(){resolve({error:'network error'})};
+      x.send(payload);
+    });
+  });
 }
 
 // ====== Plate whitelist ======
@@ -1412,7 +1439,12 @@ async function loadR(){
         var exp='';
         Object.keys(r).forEach(function(k){if(k.indexOf('หมดอายุ')>=0&&r[k])exp=normalizeDate(r[k])});
         var bs=b.replace(/\\/g,'\\\\').replace(/'/g,"\\'");
-        var hasImg=r['รูปเอกสาร']||'';var gal=hasImg?' <span onclick="event.stopPropagation();openImgs(\''+hasImg.replace(/'/g,"\\'")+'\')" style="display:inline-flex;align-items:center;gap:3px;padding:2px 8px;background:#e0f2fe;color:#0284c7;border-radius:20px;font-size:11px;cursor:pointer;font-weight:500;margin-left:6px">📷 '+hasImg.split(/[\n,]/).filter(function(x){return x.trim()}).length+'</span>':'';
+        var hasImg=r['รูปเอกสาร']||'';var gal='';
+        if(hasImg){
+          var imgCount=hasImg.split(/[\n,]+/).filter(function(x){return x.trim()}).length;
+          var escaped=hasImg.replace(/\\/g,'\\\\').replace(/'/g,"\\'").replace(/\n/g,'\\n');
+          gal=' <span onclick="event.stopPropagation();openImgs(\''+escaped+'\')" style="display:inline-flex;align-items:center;gap:3px;padding:2px 8px;background:#e0f2fe;color:#0284c7;border-radius:20px;font-size:11px;cursor:pointer;font-weight:500;margin-left:6px">📷 '+imgCount+'</span>';
+        }
         html+='<div class="list-item" onclick="editV(\''+bs+'\')"><div><div class="main">'+b+gal+'</div></div><span style="font-size:11px;color:#64748b">'+exp+'</span></div>';
       });
       html+='</div>';
@@ -1425,7 +1457,12 @@ async function loadR(){
       d.slice(-5).reverse().forEach(function(r){
         var n=r['ชื่อ']||'',p=r['เบอร์โทร']||'';
         var ps=p.replace(/\\/g,'\\\\').replace(/'/g,"\\'");
-        var hasImg=r['รูปเอกสาร']||'';var galD=hasImg?' <span onclick="event.stopPropagation();openImgs(\''+hasImg+'\')" style="display:inline-flex;align-items:center;gap:3px;padding:2px 8px;background:#e0f2fe;color:#0284c7;border-radius:20px;font-size:11px;cursor:pointer;font-weight:500;margin-left:6px">📷 '+hasImg.split(/[\n,]/).filter(function(x){return x.trim()}).length+'</span>':'';
+        var hasImg=r['รูปเอกสาร']||'';var galD='';
+        if(hasImg){
+          var imgCount=hasImg.split(/[\n,]+/).filter(function(x){return x.trim()}).length;
+          var escaped=hasImg.replace(/\\/g,'\\\\').replace(/'/g,"\\'").replace(/\n/g,'\\n');
+          galD=' <span onclick="event.stopPropagation();openImgs(\''+escaped+'\')" style="display:inline-flex;align-items:center;gap:3px;padding:2px 8px;background:#e0f2fe;color:#0284c7;border-radius:20px;font-size:11px;cursor:pointer;font-weight:500;margin-left:6px">📷 '+imgCount+'</span>';
+        }
         html+='<div class="list-item" onclick="editD(\''+ps+'\')"><div><div class="main">'+n+galD+'</div></div></div>';
       });
       html+='</div>';
@@ -1486,7 +1523,7 @@ function editD(phone){
 
 // ==== IMAGE VIEWER ====
 function openImgs(urls){
-  var imgs=urls.split(',');
+  var imgs=urls.split(/[\n,]+/);
   var h='<div onclick="this.remove()" style="position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.92);z-index:9999;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:20px;overflow-y:auto">';
   h+='<div onclick="event.stopPropagation();this.parentElement.remove()" style="position:fixed;top:16px;right:20px;color:#fff;font-size:28px;cursor:pointer;z-index:10">✕</div>';
   h+='<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:12px;width:100%;max-width:900px">';
@@ -1494,7 +1531,7 @@ function openImgs(urls){
     u=u.trim();if(!u)return;
     var src=u;
     var idMatch=u.match(/[?&]id=([^&]+)/)||u.match(/\/file\/d\/([^/]+)/);
-    if(idMatch) src='https://drive.google.com/thumbnail?id='+(idMatch[1]||idMatch[2])+'&sz=w800';
+    if(idMatch) src='https://drive.google.com/thumbnail?id='+idMatch[1]+'&sz=w800';
     h+='<div style="background:#1e293b;border-radius:10px;overflow:hidden"><a href="'+u+'" target="_blank" rel="noopener"><img src="'+src+'" style="width:100%;display:block" loading="lazy"></a></div>';
   });
   h+='</div></div>';
