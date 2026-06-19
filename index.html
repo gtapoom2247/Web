@@ -1454,7 +1454,7 @@ async function loadR(){
           var escaped=hasImg.replace(/\\/g,'\\\\').replace(/'/g,"\\'").replace(/\n/g,'\\n');
           gal=' <span onclick="event.stopPropagation();openImgs(\''+escaped+'\')" style="display:inline-flex;align-items:center;gap:3px;padding:2px 8px;background:#e0f2fe;color:#0284c7;border-radius:20px;font-size:11px;cursor:pointer;font-weight:500;margin-left:6px">📷 '+imgCount+'</span>';
         }
-        html+='<div class="list-item" onclick="editV(\''+bs+'\')"><div><div class="main">'+b+gal+'</div></div><span style="font-size:11px;color:#64748b">'+exp+'</span></div>';
+        html+='<div class="list-item" onclick="(\''+bs+'\')"><div><div class="main">'+b+gal+'</div></div><span style="font-size:11px;color:#64748b">'+exp+'</span></div>';
       });
       html+='</div>';
     }else{
@@ -1472,7 +1472,7 @@ async function loadR(){
           var escaped=hasImg.replace(/\\/g,'\\\\').replace(/'/g,"\\'").replace(/\n/g,'\\n');
           galD=' <span onclick="event.stopPropagation();openImgs(\''+escaped+'\')" style="display:inline-flex;align-items:center;gap:3px;padding:2px 8px;background:#e0f2fe;color:#0284c7;border-radius:20px;font-size:11px;cursor:pointer;font-weight:500;margin-left:6px">📷 '+imgCount+'</span>';
         }
-        html+='<div class="list-item" onclick="editD(\''+ps+'\')"><div><div class="main">'+n+galD+'</div></div></div>';
+        html+='<div class="list-item" onclick="(\''+ps+'\')"><div><div class="main">'+n+galD+'</div></div></div>';
       });
       html+='</div>';
     }else{
