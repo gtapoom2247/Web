@@ -1,408 +1,970 @@
-  <!DOCTYPE html>
-  <html lang="th">
-  <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1.0">
-  <title>ระบบติดตามบัตร พขร.</title>
-  <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-  <style>
-  *{box-sizing:border-box;margin:0;padding:0}
-  body{font-family:Prompt,Sarabun,sans-serif;background:#f1f5f9;color:#0f172a;padding:16px}
-  .admin-btn{position:absolute;top:12px;right:14px;background:rgba(255,255,255,0.1);border:none;color:#94a3b8;font-size:16px;cursor:pointer;padding:6px 10px;border-radius:8px;transition:0.2s;font-family:Prompt,sans-serif}
-  .admin-btn:hover{background:rgba(255,255,255,0.2);color:#fff}
-  .admin-btn.ok{color:#4ade80}
-  .modal-overlay{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);z-index:999;display:none;align-items:center;justify-content:center}
-  .modal-overlay.show{display:flex}
-  .modal-box{background:#fff;border-radius:16px;padding:24px;width:90%;max-width:400px;max-height:90vh;overflow-y:auto}
-  .modal-box h3{font-size:18px;font-weight:600;margin-bottom:16px}
-  .modal-box label{display:block;font-size:13px;color:#64748b;margin-bottom:4px;margin-top:12px}
-  .modal-box input[type=text],.modal-box input[type=password]{width:100%;padding:10px 14px;border:2px solid #e2e8f0;border-radius:10px;font-size:15px;font-family:Prompt,sans-serif;outline:none;transition:0.2s}
-  .modal-box input:focus{border-color:#38bdf8}
-  .modal-box .btn-primary{background:#0f172a;color:#fff;border:none;padding:12px;border-radius:10px;font-size:15px;font-weight:600;cursor:pointer;width:100%;margin-top:18px;font-family:Prompt,sans-serif}
-  .modal-box .btn-primary:hover{background:#1e293b}
-  .modal-box .btn-close{float:right;background:none;border:none;font-size:22px;cursor:pointer;color:#94a3b8;line-height:1}
-  .admin-panel{display:none}
-  .admin-panel.show{display:block}
-  .admin-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:14px}
-  .admin-card{background:#f8fafc;border:2px dashed #e2e8f0;border-radius:12px;padding:20px;text-align:center;cursor:pointer;transition:0.2s}
-  .admin-card:hover{border-color:#38bdf8;background:#f0f9ff}
-  .admin-card .icon{font-size:28px;display:block;margin-bottom:6px}
-  .admin-card .name{font-size:14px;font-weight:500;color:#0f172a}
-  .admin-logout{background:none;border:1px solid #e2e8f0;color:#ef4444;padding:8px 16px;border-radius:8px;cursor:pointer;font-size:13px;margin-top:16px;width:100%;font-family:Prompt,sans-serif}
-  .admin-logout:hover{background:#fef2f2}
-  .admin-list{max-height:300px;overflow-y:auto;margin-top:10px}
-  .admin-list-item{display:flex;align-items:center;justify-content:space-between;padding:8px 12px;border-bottom:1px solid #f1f5f9;font-size:14px}
-  .admin-list-item .del{color:#ef4444;cursor:pointer;font-size:18px;padding:0 6px}
-  .admin-add-row{display:flex;gap:8px;margin-top:10px}
-  .admin-add-row input{flex:1;padding:8px 12px;border:2px solid #e2e8f0;border-radius:8px;font-size:14px;font-family:Prompt,sans-serif;outline:none}
-  .admin-add-row input:focus{border-color:#38bdf8}
-  .admin-add-row button{background:#0f172a;color:#fff;border:none;padding:8px 16px;border-radius:8px;cursor:pointer;font-family:Prompt,sans-serif;font-weight:500}
-  .admin-add-row button:hover{background:#1e293b}
-  .admin-tabs{display:flex;gap:8px;margin-bottom:14px}
-  .admin-tab{padding:8px 16px;border-radius:8px;border:1px solid #e2e8f0;background:#fff;cursor:pointer;font-size:13px;font-family:Prompt,sans-serif;transition:0.2s}
-  .admin-tab.active{background:#0f172a;color:#fff;border-color:#0f172a}
-  .admin-tab:hover:not(.active){background:#f1f5f9}
-  .admin-section{display:none}
-  .admin-section.show{display:block}
-  .app{max-width:860px;margin:0 auto}
-  .header{background:linear-gradient(135deg,#0f172a,#1e293b);padding:24px;border-radius:16px;margin-bottom:16px;text-align:center}
-  .header{position:relative}.header h1{color:#fff;font-size:22px;font-weight:700}
-  .header h1 span{color:#38bdf8}
-  .header p{color:#94a3b8;font-size:13px;margin-top:4px}
-  .page{display:none}.page.active{display:block}
-  .card{background:#fff;border-radius:16px;padding:20px;margin-bottom:14px;box-shadow:0 1px 3px rgba(0,0,0,0.06)}
-  .card-title{font-size:16px;font-weight:600;margin-bottom:16px;padding-bottom:10px;border-bottom:2px solid #f1f5f9}
-  .menu-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px}
-  .menu-card{background:#fff;border-radius:16px;padding:32px 20px;text-align:center;cursor:pointer;box-shadow:0 1px 3px rgba(0,0,0,0.06);border:2px solid transparent;user-select:none;transition:0.2s}
-  .menu-card:hover{border-color:#38bdf8;transform:translateY(-2px)}
-  .menu-card .icon{font-size:40px;display:block;margin-bottom:10px}
-  .menu-card .name{font-size:17px;font-weight:600}
-  .menu-card .desc{font-size:12px;color:#64748b;margin-top:4px}
-  @media(max-width:500px){.menu-grid{grid-template-columns:1fr}}
-  .top-bar{display:flex;align-items:center;gap:12px;margin-bottom:14px;background:#fff;border-radius:12px;padding:10px 16px;box-shadow:0 1px 3px rgba(0,0,0,0.06)}
-  .top-bar .back{background:none;border:none;font-size:20px;cursor:pointer;color:#0f172a;padding:4px 8px;font-family:Prompt,sans-serif}
-  .top-bar .title{font-size:16px;font-weight:600;flex:1}
-  .row{display:grid;gap:10px;margin-bottom:12px}
-  .r2{grid-template-columns:1fr 1fr}.r3{grid-template-columns:1fr 1fr 1fr}
-  @media(max-width:600px){.r2,.r3{grid-template-columns:1fr 1fr}}
-  @media(max-width:400px){.r2,.r3{grid-template-columns:1fr}}
-  label{font-size:13px;font-weight:500;color:#475569;display:block;margin-bottom:4px}
-  input,select{width:100%;padding:10px 12px;border:2px solid #e2e8f0;border-radius:10px;font-size:15px;font-family:Prompt,sans-serif;background:#fff}
-  input:focus,select:focus{outline:none;border-color:#38bdf8}
-  .btn{width:100%;padding:12px;border:none;border-radius:12px;font-size:16px;font-weight:600;font-family:Prompt,sans-serif;cursor:pointer;margin-bottom:14px;transition:0.2s}
-  .btn:disabled{opacity:0.6;cursor:not-allowed}
-  .btn-primary{background:#0f172a;color:#fff}.btn-success{background:#059669;color:#fff}
-  .spinner{display:inline-block;width:18px;height:18px;border:3px solid rgba(255,255,255,0.3);border-top-color:#fff;border-radius:50%;animation:spin .6s linear infinite;vertical-align:middle;margin-right:6px}
-  @keyframes spin{to{transform:rotate(360deg)}}
-  .toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#0f172a;color:#fff;padding:12px 24px;border-radius:12px;font-size:14px;z-index:999;opacity:0;transition:0.3s;pointer-events:none}
-  .toast.show{opacity:1}
-  .list-item{display:flex;justify-content:space-between;align-items:center;padding:12px 0;border-bottom:1px solid #f1f5f9;cursor:pointer}
-  .list-item:last-child{border-bottom:none}
-  .list-item .main{font-size:15px;font-weight:500}
-  .list-item .sub{font-size:12px;color:#64748b;margin-top:2px}
-  .section-label{font-size:13px;font-weight:600;color:#64748b;margin:16px 0 10px;padding:6px 12px;background:#f1f5f9;border-radius:8px}
-  .upload-zone{border:2px dashed #cbd5e1;border-radius:12px;padding:20px;text-align:center;cursor:pointer;transition:0.2s;background:#fafafa;margin-bottom:8px}
-  .upload-zone:hover{border-color:#38bdf8;background:#f0f9ff}
-  .upload-zone .icn{font-size:28px;display:block;margin-bottom:4px}
-  .upload-zone .txt{color:#94a3b8;font-size:13px}
-  .preview-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(90px,1fr));gap:6px}
-  .preview-item{position:relative;border-radius:8px;overflow:hidden;aspect-ratio:1;border:1px solid #e2e8f0}
-  .preview-item img{width:100%;height:100%;object-fit:cover}
-  .preview-item .del{position:absolute;top:2px;right:2px;width:20px;height:20px;background:rgba(0,0,0,0.55);color:#fff;border:none;border-radius:50%;font-size:12px;cursor:pointer;line-height:20px;text-align:center;font-family:Prompt,sans-serif}
-  .preview-count{font-size:12px;color:#64748b;margin-top:4px}
-  </style>
-  </head>
-  <body>
-  <div class="app">
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>ระบบติดตามบัตร พขร.</title>
+<link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:Prompt,Sarabun,sans-serif;background:#f1f5f9;color:#0f172a;padding:16px}
+.admin-btn{position:absolute;top:12px;right:14px;background:rgba(255,255,255,0.1);border:none;color:#94a3b8;font-size:16px;cursor:pointer;padding:6px 10px;border-radius:8px;transition:0.2s;font-family:Prompt,sans-serif}
+.admin-btn:hover{background:rgba(255,255,255,0.2);color:#fff}
+.admin-btn.ok{color:#4ade80}
+.modal-overlay{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);z-index:999;display:none;align-items:center;justify-content:center}
+.modal-overlay.show{display:flex}
+.modal-box{background:#fff;border-radius:16px;padding:24px;width:90%;max-width:400px;max-height:90vh;overflow-y:auto}
+.modal-box h3{font-size:18px;font-weight:600;margin-bottom:16px}
+.modal-box label{display:block;font-size:13px;color:#64748b;margin-bottom:4px;margin-top:12px}
+.modal-box input[type=text],.modal-box input[type=password]{width:100%;padding:10px 14px;border:2px solid #e2e8f0;border-radius:10px;font-size:15px;font-family:Prompt,sans-serif;outline:none;transition:0.2s}
+.modal-box input:focus{border-color:#38bdf8}
+.modal-box .btn-primary{background:#0f172a;color:#fff;border:none;padding:12px;border-radius:10px;font-size:15px;font-weight:600;cursor:pointer;width:100%;margin-top:18px;font-family:Prompt,sans-serif}
+.modal-box .btn-primary:hover{background:#1e293b}
+.modal-box .btn-close{float:right;background:none;border:none;font-size:22px;cursor:pointer;color:#94a3b8;line-height:1}
+.admin-panel{display:none}
+.admin-panel.show{display:block}
+.admin-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:14px}
+.admin-card{background:#f8fafc;border:2px dashed #e2e8f0;border-radius:12px;padding:20px;text-align:center;cursor:pointer;transition:0.2s}
+.admin-card:hover{border-color:#38bdf8;background:#f0f9ff}
+.admin-card .icon{font-size:28px;display:block;margin-bottom:6px}
+.admin-card .name{font-size:14px;font-weight:500;color:#0f172a}
+.admin-logout{background:none;border:1px solid #e2e8f0;color:#ef4444;padding:8px 16px;border-radius:8px;cursor:pointer;font-size:13px;margin-top:16px;width:100%;font-family:Prompt,sans-serif}
+.admin-logout:hover{background:#fef2f2}
+.admin-list{max-height:300px;overflow-y:auto;margin-top:10px}
+.admin-list-item{display:flex;align-items:center;justify-content:space-between;padding:8px 12px;border-bottom:1px solid #f1f5f9;font-size:14px}
+.admin-list-item .del{color:#ef4444;cursor:pointer;font-size:18px;padding:0 6px}
+.admin-add-row{display:flex;gap:8px;margin-top:10px}
+.admin-add-row input{flex:1;padding:8px 12px;border:2px solid #e2e8f0;border-radius:8px;font-size:14px;font-family:Prompt,sans-serif;outline:none}
+.admin-add-row input:focus{border-color:#38bdf8}
+.admin-add-row button{background:#0f172a;color:#fff;border:none;padding:8px 16px;border-radius:8px;cursor:pointer;font-family:Prompt,sans-serif;font-weight:500}
+.admin-add-row button:hover{background:#1e293b}
+.admin-tabs{display:flex;gap:8px;margin-bottom:14px}
+.admin-tab{padding:8px 16px;border-radius:8px;border:1px solid #e2e8f0;background:#fff;cursor:pointer;font-size:13px;font-family:Prompt,sans-serif;transition:0.2s}
+.admin-tab.active{background:#0f172a;color:#fff;border-color:#0f172a}
+.admin-tab:hover:not(.active){background:#f1f5f9}
+.admin-section{display:none}
+.admin-section.show{display:block}
+.app{max-width:860px;margin:0 auto}
+.header{background:linear-gradient(135deg,#0f172a,#1e293b);padding:24px;border-radius:16px;margin-bottom:16px;text-align:center}
+.header{position:relative}.header h1{color:#fff;font-size:22px;font-weight:700}
+.header h1 span{color:#38bdf8}
+.header p{color:#94a3b8;font-size:13px;margin-top:4px}
+.page{display:none}.page.active{display:block}
+.card{background:#fff;border-radius:16px;padding:20px;margin-bottom:14px;box-shadow:0 1px 3px rgba(0,0,0,0.06)}
+.card-title{font-size:16px;font-weight:600;margin-bottom:16px;padding-bottom:10px;border-bottom:2px solid #f1f5f9}
+.menu-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px}
+.menu-card{background:#fff;border-radius:16px;padding:32px 20px;text-align:center;cursor:pointer;box-shadow:0 1px 3px rgba(0,0,0,0.06);border:2px solid transparent;user-select:none;transition:0.2s}
+.menu-card:hover{border-color:#38bdf8;transform:translateY(-2px)}
+.menu-card .icon{font-size:40px;display:block;margin-bottom:10px}
+.menu-card .name{font-size:17px;font-weight:600}
+.menu-card .desc{font-size:12px;color:#64748b;margin-top:4px}
+@media(max-width:500px){.menu-grid{grid-template-columns:1fr}}
+.top-bar{display:flex;align-items:center;gap:12px;margin-bottom:14px;background:#fff;border-radius:12px;padding:10px 16px;box-shadow:0 1px 3px rgba(0,0,0,0.06)}
+.top-bar .back{background:none;border:none;font-size:20px;cursor:pointer;color:#0f172a;padding:4px 8px;font-family:Prompt,sans-serif}
+.top-bar .title{font-size:16px;font-weight:600;flex:1}
+.row{display:grid;gap:10px;margin-bottom:12px}
+.r2{grid-template-columns:1fr 1fr}.r3{grid-template-columns:1fr 1fr 1fr}
+@media(max-width:600px){.r2,.r3{grid-template-columns:1fr 1fr}}
+@media(max-width:400px){.r2,.r3{grid-template-columns:1fr}}
+label{font-size:13px;font-weight:500;color:#475569;display:block;margin-bottom:4px}
+input,select{width:100%;padding:10px 12px;border:2px solid #e2e8f0;border-radius:10px;font-size:15px;font-family:Prompt,sans-serif;background:#fff}
+input:focus,select:focus{outline:none;border-color:#38bdf8}
+input.ai-filled{border-color:#10b981;background:#f0fdf4}
+.btn{width:100%;padding:12px;border:none;border-radius:12px;font-size:16px;font-weight:600;font-family:Prompt,sans-serif;cursor:pointer;margin-bottom:14px;transition:0.2s}
+.btn:disabled{opacity:0.6;cursor:not-allowed}
+.btn-primary{background:#0f172a;color:#fff}.btn-success{background:#059669;color:#fff}
+.spinner{display:inline-block;width:18px;height:18px;border:3px solid rgba(255,255,255,0.3);border-top-color:#fff;border-radius:50%;animation:spin .6s linear infinite;vertical-align:middle;margin-right:6px}
+.spinner-dark{display:inline-block;width:14px;height:14px;border:2px solid rgba(0,0,0,0.15);border-top-color:#7c3aed;border-radius:50%;animation:spin .6s linear infinite;vertical-align:middle;margin-right:6px}
+@keyframes spin{to{transform:rotate(360deg)}}
+.toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#0f172a;color:#fff;padding:12px 24px;border-radius:12px;font-size:14px;z-index:999;opacity:0;transition:0.3s;pointer-events:none}
+.toast.show{opacity:1}
+.list-item{display:flex;justify-content:space-between;align-items:center;padding:12px 0;border-bottom:1px solid #f1f5f9;cursor:pointer}
+.list-item:last-child{border-bottom:none}
+.list-item .main{font-size:15px;font-weight:500}
+.list-item .sub{font-size:12px;color:#64748b;margin-top:2px}
+.section-label{font-size:13px;font-weight:600;color:#64748b;margin:16px 0 10px;padding:6px 12px;background:#f1f5f9;border-radius:8px}
+.upload-zone{border:2px dashed #cbd5e1;border-radius:12px;padding:20px;text-align:center;cursor:pointer;transition:0.2s;background:#fafafa;margin-bottom:8px}
+.upload-zone:hover{border-color:#38bdf8;background:#f0f9ff}
+.upload-zone .icn{font-size:28px;display:block;margin-bottom:4px}
+.upload-zone .txt{color:#94a3b8;font-size:13px}
+.preview-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(90px,1fr));gap:6px}
+.preview-item{position:relative;border-radius:8px;overflow:hidden;aspect-ratio:1;border:1px solid #e2e8f0}
+.preview-item img{width:100%;height:100%;object-fit:cover}
+.preview-item .del{position:absolute;top:2px;right:2px;width:20px;height:20px;background:rgba(0,0,0,0.55);color:#fff;border:none;border-radius:50%;font-size:12px;cursor:pointer;line-height:20px;text-align:center;font-family:Prompt,sans-serif}
+.preview-count{font-size:12px;color:#64748b;margin-top:4px}
 
-  <div class="header">
-    <h1>ระบบติดตามบัตร <span>พขร.</span></h1>
-    <p>จัดการบัตรประจําตัวรถและพนักงานขับรถ</p>
-    <button class="admin-btn" id="adminBtn" onclick="showLogin()">🔐</button>
-  
-  <!-- === Admin Login Modal === -->
-  <div class="modal-overlay" id="loginModal">
-    <div class="modal-box">
-      <button class="btn-close" onclick="hide('loginModal')">&times;</button>
-      <h3>🔐 แอดมิน</h3>
-      <label>Username</label>
-      <input type="text" id="adminUser" placeholder="username" onkeydown="if(event.key==='Enter')doLogin()">
-      <label>Password</label>
-      <input type="password" id="adminPass" placeholder="password" onkeydown="if(event.key==='Enter')doLogin()">
-      <button class="btn-primary" onclick="doLogin()">เข้าสู่ระบบ</button>
-    </div>
+/* === Gemini OCR button === */
+.ocr-bar{display:none;align-items:center;gap:10px;margin:8px 0 4px;flex-wrap:wrap}
+.ocr-bar.show{display:flex}
+.btn-ocr{background:linear-gradient(135deg,#7c3aed,#4f46e5);color:#fff;border:none;padding:9px 18px;border-radius:10px;font-size:14px;font-weight:600;font-family:Prompt,sans-serif;cursor:pointer;display:flex;align-items:center;gap:6px;transition:0.2s;white-space:nowrap}
+.btn-ocr:hover{background:linear-gradient(135deg,#6d28d9,#4338ca);transform:translateY(-1px)}
+.btn-ocr:disabled{opacity:0.6;cursor:not-allowed;transform:none}
+.ocr-result-box{background:#f0fdf4;border:1px solid #bbf7d0;border-radius:10px;padding:12px 14px;font-size:13px;margin:6px 0 10px;display:none}
+.ocr-result-box.show{display:block}
+.ocr-result-box .ocr-title{font-weight:600;color:#059669;margin-bottom:6px;font-size:13px}
+.ocr-result-row{display:flex;justify-content:space-between;align-items:center;padding:3px 0;border-bottom:1px solid #d1fae5;font-size:13px}
+.ocr-result-row:last-child{border-bottom:none}
+.ocr-result-row .field{color:#475569}
+.ocr-result-row .val{font-weight:600;color:#065f46}
+.ocr-error-box{background:#fef2f2;border:1px solid #fecaca;border-radius:10px;padding:12px 14px;font-size:13px;color:#dc2626;margin:6px 0 10px;display:none}
+.ocr-error-box.show{display:block}
+</style>
+</head>
+<body>
+<div class="app">
+
+<div class="header">
+  <h1>ระบบติดตามบัตร <span>พขร.</span></h1>
+  <p>จัดการบัตรประจําตัวรถและพนักงานขับรถ</p>
+  <button class="admin-btn" id="adminBtn" onclick="showLogin()">🔐</button>
+
+<!-- === Admin Login Modal === -->
+<div class="modal-overlay" id="loginModal">
+  <div class="modal-box">
+    <button class="btn-close" onclick="hide('loginModal')">&times;</button>
+    <h3>🔐 แอดมิน</h3>
+    <label>Username</label>
+    <input type="text" id="adminUser" placeholder="username" onkeydown="if(event.key==='Enter')doLogin()">
+    <label>Password</label>
+    <input type="password" id="adminPass" placeholder="password" onkeydown="if(event.key==='Enter')doLogin()">
+    <button class="btn-primary" onclick="doLogin()">เข้าสู่ระบบ</button>
   </div>
+</div>
 
-  <!-- === Admin Panel === -->
-  <div class="card admin-panel" id="adminPanel">
-    <div class="card-title">🛠️ แผงควบคุม</div>
-    <div class="admin-tabs">
-      <button class="admin-tab active" onclick="switchAdminTab('veh',this)">🚛 เบอร์รถ</button>
-      <button class="admin-tab" onclick="switchAdminTab('emp',this)">👤 รหัสพนักงานเลข 4 ตัวท้าย</button>
-      <button class="admin-tab" onclick="switchAdminTab('data',this)">📋 ข้อมูล</button>
-    </div>
-
-    <!-- Vehicle management -->
-    <div class="admin-section show" id="adminVeh">
-      <div style="font-size:13px;color:#64748b;margin-bottom:8px">เพิ่มเบอร์รถและทะเบียน</div>
-      <div class="admin-add-row">
-        <input id="aVehNum" placeholder="เบอร์รถ (3 หลัก)" maxlength="3" oninput="this.value=this.value.replace(/[^0-9]/g,'').slice(0,3)">
-        <input id="aVehFront" placeholder="ป้ายหน้า" style="max-width:120px">
-        <input id="aVehBack" placeholder="ป้ายหลัง" style="max-width:120px">
-        <button onclick="addVehicle()">+</button>
-      </div>
-      <div class="admin-list" id="adminVehList"></div>
-    </div>
-
-    <!-- Employee management -->
-    <div class="admin-section" id="adminEmp">
-      <div style="font-size:13px;color:#64748b;margin-bottom:8px">เพิ่มรหัสพนักงาน</div>
-      <div class="admin-add-row">
-        <input id="aEmpCode" placeholder="เลข 4 หลัก" maxlength="4" oninput="this.value=this.value.replace(/[^0-9]/g,'').slice(0,4)">
-        <button onclick="addEmpCode()">+</button>
-      </div>
-      <div class="admin-list" id="adminEmpList"></div>
-    </div>
-
-    
-    <!-- Data view -->
-    <div class="admin-section" id="adminData">
-      <div style="font-size:13px;color:#64748b;margin-bottom:8px">ข้อมูลที่บันทึกแล้ว</div>
-      <div style="display:flex;gap:8px;margin-bottom:10px">
-        <button class="admin-tab" onclick="switchAdminDataTab('รถ',this)" style="background:#fff;border:1px solid #e2e8f0;padding:6px 14px;border-radius:8px;cursor:pointer;font-size:13px;font-family:Prompt,sans-serif">🚚 รถ</button>
-        <button class="admin-tab active" onclick="switchAdminDataTab('คน',this)" style="background:#fff;border:1px solid #e2e8f0;padding:6px 14px;border-radius:8px;cursor:pointer;font-size:13px;font-family:Prompt,sans-serif;background:#0f172a;color:#fff">🧑 คน</button>
-      </div>
-      <div class="admin-list" id="adminDataList" style="max-height:400px"></div>
-    </div>
-
-    <button class="admin-logout" onclick="doLogout()">🚪 ออกจากระบบ</button>
+<!-- === Admin Panel === -->
+<div class="card admin-panel" id="adminPanel">
+  <div class="card-title">🛠️ แผงควบคุม</div>
+  <div class="admin-tabs">
+    <button class="admin-tab active" onclick="switchAdminTab('veh',this)">🚛 เบอร์รถ</button>
+    <button class="admin-tab" onclick="switchAdminTab('emp',this)">👤 รหัสพนักงาน</button>
+    <button class="admin-tab" onclick="switchAdminTab('data',this)">📋 ข้อมูล</button>
   </div>
+  <div class="admin-section show" id="adminVeh">
+    <div style="font-size:13px;color:#64748b;margin-bottom:8px">เพิ่มเบอร์รถและทะเบียน</div>
+    <div class="admin-add-row">
+      <input id="aVehNum" placeholder="เบอร์รถ (3 หลัก)" maxlength="3" oninput="this.value=this.value.replace(/[^0-9]/g,'').slice(0,3)">
+      <input id="aVehFront" placeholder="ป้ายหน้า" style="max-width:120px">
+      <input id="aVehBack" placeholder="ป้ายหลัง" style="max-width:120px">
+      <button onclick="addVehicle()">+</button>
+    </div>
+    <div class="admin-list" id="adminVehList"></div>
+  </div>
+  <div class="admin-section" id="adminEmp">
+    <div style="font-size:13px;color:#64748b;margin-bottom:8px">เพิ่มรหัสพนักงาน</div>
+    <div class="admin-add-row">
+      <input id="aEmpCode" placeholder="เลข 4 หลัก" maxlength="4" oninput="this.value=this.value.replace(/[^0-9]/g,'').slice(0,4)">
+      <button onclick="addEmpCode()">+</button>
+    </div>
+    <div class="admin-list" id="adminEmpList"></div>
+  </div>
+  <div class="admin-section" id="adminData">
+    <div style="font-size:13px;color:#64748b;margin-bottom:8px">ข้อมูลที่บันทึกแล้ว</div>
+    <div style="display:flex;gap:8px;margin-bottom:10px">
+      <button class="admin-tab" onclick="switchAdminDataTab('รถ',this)" style="background:#fff;border:1px solid #e2e8f0;padding:6px 14px;border-radius:8px;cursor:pointer;font-size:13px;font-family:Prompt,sans-serif">🚚 รถ</button>
+      <button class="admin-tab active" onclick="switchAdminDataTab('คน',this)" style="background:#fff;border:1px solid #e2e8f0;padding:6px 14px;border-radius:8px;cursor:pointer;font-size:13px;font-family:Prompt,sans-serif;background:#0f172a;color:#fff">🧑 คน</button>
+    </div>
+    <input id="adminDataSearch" placeholder="🔍 ค้นหา ชื่อ / รหัส / เบอร์รถ / โทร..." oninput="renderAdminDataRows(_adminDataCache,this.value)" style="width:100%;padding:8px 12px;border:2px solid #e2e8f0;border-radius:8px;font-size:13px;font-family:Prompt,sans-serif;margin-bottom:8px;outline:none" onfocus="this.style.borderColor='#38bdf8'" onblur="this.style.borderColor='#e2e8f0'">
+    <div class="admin-list" id="adminDataList" style="max-height:400px"></div>
+  </div>
+  <button class="admin-logout" onclick="doLogout()">🚪 ออกจากระบบ</button>
+</div>
 
 </div>
 
-  <!-- MENU -->
-  <div id="pageMenu" class="page active">
-    <div class="menu-grid">
-      <div class="menu-card" onclick="goV()"><span class="icon">🚚</span><div class="name">อัพบัตรรถ</div><div class="desc">จัดการบัตรประจําตัวรถ</div></div>
-      <div class="menu-card" onclick="goD()"><span class="icon">🧑‍✈️</span><div class="name">อัพบัตรคน</div><div class="desc">จัดการบัตรพนักงานขับรถ</div></div>
-    </div>
-    <div class="card"><div class="card-title">📋 รายการล่าสุด</div><div id="recentList"><div style="text-align:center;color:#94a3b8;padding:20px">กำลังโหลด...</div></div></div>
+<!-- MENU -->
+<div id="pageMenu" class="page active">
+  <div class="menu-grid">
+    <div class="menu-card" onclick="goV()"><span class="icon">🚚</span><div class="name">อัพบัตรรถ</div><div class="desc">จัดการบัตรประจําตัวรถ</div></div>
+    <div class="menu-card" onclick="goD()"><span class="icon">🧑‍✈️</span><div class="name">อัพบัตรคน</div><div class="desc">จัดการบัตรพนักงานขับรถ</div></div>
   </div>
+  <div class="card"><div class="card-title">📋 รายการล่าสุด</div><div id="recentList"><div style="text-align:center;color:#94a3b8;padding:20px">กำลังโหลด...</div></div></div>
+</div>
 
-  <!-- VEHICLE FORM -->
-  <div id="pageV" class="page">
-    <div class="top-bar"><button class="back" onclick="goM()">‹</button><span class="title" id="vMode">อัพบัตรรถ</span></div>
-    <div class="card">
-      <div class="card-title">🚚 ข้อมูลรถ</div>
-      <div class="row r2">
-        <div><label>เบอร์รถ</label><input id="v_ber" placeholder="000" oninput="fmtBer(this)" maxlength="3"></div>
-        <div><label>จังหวัด</label><select id="v_province"><option>กทม</option><option>อื่น ๆ</option></select></div>
-      </div>
-      <div class="row r2">
-        <div><label>ทะเบียนหัว</label>
-          <div style="display:flex;gap:6px">
-            <select id="v_fmt_hua" onchange="updatePlateFmt()" style="width:90px;flex-shrink:0;padding:10px 6px;font-size:13px">
-              <option value="2">2 ตัวหน้า</option><option value="3">3 ตัวหน้า</option>
-            </select>
-            <input id="v_hua" placeholder="00-0000" oninput="fmtPlate(this)" maxlength="8" style="flex:1">
-          </div>
-        </div>
-        <div><label>ทะเบียนหาง</label>
-          <div style="display:flex;gap:6px">
-            <select id="v_fmt_hang" onchange="updatePlateFmt()" style="width:90px;flex-shrink:0;padding:10px 6px;font-size:13px">
-              <option value="2">2 ตัวหน้า</option><option value="3">3 ตัวหน้า</option>
-            </select>
-            <input id="v_hang" placeholder="00-0000" oninput="fmtPlate(this)" maxlength="8" style="flex:1">
-          </div>
+<!-- VEHICLE FORM -->
+<div id="pageV" class="page">
+  <div class="top-bar"><button class="back" onclick="goM()">‹</button><span class="title" id="vMode">อัพบัตรรถ</span></div>
+  <div class="card">
+    <div class="card-title">🚚 ข้อมูลรถ</div>
+    <div class="row r2">
+      <div><label>เบอร์รถ</label><input id="v_ber" placeholder="000" oninput="fmtBer(this)" onblur="fillBer(this)" maxlength="3"></div>
+      <div><label>จังหวัด</label><select id="v_province"><option>กทม</option><option>อื่น ๆ</option></select></div>
+    </div>
+    <div class="row r2">
+      <div><label>ทะเบียนหัว</label>
+        <div style="display:flex;gap:6px">
+          <select id="v_fmt_hua" onchange="updatePlateFmt()" style="width:90px;flex-shrink:0;padding:10px 6px;font-size:13px">
+            <option value="2">2 ตัวหน้า</option><option value="3">3 ตัวหน้า</option>
+          </select>
+          <input id="v_hua" placeholder="00-0000" oninput="fmtPlate(this)" maxlength="8" style="flex:1">
         </div>
       </div>
+      <div><label>ทะเบียนหาง</label>
+        <div style="display:flex;gap:6px">
+          <select id="v_fmt_hang" onchange="updatePlateFmt()" style="width:90px;flex-shrink:0;padding:10px 6px;font-size:13px">
+            <option value="2">2 ตัวหน้า</option><option value="3">3 ตัวหน้า</option>
+          </select>
+          <input id="v_hang" placeholder="00-0000" oninput="fmtPlate(this)" maxlength="8" style="flex:1">
+        </div>
+      </div>
     </div>
-    <div class="card">
-      <div class="card-title">📄 บัตรต่าง ๆ</div>
-      <div class="section-label">ธพน.2</div>
-      <div class="row"><div><label>ธพน.2 หมดอายุบัตร</label><input id="v_tho_e" placeholder="วัน/เดือน/ปี" oninput="fmtDate(this)" maxlength="10"></div></div>
-      <div class="section-label">ภาษี</div>
-      <div class="row"><div><label>ภาษี หมดอายุบัตร</label><input id="v_pasi_e" placeholder="วัน/เดือน/ปี" oninput="fmtDate(this)" maxlength="10"></div></div>
-      <div class="section-label">Thaioil SRC, Esso SRC, PTT-GC</div>
-      <div class="row r3">
-        <div><label>Thaioil SRC หมดอายุ</label><input id="v_c1_e" placeholder="วัน/เดือน/ปี" oninput="fmtDate(this)" maxlength="10"></div>
-        <div><label>Esso SRC หมดอายุ</label><input id="v_c2_e" placeholder="วัน/เดือน/ปี" oninput="fmtDate(this)" maxlength="10"></div>
-        <div><label>PTT-GC หมดอายุ</label><input id="v_c3_e" placeholder="วัน/เดือน/ปี" oninput="fmtDate(this)" maxlength="10"></div>
-      </div>
-      <div class="section-label">LLK Thappline, SRB Thappline, SPRC</div>
-      <div class="row r3">
-        <div><label>LLK Thappline หมดอายุ</label><input id="v_c4_e" placeholder="วัน/เดือน/ปี" oninput="fmtDate(this)" maxlength="10"></div>
-        <div><label>SRB Thappline หมดอายุ</label><input id="v_c5_e" placeholder="วัน/เดือน/ปี" oninput="fmtDate(this)" maxlength="10"></div>
-        <div><label>SPRC หมดอายุ</label><input id="v_c6_e" placeholder="วัน/เดือน/ปี" oninput="fmtDate(this)" maxlength="10"></div>
-      </div>
-      <div class="section-label">IRPC IRY & AU</div>
-      <div class="row"><div><label>IRPC IRY & AU หมดอายุบัตร</label><input id="v_c7_e" placeholder="วัน/เดือน/ปี" oninput="fmtDate(this)" maxlength="10"></div></div>
-      <div class="section-label">รูปเอกสาร</div>
-      <div class="upload-zone" onclick="document.getElementById('v_img').click()">
-        <span class="icn">📁</span>
-        <div class="txt">คลิกเลือกรูปหลายไฟล์</div>
-      </div>
-      <input type="file" id="v_img" accept="image/*" multiple style="display:none" onchange="onImg('v')">
-      <div id="v_preview" class="preview-grid"></div>
-      <div id="v_imgCount" class="preview-count"></div>
-    </div>
-    <button class="btn btn-primary" id="btnSaveV" onclick="saveV()">💾 บันทึกข้อมูลรถ</button>
   </div>
-
-  <!-- DRIVER FORM -->
-  <div id="pageD" class="page">
-    <div class="top-bar"><button class="back" onclick="goM()">‹</button><span class="title" id="dMode">อัพบัตรคน</span></div>
-    <div class="card">
-      <div class="card-title">🧑‍✈️ ข้อมูลพนักงานขับรถ</div>
-      <div class="row r2">
-        <div><label>รหัสพนักงานเลข 4 ตัวท้าย</label><input id="d_code" placeholder="เลข 4 ตัว" oninput="fmtCode(this)" maxlength="4"></div>
-        <div><label>เบอร์รถ</label><input id="d_ber" placeholder="000" oninput="fmtBer(this)" maxlength="3"></div>
-      </div>
-      <div class="row r2">
-        <div><label>ชื่อ</label><input id="d_name" placeholder="ชื่อ-นามสกุล"></div>
-        <div><label>เบอร์โทร</label><input id="d_phone" placeholder="เบอร์มือถือ" oninput="fmtPhone(this)" maxlength="10"></div>
-      </div>
+  <div class="card">
+    <div class="card-title">📄 บัตรต่าง ๆ ( ถ้ามีรูปอัพแค่รูปก็ได้ ) </div>
+    <div class="section-label">ธพน.2</div>
+    <div class="row"><div><label>ธพน.2 หมดอายุบัตร</label><input id="v_tho_e" placeholder="วัน/เดือน/ปี" oninput="fmtDate(this)" maxlength="10"></div></div>
+    <div class="section-label">ภาษี</div>
+    <div class="row"><div><label>ภาษี หมดอายุบัตร</label><input id="v_pasi_e" placeholder="วัน/เดือน/ปี" oninput="fmtDate(this)" maxlength="10"></div></div>
+    <div class="section-label">Thaioil SRC, Esso SRC, PTT-GC</div>
+    <div class="row r3">
+      <div><label>Thaioil SRC หมดอายุ</label><input id="v_c1_e" placeholder="วัน/เดือน/ปี" oninput="fmtDate(this)" maxlength="10"></div>
+      <div><label>Esso SRC หมดอายุ</label><input id="v_c2_e" placeholder="วัน/เดือน/ปี" oninput="fmtDate(this)" maxlength="10"></div>
+      <div><label>PTT-GC หมดอายุ</label><input id="v_c3_e" placeholder="วัน/เดือน/ปี" oninput="fmtDate(this)" maxlength="10"></div>
     </div>
-    <div class="card">
-      <div class="card-title">📄 บัตรต่าง ๆ</div>
-      <div class="section-label">Esso SRC, PTT-GC, LLK Thappline</div>
-      <div class="row r3">
-        <div><label>Esso SRC หมดอายุ</label><input id="d_c1_e" placeholder="วัน/เดือน/ปี" oninput="fmtDate(this)" maxlength="10"></div>
-        <div><label>PTT-GC หมดอายุ</label><input id="d_c2_e" placeholder="วัน/เดือน/ปี" oninput="fmtDate(this)" maxlength="10"></div>
-        <div><label>LLK Thappline หมดอายุ</label><input id="d_c3_e" placeholder="วัน/เดือน/ปี" oninput="fmtDate(this)" maxlength="10"></div>
-      </div>
-      <div class="section-label">SRB Thappline, SPRC, Thaioil SRC, IRPC</div>
-      <div class="row r2">
-        <div><label>SRB Thappline หมดอายุ</label><input id="d_c4_e" placeholder="วัน/เดือน/ปี" oninput="fmtDate(this)" maxlength="10"></div>
-        <div><label>SPRC หมดอายุ</label><input id="d_c5_e" placeholder="วัน/เดือน/ปี" oninput="fmtDate(this)" maxlength="10"></div>
-        <div><label>Thaioil SRC หมดอายุ</label><input id="d_c6_e" placeholder="วัน/เดือน/ปี" oninput="fmtDate(this)" maxlength="10"></div>
-        <div><label>IRPC IRY & AU หมดอายุ</label><input id="d_c7_e" placeholder="วัน/เดือน/ปี" oninput="fmtDate(this)" maxlength="10"></div>
-      </div>
-      <div class="section-label">รูปเอกสาร</div>
-      <div class="upload-zone" onclick="document.getElementById('d_img').click()">
-        <span class="icn">📁</span>
-        <div class="txt">คลิกเลือกรูปหลายไฟล์</div>
-      </div>
-      <input type="file" id="d_img" accept="image/*" multiple style="display:none" onchange="onImg('d')">
-      <div id="d_preview" class="preview-grid"></div>
-      <div id="d_imgCount" class="preview-count"></div>
+    <div class="section-label">LLK Thappline, SRB Thappline, SPRC</div>
+    <div class="row r3">
+      <div><label>LLK Thappline หมดอายุ</label><input id="v_c4_e" placeholder="วัน/เดือน/ปี" oninput="fmtDate(this)" maxlength="10"></div>
+      <div><label>SRB Thappline หมดอายุ</label><input id="v_c5_e" placeholder="วัน/เดือน/ปี" oninput="fmtDate(this)" maxlength="10"></div>
+      <div><label>SPRC หมดอายุ</label><input id="v_c6_e" placeholder="วัน/เดือน/ปี" oninput="fmtDate(this)" maxlength="10"></div>
     </div>
-    <button class="btn btn-success" id="btnSaveD" onclick="saveD()">💾 บันทึกข้อมูลพนักงาน</button>
+    <div class="section-label">IRPC IRY & AU</div>
+    <div class="row"><div><label>IRPC IRY & AU หมดอายุบัตร</label><input id="v_c7_e" placeholder="วัน/เดือน/ปี" oninput="fmtDate(this)" maxlength="10"></div></div>
+    <div class="section-label">รูปเอกสาร</div>
+    <div class="upload-zone" onclick="document.getElementById('v_img').click()">
+      <span class="icn">📁</span>
+      <div class="txt">คลิกเลือกรูปหลายไฟล์</div>
+    </div>
+    <input type="file" id="v_img" accept="image/*" multiple style="display:none" onchange="onImg('v')">
+    <div id="v_preview" class="preview-grid"></div>
+    <div id="v_imgCount" class="preview-count"></div>
+    <!-- OCR bar for vehicle -->
+    <div class="ocr-bar" id="v_ocrBar">
+      <button class="btn-ocr" id="v_ocrBtn" onclick="runOCR('v')">🤖 อ่านบัตรอัตโนมัติ</button>
+      <span style="font-size:12px;color:#94a3b8">Powered by Gemini AI</span>
+    </div>
+    <div class="ocr-result-box" id="v_ocrResult"></div>
+    <div class="ocr-error-box" id="v_ocrError"></div>
   </div>
+  <button class="btn btn-primary" id="btnSaveV" onclick="saveV()">💾 บันทึกข้อมูลรถ</button>
+</div>
 
-  <div class="toast" id="toast"></div>
+<!-- DRIVER FORM -->
+<div id="pageD" class="page">
+  <div class="top-bar"><button class="back" onclick="goM()">‹</button><span class="title" id="dMode">อัพบัตรคน</span></div>
+  <div class="card">
+    <div class="card-title">🧑‍✈️ ข้อมูลพนักงานขับรถ</div>
+    <div class="row r2">
+      <div><label>รหัสพนักงาน</label><input id="d_code" placeholder="เลข 4 ตัว" oninput="fmtCode(this)" maxlength="4"></div>
+      <div><label>เบอร์รถ</label><input id="d_ber" placeholder="000" oninput="fmtBer(this)" maxlength="3"></div>
+    </div>
+    <div class="row r2">
+      <div><label>ชื่อ</label><input id="d_name" placeholder="ชื่อ-นามสกุล"></div>
+      <div><label>เบอร์โทร</label><input id="d_phone" placeholder="เบอร์มือถือ" oninput="fmtPhone(this)" maxlength="10"></div>
+    </div>
   </div>
+  <div class="card">
+    <div class="card-title">📄 บัตรต่าง ๆ ( ถ้ามีรูปอัพแค่รูปก็ได้ )</div>
+    <div class="section-label">Esso SRC, PTT-GC, LLK Thappline</div>
+    <div class="row r3">
+      <div><label>Esso SRC หมดอายุ</label><input id="d_c1_e" placeholder="วัน/เดือน/ปี" oninput="fmtDate(this)" maxlength="10"></div>
+      <div><label>PTT-GC หมดอายุ</label><input id="d_c2_e" placeholder="วัน/เดือน/ปี" oninput="fmtDate(this)" maxlength="10"></div>
+      <div><label>LLK Thappline หมดอายุ</label><input id="d_c3_e" placeholder="วัน/เดือน/ปี" oninput="fmtDate(this)" maxlength="10"></div>
+    </div>
+    <div class="section-label">SRB Thappline, SPRC, Thaioil SRC, IRPC</div>
+    <div class="row r2">
+      <div><label>SRB Thappline หมดอายุ</label><input id="d_c4_e" placeholder="วัน/เดือน/ปี" oninput="fmtDate(this)" maxlength="10"></div>
+      <div><label>SPRC หมดอายุ</label><input id="d_c5_e" placeholder="วัน/เดือน/ปี" oninput="fmtDate(this)" maxlength="10"></div>
+      <div><label>Thaioil SRC หมดอายุ</label><input id="d_c6_e" placeholder="วัน/เดือน/ปี" oninput="fmtDate(this)" maxlength="10"></div>
+      <div><label>IRPC IRY & AU หมดอายุ</label><input id="d_c7_e" placeholder="วัน/เดือน/ปี" oninput="fmtDate(this)" maxlength="10"></div>
+    </div>
+    <div class="section-label">รูปเอกสาร</div>
+    <div class="upload-zone" onclick="document.getElementById('d_img').click()">
+      <span class="icn">📁</span>
+      <div class="txt">คลิกเลือกรูปหลายไฟล์</div>
+    </div>
+    <input type="file" id="d_img" accept="image/*" multiple style="display:none" onchange="onImg('d')">
+    <div id="d_preview" class="preview-grid"></div>
+    <div id="d_imgCount" class="preview-count"></div>
+    <!-- OCR bar for driver -->
+    <div class="ocr-bar" id="d_ocrBar">
+      <button class="btn-ocr" id="d_ocrBtn" onclick="runOCR('d')">🤖 อ่านบัตรอัตโนมัติ</button>
+      <span style="font-size:12px;color:#94a3b8">Powered by Gemini AI</span>
+    </div>
+    <div class="ocr-result-box" id="d_ocrResult"></div>
+    <div class="ocr-error-box" id="d_ocrError"></div>
+  </div>
+  <button class="btn btn-success" id="btnSaveD" onclick="saveD()">💾 บันทึกข้อมูลพนักงาน</button>
+</div>
 
-  <script>
-  // *** วาง URL จาก Apps Script Deploy ตรงนี้ ***
-  const API = 'https://script.google.com/macros/s/AKfycbyuU-gGfMhIMKlEHbiRTd01Tcd2JGeXIDybGkg9VWPCEMJl6OsUf2qrCAgVudJ_Bg6v1A/exec';
+<div class="toast" id="toast"></div>
+</div>
 
-  function $(id){return document.getElementById(id)}
-  function goM(){$('pageMenu').className='page active';$('pageV').className='page';$('pageD').className='page';loadR()}
-  function goV(){$('pageMenu').className='page';$('pageV').className='page active';$('pageD').className='page'}
-  function goD(){$('pageMenu').className='page';$('pageV').className='page';$('pageD').className='page active'}
-  function g(id){return $(id).value.trim()}
-  function toast(m){var t=$('toast');t.textContent=m;t.className='toast show';setTimeout(function(){t.className='toast'},2500)}
+<script>
+const API = 'https://script.google.com/macros/s/AKfycbyuU-gGfMhIMKlEHbiRTd01Tcd2JGeXIDybGkg9VWPCEMJl6OsUf2qrCAgVudJ_Bg6v1A/exec';
+const GEMINI_API_KEY = 'AIzaSyDMFwAZWWFZx5lO9tPy6W4JeyV082Z-vj0';
+const GEMINI_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=' + GEMINI_API_KEY;
 
-  function fmtPlate(el){
-    var fmt=$(el.id.replace('v_h','v_fmt_h'));
-    var n=fmt&&fmt.value==='3'?3:2;
+function $(id){return document.getElementById(id)}
+function goM(){$('pageMenu').className='page active';$('pageV').className='page';$('pageD').className='page';loadR()}
+function goV(){$('pageMenu').className='page';$('pageV').className='page active';$('pageD').className='page'}
+function goD(){$('pageMenu').className='page';$('pageV').className='page';$('pageD').className='page active'}
+function g(id){return $(id).value.trim()}
+function toast(m){var t=$('toast');t.textContent=m;t.className='toast show';setTimeout(function(){t.className='toast'},2500)}
+
+function fmtPlate(el){
+  var fmt=$(el.id.replace('v_h','v_fmt_h'));
+  var n=fmt&&fmt.value==='3'?3:2;
+  var v=el.value.replace(/[^0-9]/g,'').slice(0,n+4);
+  if(v.length>n) v=v.slice(0,n)+'-'+v.slice(n);
+  el.value=v;
+}
+function updatePlateFmt(){
+  ['v_hua','v_hang'].forEach(function(id){
+    var el=$(id);if(!el)return;
+    var fmt=$(id.replace('v_h','v_fmt_h'));if(!fmt)return;
+    var n=fmt.value==='3'?3:2;
+    el.maxLength=n+5;el.placeholder=n===3?'000-0000':'00-0000';
     var v=el.value.replace(/[^0-9]/g,'').slice(0,n+4);
     if(v.length>n) v=v.slice(0,n)+'-'+v.slice(n);
     el.value=v;
+  });
+}
+function fmtBer(el){
+  el.value=el.value.replace(/[^0-9]/g,'').slice(0,3);
+  var v=el.value;
+  if(v.length===3){
+    var key=v.slice(0,1)=='0'?v.slice(1):v;
+    var d=VEHICLE_DATA[key];
+    if(d){$('v_hua').value=d.h;$('v_hang').value=d.b;}
   }
-  function updatePlateFmt(){
-    ['v_hua','v_hang'].forEach(function(id){
-      var el=$(id);
-      if(!el)return;
-      var fmt=$(id.replace('v_h','v_fmt_h'));
-      if(!fmt)return;
-      var n=fmt.value==='3'?3:2;
-      el.maxLength=n+5;
-      el.placeholder=n===3?'000-0000':'00-0000';
-      var v=el.value.replace(/[^0-9]/g,'').slice(0,n+4);
-      if(v.length>n) v=v.slice(0,n)+'-'+v.slice(n);
-      el.value=v;
+}
+function fillBer(el){
+  if(!el.value) return;
+  el.value=el.value.padStart(3,'0');
+  var v=el.value,key=v.slice(0,1)=='0'?v.slice(1):v;
+  var d=VEHICLE_DATA[key];
+  if(d){$('v_hua').value=d.h;$('v_hang').value=d.b;}
+}
+function fmtPhone(el){el.value=el.value.replace(/[^0-9]/g,'').slice(0,10)}
+function fmtCode(el){el.value=el.value.replace(/[^0-9]/g,'').slice(0,4)}
+function fmtDate(el){el.value=el.value.replace(/[^0-9]/g,'').replace(/^(\d{2})(\d)/,'$1/$2').replace(/^(\d{2}\/\d{2})(\d)/,'$1/$2').slice(0,10)}
+
+function normalizeDate(v){
+  if(!v||!(v=v.trim()))return '';
+  var p=v.split('/');
+  if(p.length!==3)return v;
+  var d=parseInt(p[0]),m=parseInt(p[1]),y=parseInt(p[2]);
+  if(isNaN(d)||isNaN(m)||isNaN(y))return '';
+  if(d<1||d>31||m<1||m>12)return '';
+  var dd=d<10?'0'+d:''+d;
+  var mm=m<10?'0'+m:''+m;
+  if(y<100) y+=y>=60?2500:2543;
+  else if(y>1000&&y<2500)y+=543;
+  return dd+'/'+mm+'/'+y;
+}
+
+function fmtDateBlur(el){
+  var v=el.value.trim();
+  if(!v){el.value='';return}
+  var p=v.split('/');
+  if(p.length<3){toast('❌ กรุณากรอกวันเดือนปีให้ครบ (วว/ดด/ปปปป)');el.value='';el.focus();return}
+  var n=normalizeDate(v);
+  if(!n){toast('❌ รูปแบบวันที่ไม่ถูกต้อง');el.value='';return}
+  el.value=n;
+}
+
+window.addEventListener('DOMContentLoaded',function(){
+  document.querySelectorAll('input[maxlength="10"]').forEach(function(el){
+    if(el.getAttribute('oninput')&&el.getAttribute('oninput').indexOf('fmtDate')>=0)
+      el.addEventListener('blur',function(){fmtDateBlur(this)});
+  });
+});
+
+var editKeyV='',editKeyD='',editImgsV='',editImgsD='';
+
+function clr(){
+  ['v_ber','v_hua','v_hang','v_tho_e','v_pasi_e',
+  'v_c1_e','v_c2_e','v_c3_e','v_c4_e','v_c5_e','v_c6_e','v_c7_e'].forEach(function(id){$(id).value=''});
+  ['d_code','d_ber','d_name','d_phone',
+  'd_c1_e','d_c2_e','d_c3_e','d_c4_e','d_c5_e','d_c6_e','d_c7_e'].forEach(function(id){$(id).value=''});
+  $('vMode').textContent='อัพบัตรรถ';$('dMode').textContent='อัพบัตรคน';
+  editKeyV='';editKeyD='';editImgsV='';editImgsD='';
+  removeImgs('v');removeImgs('d');
+  ['v','d'].forEach(function(p){
+    $(p+'_ocrBar').classList.remove('show');
+    $(p+'_ocrResult').className='ocr-result-box';
+    $(p+'_ocrError').className='ocr-error-box';
+  });
+}
+
+function apiGet(params){
+  var url=API+'?'+Object.keys(params).map(function(k){return encodeURIComponent(k)+'='+encodeURIComponent(params[k])}).join('&');
+  return fetch(url).then(function(r){return r.json()})
+}
+function apiPost(body){
+  var payload=JSON.stringify(body);
+  if(payload.length>5000||payload.indexOf('data:image')>=0||payload.indexOf(';base64,')>=0){
+    return new Promise(function(resolve){
+      var x=new XMLHttpRequest();x.open('POST',API);
+      x.onload=function(){try{var d=JSON.parse(x.responseText);resolve(Array.isArray(d)?{created:1,updated:0}:d)}catch(e){resolve({created:1,updated:0})}};
+      x.onerror=function(){resolve({error:'network error'})};
+      x.send(payload);
     });
   }
-  function fmtBer(el){el.value=el.value.replace(/[^0-9]/g,'').slice(0,3)}
-  function fmtPhone(el){el.value=el.value.replace(/[^0-9]/g,'').slice(0,10)}
-  function fmtCode(el){el.value=el.value.replace(/[^0-9]/g,'').slice(0,4)}
-  function fmtDate(el){el.value=el.value.replace(/[^0-9]/g,'').replace(/^(\d{2})(\d)/,'$1/$2').replace(/^(\d{2}\/\d{2})(\d)/,'$1/$2').slice(0,10)}
-
-  function normalizeDate(v){
-    if(!v||!(v=v.trim()))return '';
-    var p=v.split('/');
-    if(p.length!==3)return v;
-    var d=parseInt(p[0]),m=parseInt(p[1]),y=parseInt(p[2]);
-    if(isNaN(d)||isNaN(m)||isNaN(y))return '';
-    if(d<1||d>31||m<1||m>12)return '';
-    var dd=d<10?'0'+d:''+d;
-    var mm=m<10?'0'+m:''+m;
-    if(y<100) y+=y>=60?2500:2543; // ≥60 → พ.ศ. 2 หลัก (2560-2599), &lt;60 → ค.ศ. 2 หลัก (25+2543=2568)
-    else if(y>1000&&y<2500)y+=543; // ค.ศ. → พ.ศ.
-    return dd+'/'+mm+'/'+y;
-  }
-
-  function fmtDateBlur(el){
-    var v=el.value.trim();
-    if(!v){el.value='';return}
-    var p=v.split('/');
-    if(p.length<3){toast('❌ กรุณากรอกวันเดือนปีให้ครบ (วว/ดด/ปปปป)');el.value='';el.focus();return}
-    var n=normalizeDate(v);
-    if(!n){toast('❌ รูปแบบวันที่ไม่ถูกต้อง');el.value='';return}
-    el.value=n;
-  }
-
-  window.addEventListener('DOMContentLoaded',function(){
-    document.querySelectorAll('input[maxlength="10"]').forEach(function(el){
-      if(el.getAttribute('oninput')&&el.getAttribute('oninput').indexOf('fmtDate')>=0)
-        el.addEventListener('blur',function(){fmtDateBlur(this)});
+  return fetch(API+'?payload='+encodeURIComponent(payload)).then(function(r){return r.json()}).then(function(res){
+    if(res&&res.error)return res;if(Array.isArray(res))return{created:1,updated:0};return res;
+  }).catch(function(){
+    return new Promise(function(resolve){
+      var x=new XMLHttpRequest();x.open('POST',API);
+      x.onload=function(){try{var d=JSON.parse(x.responseText);resolve(Array.isArray(d)?{created:1,updated:0}:d)}catch(e){resolve({created:1,updated:0})}};
+      x.onerror=function(){resolve({error:'network error'})};
+      x.send(payload);
     });
   });
+}
 
-  var editKeyV='',editKeyD='',editImgsV='',editImgsD='';
+// ====== Image helpers ======
+function onImg(prefix){
+  var input=$(prefix+'_img');var files=input.files;
+  var container=$(prefix+'_preview');var count=$(prefix+'_imgCount');
+  container.innerHTML='';
+  $(prefix+'_ocrResult').className='ocr-result-box';
+  $(prefix+'_ocrError').className='ocr-error-box';
+  if(!files||files.length===0){
+    count.textContent='';
+    $(prefix+'_ocrBar').classList.remove('show');
+    return;
+  }
+  count.textContent='เลือก '+files.length+' รูป';
+  $(prefix+'_ocrBar').classList.add('show');
+  [].forEach.call(files,function(f){
+    if(!f.type.match('image.*'))return;
+    var reader=new FileReader();
+    reader.onload=function(e){
+      var div=document.createElement('div');div.className='preview-item';
+      div.innerHTML='<img src="'+e.target.result+'"><button class="del" onclick="removeImgs(\''+prefix+'\')">\u00D7</button>';
+      container.appendChild(div);
+    };
+    reader.readAsDataURL(f);
+  });
+}
+function removeImgs(prefix){
+  $(prefix+'_img').value='';$(prefix+'_preview').innerHTML='';$(prefix+'_imgCount').textContent='';
+  $(prefix+'_ocrBar').classList.remove('show');
+  $(prefix+'_ocrResult').className='ocr-result-box';
+  $(prefix+'_ocrError').className='ocr-error-box';
+}
+function readImgs(prefix){
+  return new Promise(function(resolve){
+    var input=$(prefix+'_img');var files=input.files;
+    if(!files||files.length===0){resolve([]);return}
+    var results=[];
+    function readNext(idx){
+      if(idx>=files.length){resolve(results);return}
+      var r=new FileReader();
+      r.onload=function(e){results.push(e.target.result);readNext(idx+1)};
+      r.onerror=function(){readNext(idx+1)};
+      r.readAsDataURL(files[idx]);
+    }
+    readNext(0);
+  });
+}
 
-  function clr(){
-    ['v_ber','v_hua','v_hang','v_tho_e','v_pasi_e',
-    'v_c1_e','v_c2_e','v_c3_e','v_c4_e','v_c5_e','v_c6_e','v_c7_e'].forEach(function(id){$(id).value=''});
-    ['d_code','d_ber','d_name','d_phone',
-    'd_c1_e','d_c2_e','d_c3_e','d_c4_e','d_c5_e','d_c6_e','d_c7_e'].forEach(function(id){$(id).value=''});
-    $('vMode').textContent='อัพบัตรรถ';
-    $('dMode').textContent='อัพบัตรคน';
-    editKeyV='';editKeyD='';editImgsV='';editImgsD='';
-    removeImgs('v');removeImgs('d');
+// ====== GEMINI OCR ======
+// Map บัตรแต่ละประเภท → field ในฟอร์ม
+var OCR_FIELD_MAP_V = {
+  'thaioil': 'v_c1_e',
+  'esso':    'v_c2_e',
+  'ptt':     'v_c3_e',
+  'llk':     'v_c4_e',
+  'srb':     'v_c5_e',
+  'sprc':    'v_c6_e',
+  'irpc':    'v_c7_e',
+  'ธพน':    'v_tho_e',
+  'ภาษี':   'v_pasi_e'
+};
+var OCR_FIELD_MAP_D = {
+  'esso':    'd_c1_e',
+  'ptt':     'd_c2_e',
+  'llk':     'd_c3_e',
+  'srb':     'd_c4_e',
+  'sprc':    'd_c5_e',
+  'thaioil': 'd_c6_e',
+  'irpc':    'd_c7_e'
+};
+
+var OCR_LABEL_MAP = {
+  'v_c1_e':'Thaioil SRC','v_c2_e':'Esso SRC','v_c3_e':'PTT-GC',
+  'v_c4_e':'LLK Thappline','v_c5_e':'SRB Thappline','v_c6_e':'SPRC','v_c7_e':'IRPC IRY & AU',
+  'v_tho_e':'ธพน.2','v_pasi_e':'ภาษี',
+  'd_c1_e':'Esso SRC','d_c2_e':'PTT-GC','d_c3_e':'LLK Thappline',
+  'd_c4_e':'SRB Thappline','d_c5_e':'SPRC','d_c6_e':'Thaioil SRC','d_c7_e':'IRPC IRY & AU'
+};
+
+async function runOCR(prefix){
+  var btn=$(prefix+'_ocrBtn');
+  var resultBox=$(prefix+'_ocrResult');
+  var errorBox=$(prefix+'_ocrError');
+  resultBox.className='ocr-result-box';
+  errorBox.className='ocr-error-box';
+
+  var files=$(prefix+'_img').files;
+  if(!files||files.length===0){toast('กรุณาเลือกรูปก่อน');return}
+
+  btn.disabled=true;
+  btn.innerHTML='<span class="spinner-dark"></span>กำลังอ่านบัตร...';
+
+  try{
+    // อ่านรูปทุกใบแล้วส่งให้ Gemini
+    var imgDataList=await readImgs(prefix);
+
+    var parts=[{
+      text: `คุณคือผู้ช่วยอ่านบัตรผ่านเข้าคลังน้ำมัน กรุณาอ่านรูปบัตรที่แนบมาทั้งหมด แล้วระบุข้อมูลต่อไปนี้ในรูปแบบ JSON เท่านั้น (ไม่ต้องอธิบายเพิ่ม):
+
+{
+  "card_type": "ชื่อบัตร เช่น Thaioil SRC / Esso SRC / PTT-GC / LLK Thappline / SRB Thappline / SPRC / IRPC / ธพน.2 / ภาษี",
+  "expiry_date": "วันหมดอายุในรูปแบบ DD/MM/YYYY (ค.ศ.) หรือ DD/MM/BBBB (พ.ศ.)",
+  "start_date": "วันที่เริ่มต้น (ถ้ามี)",
+  "name": "ชื่อผู้ถือบัตร (ถ้ามี)",
+  "card_number": "หมายเลขบัตร (ถ้ามี)"
+}
+
+ถ้ามีบัตรหลายใบในรูป ให้ return เป็น array ของ object
+ถ้าอ่านวันหมดอายุไม่ได้ให้ใส่ null`
+    }];
+
+    imgDataList.forEach(function(dataUrl){
+      var match=dataUrl.match(/^data:([^;]+);base64,(.+)$/);
+      if(match){
+        parts.push({inline_data:{mime_type:match[1],data:match[2]}});
+      }
+    });
+
+    var resp=await fetch(GEMINI_URL,{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({contents:[{parts:parts}],generationConfig:{temperature:0.1}})
+    });
+
+    if(!resp.ok){
+      var err=await resp.json();
+      throw new Error(err.error&&err.error.message?err.error.message:'Gemini API error '+resp.status);
+    }
+
+    var data=await resp.json();
+    var text=data.candidates&&data.candidates[0]&&data.candidates[0].content&&data.candidates[0].content.parts&&data.candidates[0].content.parts[0]&&data.candidates[0].content.parts[0].text;
+    if(!text)throw new Error('ไม่ได้รับข้อมูลจาก Gemini');
+
+    // parse JSON จาก response
+    var clean=text.replace(/```json|```/g,'').trim();
+    var parsed;
+    try{parsed=JSON.parse(clean)}catch(e){throw new Error('อ่านผลลัพธ์ไม่ได้: '+text.slice(0,100))}
+
+    if(!Array.isArray(parsed))parsed=[parsed];
+
+    var fieldMap=prefix==='v'?OCR_FIELD_MAP_V:OCR_FIELD_MAP_D;
+    var filled={};
+    var unfilled=[];
+
+    parsed.forEach(function(card){
+      if(!card)return;
+      var ct=(card.card_type||'').toLowerCase();
+      var exp=card.expiry_date;
+      if(!exp)return;
+
+      // หา field ที่ตรงกับบัตรประเภทนี้
+      var fieldId=null;
+      Object.keys(fieldMap).forEach(function(keyword){
+        if(ct.indexOf(keyword)>=0)fieldId=fieldMap[keyword];
+      });
+
+      if(fieldId&&exp){
+        var normalized=normalizeDate(exp.replace(/[^\d\/]/g,'/').replace(/\/+/g,'/'));
+        if(normalized){
+          $(fieldId).value=normalized;
+          $(fieldId).classList.add('ai-filled');
+          filled[fieldId]={label:OCR_LABEL_MAP[fieldId]||fieldId,date:normalized,name:card.name||''};
+        }
+      } else if(exp){
+        unfilled.push((card.card_type||'ไม่ทราบประเภท')+': '+exp);
+      }
+    });
+
+    // แสดงผล
+    if(Object.keys(filled).length>0){
+      var html='<div class="ocr-title">✅ อ่านได้ '+Object.keys(filled).length+' บัตร — กรุณาตรวจสอบก่อนบันทึก</div>';
+      Object.keys(filled).forEach(function(fid){
+        var f=filled[fid];
+        html+='<div class="ocr-result-row"><span class="field">'+f.label+'</span><span class="val">'+f.date+'</span></div>';
+      });
+      if(unfilled.length){
+        html+='<div style="margin-top:8px;font-size:12px;color:#92400e">⚠️ อ่านได้แต่ไม่ตรงกับช่องในฟอร์ม: '+unfilled.join(', ')+'</div>';
+      }
+      resultBox.innerHTML=html;
+      resultBox.className='ocr-result-box show';
+      toast('✅ อ่านบัตรสำเร็จ '+Object.keys(filled).length+' รายการ');
+    } else {
+      var noMatch='ไม่พบวันหมดอายุที่ตรงกับช่องในฟอร์ม';
+      if(unfilled.length)noMatch+=' (พบ: '+unfilled.join(', ')+')';
+      errorBox.textContent='⚠️ '+noMatch;
+      errorBox.className='ocr-error-box show';
+    }
+
+  }catch(e){
+    errorBox.textContent='❌ '+e.message;
+    errorBox.className='ocr-error-box show';
   }
-  function apiGet(params){
-    var url=API+'?'+Object.keys(params).map(function(k){
-      return encodeURIComponent(k)+'='+encodeURIComponent(params[k]);
-    }).join('&');
-    return fetch(url).then(function(r){return r.json()});
+
+  btn.disabled=false;
+  btn.innerHTML='🤖 อ่านบัตรอัตโนมัติ';
+}
+
+// ====== SAVE VEHICLE ======
+async function saveV(){
+  var btn=$('btnSaveV');btn.disabled=true;btn.innerHTML='<span class="spinner"></span>กำลังบันทึก...';
+  var ber=g('v_ber');
+  if(!ber||ber.length<3){toast('กรุณากรอกเบอร์รถให้ครบ 3 หลัก');btn.disabled=false;btn.innerHTML='💾 บันทึกข้อมูลรถ';return}
+  var veh=VEHICLE_DATA[ber];
+  if(!veh){toast('❌ เบอร์ '+ber+' ไม่มีในระบบ');btn.disabled=false;btn.innerHTML='💾 บันทึกข้อมูลรถ';return}
+  try{
+    ['v_hua','v_hang'].forEach(function(id){
+      var el=$(id);if(!el||!el.value)return;
+      var fmt=$(id.replace('v_h','v_fmt_h'));var n=fmt&&fmt.value==='3'?3:2;
+      var raw=el.value.replace(/[^0-9]/g,'').slice(0,n+4);
+      if(raw.length>n) raw=raw.slice(0,n)+'-'+raw.slice(n);
+      var isFront=id==='v_hua';var expected=isFront?veh.h:veh.b;
+      if(expected&&raw!==expected){
+        toast('❌ ทะเบียน'+(isFront?'หัว':'หาง')+' ไม่ตรงกับเบอร์ '+ber+' (ต้องเป็น '+expected+')');
+        btn.disabled=false;btn.innerHTML='💾 บันทึกข้อมูลรถ';throw'stop'
+      }
+    });
+  }catch(e){if(e==='stop')return}
+  var data={
+    'เบอร์รถ':ber,'จังหวัด':g('v_province'),'ทะเบียนหัว':g('v_hua'),'ทะเบียนหาง':g('v_hang'),
+    'ธพน.2 หมดอายุบัตร':normalizeDate(g('v_tho_e')),
+    'ภาษี หมดอายุบัตร':normalizeDate(g('v_pasi_e')),
+    'Thaioil SRC หมดอายุบัตร':normalizeDate(g('v_c1_e')),
+    'Esso SRC หมดอายุบัตร':normalizeDate(g('v_c2_e')),
+    'PTT-GC หมดอายุบัตร':normalizeDate(g('v_c3_e')),
+    'LLK Thappline หมดอายุบัตร':normalizeDate(g('v_c4_e')),
+    'SRB Thappline หมดอายุบัตร':normalizeDate(g('v_c5_e')),
+    'SPRC หมดอายุบัตร':normalizeDate(g('v_c6_e')),
+    'IRPC IRY & AU หมดอายุบัตร':normalizeDate(g('v_c7_e'))
+  };
+  var newImgs=await readImgs('v');
+  if(newImgs.length) data['รูปเอกสาร_base64']=newImgs;
+  else if(editImgsV) data['รูปเอกสาร']=editImgsV;
+  try{
+    var res=await apiPost({sheet:'รถ',data:data,editKey:editKeyV});
+    if(res.error){toast('ผิดพลาด: '+res.error);btn.disabled=false;btn.innerHTML='💾 บันทึกข้อมูลรถ';return}
+    toast((res.updated?'อัปเดตเบอร์ '+ber:'บันทึกเบอร์ '+ber));
+    clr();setTimeout(loadR,100);
+  }catch(e){toast('เกิดข้อผิดพลาด กรุณาลองใหม่')}
+  btn.disabled=false;btn.innerHTML='💾 บันทึกข้อมูลรถ';
+}
+
+// ====== SAVE DRIVER ======
+async function saveD(){
+  var btn=$('btnSaveD');btn.disabled=true;btn.innerHTML='<span class="spinner"></span>กำลังบันทึก...';
+  var name=g('d_name');
+  if(!name){toast('กรุณากรอกชื่อ');btn.disabled=false;btn.innerHTML='💾 บันทึกข้อมูลพนักงาน';return}
+  var phone=g('d_phone');
+  if(phone&&phone.length==9){phone='0'+phone;}
+  var ber=g('d_ber');
+  if(ber&&ber.length<3){toast('กรุณากรอกเบอร์รถให้ครบ 3 หลัก');btn.disabled=false;btn.innerHTML='💾 บันทึกข้อมูลพนักงาน';return}
+  var code=g('d_code');
+  if(!code||code.length<4){toast('กรุณากรอกรหัสพนักงาน 4 หลัก');btn.disabled=false;btn.innerHTML='💾 บันทึกข้อมูลพนักงาน';return}
+  if(EMP_LIST.indexOf(code)<0){toast('❌ รหัส '+code+' ไม่มีในระบบ');btn.disabled=false;btn.innerHTML='💾 บันทึกข้อมูลพนักงาน';return}
+  var data={
+    'รหัสพนักงาน':code,'เบอร์รถ':ber,'ชื่อ':name,'เบอร์โทร':phone.replace(/^0+/,''),
+    'Esso SRC หมดอายุบัตร':normalizeDate(g('d_c1_e')),
+    'PTT-GC หมดอายุบัตร':normalizeDate(g('d_c2_e')),
+    'LLK Thappline หมดอายุบัตร':normalizeDate(g('d_c3_e')),
+    'SRB Thappline หมดอายุบัตร':normalizeDate(g('d_c4_e')),
+    'SPRC หมดอายุบัตร':normalizeDate(g('d_c5_e')),
+    'Thaioil SRC หมดอายุบัตร':normalizeDate(g('d_c6_e')),
+    'IRPC IRY & AU หมดอายุบัตร':normalizeDate(g('d_c7_e'))
+  };
+  var newImgs=await readImgs('d');
+  if(newImgs.length) data['รูปเอกสาร_base64']=newImgs;
+  else if(editImgsD) data['รูปเอกสาร']=editImgsD;
+  try{
+    var res=await apiPost({sheet:'คน',data:data,editKey:editKeyD});
+    if(res.error){toast('ผิดพลาด: '+res.error);btn.disabled=false;btn.innerHTML='💾 บันทึกข้อมูลพนักงาน';return}
+    toast((res.updated?'อัปเดต '+name:'บันทึก '+name));
+    clr();setTimeout(loadR,100);
+  }catch(e){toast('เกิดข้อผิดพลาด กรุณาลองใหม่')}
+  btn.disabled=false;btn.innerHTML='💾 บันทึกข้อมูลพนักงาน';
+}
+
+// ====== LOAD RECENT ======
+async function loadR(){
+  var el=$('recentList');
+  try{
+    var v=await apiGet({sheet:'รถ'});v=Array.isArray(v)?v:v.data||[];
+    var d=await apiGet({sheet:'คน'});d=Array.isArray(d)?d:d.data||[];
+    var html='<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">';
+    if(v&&v.length){
+      html+='<div><div style="font-size:13px;font-weight:600;color:#64748b;margin-bottom:8px">🚚 รถ</div>';
+      v.slice(-5).reverse().forEach(function(r){
+        var b=r['เบอร์รถ']||'';var exp='';
+        Object.keys(r).forEach(function(k){if(k.indexOf('หมดอายุ')>=0&&r[k])exp=normalizeDate(r[k])});
+        var bs=b.replace(/\\/g,'\\\\').replace(/'/g,"\\'");
+        var hasImg=r['รูปเอกสาร']||'';var gal='';
+        if(hasImg){
+          var imgCount=hasImg.split(/[\n,]+/).filter(function(x){return x.trim()}).length;
+          var escaped=hasImg.replace(/\\/g,'\\\\').replace(/'/g,"\\'").replace(/\n/g,'\\n');
+          gal=' <span onclick="event.stopPropagation();openImgs(\''+escaped+'\')" style="display:inline-flex;align-items:center;gap:3px;padding:2px 8px;background:#e0f2fe;color:#0284c7;border-radius:20px;font-size:11px;cursor:pointer;font-weight:500;margin-left:6px">📷 '+imgCount+'</span>';
+        }
+        html+='<div class="list-item" onclick="editV(\''+bs+'\')"><div><div class="main">'+b+gal+'</div></div><span style="font-size:11px;color:#64748b">'+exp+'</span></div>';
+      });
+      html+='</div>';
+    } else {
+      html+='<div><div style="font-size:13px;color:#94a3b8">ยังไม่มีข้อมูลรถ</div></div>';
+    }
+    if(d&&d.length){
+      html+='<div><div style="font-size:13px;font-weight:600;color:#64748b;margin-bottom:8px">🧑 คน</div>';
+      d.slice(-5).reverse().forEach(function(r){
+        var n=r['ชื่อ']||'',c=r['รหัสพนักงาน']||'';
+        var cs=c.replace(/\\/g,'\\\\').replace(/'/g,"\\'");
+        var hasImg=r['รูปเอกสาร']||'';var galD='';
+        if(hasImg){
+          var imgCount=hasImg.split(/[\n,]+/).filter(function(x){return x.trim()}).length;
+          var escaped=hasImg.replace(/\\/g,'\\\\').replace(/'/g,"\\'").replace(/\n/g,'\\n');
+          galD=' <span onclick="event.stopPropagation();openImgs(\''+escaped+'\')" style="display:inline-flex;align-items:center;gap:3px;padding:2px 8px;background:#e0f2fe;color:#0284c7;border-radius:20px;font-size:11px;cursor:pointer;font-weight:500;margin-left:6px">📷 '+imgCount+'</span>';
+        }
+        html+='<div class="list-item" onclick="editD(\''+cs+'\')"><div><div class="main">'+n+galD+'</div></div></div>';
+      });
+      html+='</div>';
+    } else {
+      html+='<div><div style="font-size:13px;color:#94a3b8">ยังไม่มีข้อมูลคน</div></div>';
+    }
+    html+='</div>';
+    el.innerHTML=html;
+  }catch(e){
+    el.innerHTML='<div style="text-align:center;color:#ef4444;padding:20px">⚠️ โหลดไม่ได้ ตรวจสอบการเชื่อมต่อ</div>';
   }
-  function apiPost(body){
-    var payload=JSON.stringify(body);
-    // ถ้า payload มี base64 หรือใหญ่เกินไป ใช้ POST โดยตรง (GET+payload URL จะยาวเกินไป)
-    if (payload.length > 5000 || payload.indexOf('data:image') >= 0 || payload.indexOf(';base64,') >= 0) {
-      return new Promise(function(resolve){
-        var x=new XMLHttpRequest();
-        x.open('POST',API);
-        x.onload=function(){
-          try{
-            var d=JSON.parse(x.responseText);
-            resolve(Array.isArray(d)?{created:1,updated:0}:d);
-          }catch(e){resolve({created:1,updated:0})}
-        };
-        x.onerror=function(){resolve({error:'network error'})};
-        x.send(payload);
+}
+
+// ====== EDIT ======
+function editV(ber){
+  editKeyV=ber;
+  apiGet({sheet:'รถ',key:ber}).then(function(r){
+    if(!r||r.error)return;if(Array.isArray(r)){r=r[0]}else{r=r.data&&r.data[0]?r.data[0]:r}
+    if(!r||!r['เบอร์รถ'])return;
+    $('v_ber').value=r['เบอร์รถ']||'';
+    $('v_province').value=(r['จังหวัด']||'').indexOf('กทม')>=0?'กทม':'อื่น ๆ';
+    $('v_hua').value=r['ทะเบียนหัว']||'';$('v_hang').value=r['ทะเบียนหาง']||'';
+    $('v_tho_e').value=normalizeDate(r['ธพน.2 หมดอายุบัตร']||'');
+    $('v_pasi_e').value=normalizeDate(r['ภาษี หมดอายุบัตร']||'');
+    $('v_c1_e').value=normalizeDate(r['Thaioil SRC หมดอายุบัตร']||'');
+    $('v_c2_e').value=normalizeDate(r['Esso SRC หมดอายุบัตร']||'');
+    $('v_c3_e').value=normalizeDate(r['PTT-GC หมดอายุบัตร']||'');
+    $('v_c4_e').value=normalizeDate(r['LLK Thappline หมดอายุบัตร']||'');
+    $('v_c5_e').value=normalizeDate(r['SRB Thappline หมดอายุบัตร']||'');
+    $('v_c6_e').value=normalizeDate(r['SPRC หมดอายุบัตร']||'');
+    $('v_c7_e').value=normalizeDate(r['IRPC IRY & AU หมดอายุบัตร']||'');
+    editImgsV=r['รูปเอกสาร']||'';
+    $('vMode').textContent='แก้ไข เบอร์ '+ber;
+    goV();window.scrollTo({top:0,behavior:'smooth'});
+  });
+}
+function editD(code){
+  editKeyD=code;
+  apiGet({sheet:'คน',key:code}).then(function(r){
+    if(!r||r.error)return;if(Array.isArray(r)){r=r[0]}else{r=r.data&&r.data[0]?r.data[0]:r}
+    if(!r||!r['รหัสพนักงาน'])return;
+    $('d_code').value=r['รหัสพนักงาน']||'';$('d_ber').value=r['เบอร์รถ']||'';
+    $('d_name').value=r['ชื่อ']||'';$('d_phone').value=r['เบอร์โทร']||'';
+    $('d_c1_e').value=normalizeDate(r['Esso SRC หมดอายุบัตร']||'');
+    $('d_c2_e').value=normalizeDate(r['PTT-GC หมดอายุบัตร']||'');
+    $('d_c3_e').value=normalizeDate(r['LLK Thappline หมดอายุบัตร']||'');
+    $('d_c4_e').value=normalizeDate(r['SRB Thappline หมดอายุบัตร']||'');
+    $('d_c5_e').value=normalizeDate(r['SPRC หมดอายุบัตร']||'');
+    $('d_c6_e').value=normalizeDate(r['Thaioil SRC หมดอายุบัตร']||'');
+    $('d_c7_e').value=normalizeDate(r['IRPC IRY & AU หมดอายุบัตร']||'');
+    editImgsD=r['รูปเอกสาร']||'';
+    $('dMode').textContent='แก้ไข '+(r['ชื่อ']||'');
+    goD();window.scrollTo({top:0,behavior:'smooth'});
+  });
+}
+
+// ====== IMAGE VIEWER ======
+function openImgs(urls){
+  var imgs=urls.split(/[\n,]+/);
+  var h='<div onclick="this.remove()" style="position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.92);z-index:9999;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:20px;overflow-y:auto">';
+  h+='<div onclick="event.stopPropagation();this.parentElement.remove()" style="position:fixed;top:16px;right:20px;color:#fff;font-size:28px;cursor:pointer;z-index:10">✕</div>';
+  h+='<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:12px;width:100%;max-width:900px">';
+  imgs.forEach(function(u){
+    u=u.trim();if(!u)return;
+    var src=u;
+    var idMatch=u.match(/[?&]id=([^&]+)/)||u.match(/\/file\/d\/([^/]+)/);
+    if(idMatch) src='https://drive.google.com/thumbnail?id='+idMatch[1]+'&sz=w800';
+    h+='<div style="background:#1e293b;border-radius:10px;overflow:hidden"><a href="'+u+'" target="_blank" rel="noopener"><img src="'+src+'" style="width:100%;display:block" loading="lazy"></a></div>';
+  });
+  h+='</div></div>';
+  var d=document.createElement('div');d.innerHTML=h;
+  document.body.appendChild(d.firstElementChild);
+}
+
+lsLoadAll();
+loadR();
+
+// ====== ADMIN ======
+function showLogin(){$('loginModal').classList.add('show');$('adminUser').focus()}
+function hide(id){$(id).classList.remove('show')}
+function doLogin(){
+  var u=$('adminUser').value.trim(),p=$('adminPass').value.trim();
+  if(u==='tha1234'&&p==='4858'){
+    hide('loginModal');$('adminPanel').classList.add('show');$('adminBtn').classList.add('ok');
+    renderAdminVeh();renderAdminEmp();
+  }else{toast('❌ Username หรือ Password ไม่ถูกต้อง')}
+}
+function doLogout(){$('adminPanel').classList.remove('show');$('adminBtn').classList.remove('ok')}
+function switchAdminTab(tab,btn){
+  document.querySelectorAll('.admin-section').forEach(function(el){el.classList.remove('show')});
+  document.querySelectorAll('.admin-tab').forEach(function(el){el.classList.remove('active')});
+  btn.classList.add('active');
+  if(tab==='veh'){$('adminVeh').classList.add('show');renderAdminVeh()}
+  else if(tab==='emp'){$('adminEmp').classList.add('show');renderAdminEmp()}
+  else{$('adminData').classList.add('show');renderAdminData()}
+}
+// ====== localStorage helpers ======
+var LS_VEH_KEY='admin_extra_veh';
+var LS_EMP_KEY='admin_extra_emp';
+
+function lsSaveVeh(){
+  // บันทึกเฉพาะรายการที่เพิ่มผ่าน admin (ไม่รวม hardcode)
+  try{localStorage.setItem(LS_VEH_KEY,JSON.stringify(window._extraVeh||{}));}catch(e){}
+}
+function lsSaveEmp(){
+  try{localStorage.setItem(LS_EMP_KEY,JSON.stringify(window._extraEmp||[]));}catch(e){}
+}
+function lsLoadAll(){
+  // โหลด extra vehicle
+  try{
+    var ev=localStorage.getItem(LS_VEH_KEY);
+    if(ev){
+      window._extraVeh=JSON.parse(ev);
+      Object.keys(window._extraVeh).forEach(function(k){
+        VEHICLE_DATA[k]=window._extraVeh[k];
+        var d=window._extraVeh[k];
+        if(d.h&&PLATE_LIST.indexOf(d.h)<0)PLATE_LIST.push(d.h);
+        if(d.b&&PLATE_LIST.indexOf(d.b)<0)PLATE_LIST.push(d.b);
       });
     }
-    // payload เล็ก → ใช้ GET+payload (เลี่ยง 302 redirect, ได้ response จริงจาก doPost)
-    return fetch(API+'?payload='+encodeURIComponent(payload)).then(function(r){
-      return r.json();
-    }).then(function(res){
-      if(res&&res.error) return res;
-      if(Array.isArray(res)) return {created:1,updated:0};
-      return res;
-    }).catch(function(){
-      return new Promise(function(resolve){
-        var x=new XMLHttpRequest();
-        x.open('POST',API);
-        x.onload=function(){
-          try{
-            var d=JSON.parse(x.responseText);
-            resolve(Array.isArray(d)?{created:1,updated:0}:d);
-          }catch(e){resolve({created:1,updated:0})}
-        };
-        x.onerror=function(){resolve({error:'network error'})};
-        x.send(payload);
-      });
+  }catch(e){}
+  // โหลด extra emp
+  try{
+    var ee=localStorage.getItem(LS_EMP_KEY);
+    if(ee){
+      window._extraEmp=JSON.parse(ee);
+      window._extraEmp.forEach(function(c){if(EMP_LIST.indexOf(c)<0)EMP_LIST.push(c)});
+      EMP_LIST.sort(function(a,b){return parseInt(a)-parseInt(b)});
+    }
+  }catch(e){}
+}
+
+// ====== Admin Data with search ======
+var _adminDataCache=[];
+function renderAdminData(){
+  var type=window._adminDataType||'คน';
+  var el=$('adminDataList');
+  var searchBox=$('adminDataSearch');
+  if(searchBox)searchBox.value='';
+  el.innerHTML='<div style="color:#94a3b8;font-size:13px;padding:10px">กำลังโหลด...</div>';
+  apiGet({sheet:type}).then(function(data){
+    _adminDataCache=Array.isArray(data)?data:data&&data.data||[];
+    renderAdminDataRows(_adminDataCache,'');
+  }).catch(function(){el.innerHTML='<div style="color:#ef4444;font-size:13px;padding:10px">โหลดข้อมูลล้มเหลว</div>'});
+}
+function renderAdminDataRows(arr,q){
+  var el=$('adminDataList');
+  if(!arr||!arr.length){el.innerHTML='<div style="color:#94a3b8;font-size:13px;padding:10px">ไม่มีข้อมูล</div>';return}
+  var filtered=arr;
+  if(q&&q.trim()){
+    var ql=q.trim().toLowerCase();
+    filtered=arr.filter(function(r){
+      return Object.values(r).some(function(v){return v&&String(v).toLowerCase().indexOf(ql)>=0});
     });
   }
+  if(!filtered.length){el.innerHTML='<div style="color:#94a3b8;font-size:13px;padding:10px">ไม่พบผลลัพธ์ "'+q+'"</div>';return}
+  var h='';
+  filtered.slice().reverse().forEach(function(r){
+    var name=r['ชื่อ']||'',code=r['รหัสพนักงาน']||'',ber=r['เบอร์รถ']||'',phone=r['เบอร์โทร']||'';
+    var imgs=r['รูปเอกสาร']||'';var gal='';
+    if(imgs){
+      var cnt=imgs.split(/[\n,]+/).filter(function(x){return x.trim()}).length;
+      var esc=imgs.replace(/\\/g,'\\\\').replace(/'/g,"\\'").replace(/\n/g,'\\n');
+      gal=' <span onclick="event.stopPropagation();openImgs(\''+esc+'\')" style="display:inline-flex;align-items:center;gap:3px;padding:2px 8px;background:#e0f2fe;color:#0284c7;border-radius:20px;font-size:11px;cursor:pointer;font-weight:500">📷 '+cnt+'</span>';
+    }
+    h+='<div class="list-item" style="cursor:default"><div><div class="main">'+(code?code+' | ':'')+name+gal+'</div><div style="font-size:11px;color:#64748b">'+(ber?'🚚 '+ber:'')+(phone?' | 📱 '+phone:'')+'</div></div></div>';
+  });
+  el.innerHTML=h;
+}
+function switchAdminDataTab(type,btn){
+  window._adminDataType=type;
+  var parent=btn.parentElement;
+  parent.querySelectorAll('.admin-tab').forEach(function(el){el.style.background='#fff';el.style.color='#0f172a'});
+  btn.style.background='#0f172a';btn.style.color='#fff';
+  renderAdminData();
+}
+function renderAdminVeh(){
+  var keys=Object.keys(VEHICLE_DATA).sort(function(a,b){return parseInt(a)-parseInt(b)});
+  var h='';
+  keys.forEach(function(k){
+    var v=VEHICLE_DATA[k];
+    h+='<div class="admin-list-item"><span>'+k+'. '+v.h+(v.b?' / '+v.b:'')+'</span><span class="del" onclick="delVehicle(\''+k+'\')">✕</span></div>';
+  });
+  $('adminVehList').innerHTML=h||'<div style="color:#94a3b8;font-size:13px;padding:10px">ไม่มีข้อมูล</div>';
+}
+function addVehicle(){
+  var num=$('aVehNum').value.trim(),f=$('aVehFront').value.trim(),b=$('aVehBack').value.trim();
+  if(!num){toast('กรุณากรอกเบอร์รถ');return}
+  if(!f&&!b){toast('กรุณากรอกทะเบียน');return}
+  VEHICLE_DATA[num]={h:f,b:b};
+  if(f&&PLATE_LIST.indexOf(f)<0)PLATE_LIST.push(f);
+  if(b&&PLATE_LIST.indexOf(b)<0)PLATE_LIST.push(b);
+  if(!window._extraVeh)window._extraVeh={};
+  window._extraVeh[num]={h:f,b:b};
+  lsSaveVeh();
+  $('aVehNum').value='';$('aVehFront').value='';$('aVehBack').value='';
+  renderAdminVeh();toast('✅ เพิ่มเบอร์ '+num+' เรียบร้อย (บันทึกแล้ว)');
+}
+function delVehicle(k){
+  if(!confirm('ลบเบอร์ '+k+'?'))return;
+  delete VEHICLE_DATA[k];
+  if(window._extraVeh&&window._extraVeh[k]){delete window._extraVeh[k];lsSaveVeh();}
+  renderAdminVeh();
+}
+function renderAdminEmp(){
+  var h='';
+  EMP_LIST.forEach(function(c){
+    h+='<div class="admin-list-item"><span>'+c+'</span><span class="del" onclick="delEmpCode(\''+c+'\')">✕</span></div>';
+  });
+  $('adminEmpList').innerHTML=h||'<div style="color:#94a3b8;font-size:13px;padding:10px">ไม่มีข้อมูล</div>';
+}
+function addEmpCode(){
+  var code=$('aEmpCode').value.trim();
+  if(!code||code.length<4){toast('กรุณากรอกรหัส 4 หลัก');return}
+  if(EMP_LIST.indexOf(code)>=0){toast('❌ รหัส '+code+' มีอยู่แล้ว');return}
+  EMP_LIST.push(code);EMP_LIST.sort(function(a,b){return parseInt(a)-parseInt(b)});
+  EMP_RAW=EMP_LIST.join('\n');
+  if(!window._extraEmp)window._extraEmp=[];
+  if(window._extraEmp.indexOf(code)<0)window._extraEmp.push(code);
+  lsSaveEmp();
+  $('aEmpCode').value='';
+  renderAdminEmp();toast('✅ เพิ่มรหัส '+code+' เรียบร้อย (บันทึกแล้ว)');
+}
+function delEmpCode(code){
+  if(!confirm('ลบรหัส '+code+'?'))return;
+  var idx=EMP_LIST.indexOf(code);
+  if(idx>=0){EMP_LIST.splice(idx,1);EMP_RAW=EMP_LIST.join('\n');}
+  if(window._extraEmp){var ei=window._extraEmp.indexOf(code);if(ei>=0){window._extraEmp.splice(ei,1);lsSaveEmp();}}
+  renderAdminEmp();
+}
 
-  // ====== Vehicle plate data ======
-  // Map of vehicle number -> {h: front plate, b: back plate}
-  // 339 vehicles total. 298 have both front & back, 40 have front only (NO.238-277)
-  var VEHICLE_DATA = {
+// ====== VEHICLE DATA ======
+var VEHICLE_DATA = {
 "01":{h:"62-0923",b:"62-0924"},"02":{h:"62-0925",b:"62-0926"},"03":{h:"62-0927",b:"62-0928"},"04":{h:"62-0929",b:"62-0930"},"05":{h:"62-0931",b:"62-0932"},
 "06":{h:"62-2723",b:"62-2724"},"07":{h:"62-2725",b:"62-2726"},"08":{h:"62-2727",b:"62-2728"},"09":{h:"62-2729",b:"62-2730"},"10":{h:"62-2731",b:"62-2732"},
 "11":{h:"62-3120",b:"62-3121"},"12":{h:"62-3122",b:"62-3123"},"13":{h:"62-3124",b:"62-3125"},"14":{h:"62-3308",b:"62-3309"},"15":{h:"62-3310",b:"62-3311"},
@@ -472,13 +1034,12 @@
 "331":{h:"700-2220",b:"700-1384"},"332":{h:"700-2221",b:"700-1385"},"333":{h:"700-2223",b:"700-1386"},"334":{h:"700-2225",b:"700-1387"},"335":{h:"700-2226",b:"700-1388"},
 "336":{h:"700-2227",b:"700-1390"},"337":{h:"700-2228",b:"700-1400"},"338":{h:"700-2230",b:"700-1401"}
 };
-  var PLATE_LIST = [];
-  for(var k in VEHICLE_DATA){var d=VEHICLE_DATA[k];if(d.h)PLATE_LIST.push(d.h);if(d.b)PLATE_LIST.push(d.b);}
-  PLATE_LIST = PLATE_LIST.filter(function(s,i,a){return a.indexOf(s)===i});
 
-  // ====== รหัสพนักงาน ======
-  var EMP_RAW = `
-1001,1002,1011,1016,1017,1020,1028,1034,1037,1039,1040,1041,1043,1046,1048
+var PLATE_LIST=[];
+for(var k in VEHICLE_DATA){var d=VEHICLE_DATA[k];if(d.h)PLATE_LIST.push(d.h);if(d.b)PLATE_LIST.push(d.b);}
+PLATE_LIST=PLATE_LIST.filter(function(s,i,a){return a.indexOf(s)===i});
+
+var EMP_RAW=`1001,1002,1011,1016,1017,1020,1028,1034,1037,1039,1040,1041,1043,1046,1048
 1061,1063,1067,1074,1076,1078,1079,1086,1100,1101,1102,1107,1110,1115,1116
 1118,1122,1127,1128,1129,1131,1138,1141,1143,1144,1149,1161,1165,1167,1170
 1175,1180,1181,1184,1185,1187,1191,1194,1195,1197,1204,1205,1206,1207,1210
@@ -522,349 +1083,9 @@
 3631,3632,3633,3635,3639,3643,3653,3666,3673,3677,3701,3709,3712,3724,3725
 3731,3735,3753,3757,3765,3770,3771,3782,3783,3784,3790,3792,3795,3799,3805
 3820,3822,3911,3921,3932,3938,3940,3944,3948,3952,3956,3957,3968,3976,3978
-3979,3980,3983,3989,3991,3995,2010
-`;
+3979,3980,3983,3989,3991,3995`;
 
-  var EMP_LIST = EMP_RAW.split(/[\s\n,]+/).filter(function(s){return s.trim()});
-
-  // ==== SAVE VEHICLE ====
-  // ====== Image upload helpers ======
-  function onImg(prefix){
-    var input=$(prefix+'_img');var files=input.files;
-    var container=$(prefix+'_preview');var count=$(prefix+'_imgCount');
-    container.innerHTML='';
-    if(!files||files.length===0){count.textContent='';return}
-    count.textContent='\u0E40\u0E25\u0E37\u0E2D\u0E01 '+files.length+' \u0E23\u0E39\u0E1B';
-    [].forEach.call(files,function(f,i){
-      if(!f.type.match('image.*'))return;
-      var reader=new FileReader();
-      reader.onload=function(e){
-        var div=document.createElement('div');div.className='preview-item';
-        div.innerHTML='<img src="'+e.target.result+'"><button class="del" onclick="removeImgs(\''+prefix+'\')">\u00D7</button>';
-        container.appendChild(div);
-      };
-      reader.readAsDataURL(f);
-    });
-  }
-  function removeImgs(prefix){
-    $(prefix+'_img').value='';$(prefix+'_preview').innerHTML='';$(prefix+'_imgCount').textContent='';
-  }
-
-  function readImgs(prefix){
-    return new Promise(function(resolve){
-      var input=$(prefix+'_img');var files=input.files;
-      if(!files||files.length===0){resolve([]);return}
-      var results=[];
-
-      function readNext(idx){
-        if(idx>=files.length){resolve(results);return}
-        var r=new FileReader();
-        r.onload=function(e){
-          results.push(e.target.result);
-          readNext(idx+1);
-        };
-        r.onerror=function(){readNext(idx+1)};
-        r.readAsDataURL(files[idx]);
-      }
-      readNext(0);
-    });
-  }
-
-  async function saveV(){
-    var btn=$('btnSaveV');btn.disabled=true;btn.innerHTML='<span class="spinner"></span>กำลังบันทึก...';
-    var ber=g('v_ber');
-    if(!ber||ber.length<3){toast('กรุณากรอกเบอร์รถให้ครบ 3 หลัก');btn.disabled=false;btn.innerHTML='💾 บันทึกข้อมูลรถ';return}
-    var veh=VEHICLE_DATA[ber];
-    if(!veh){toast('❌ เบอร์ '+ber+' ไม่มีในระบบ');btn.disabled=false;btn.innerHTML='💾 บันทึกข้อมูลรถ';return}
-    ['v_hua','v_hang'].forEach(function(id){
-      var el=$(id);if(!el||!el.value)return;
-      var fmt=$(id.replace('v_h','v_fmt_h'));var n=fmt&&fmt.value==='3'?3:2;
-      var raw=el.value.replace(/[^0-9]/g,'').slice(0,n+4);
-      if(raw.length>n) raw=raw.slice(0,n)+'-'+raw.slice(n);
-      var isFront=id==='v_hua';
-      var expected=isFront?veh.h:veh.b;
-      if(expected&&raw!==expected){
-        toast('❌ ทะเบียน'+ (isFront?'หัว':'หาง') +' ไม่ตรงกับเบอร์ '+ber+' (ต้องเป็น '+expected+')');
-        btn.disabled=false;btn.innerHTML='💾 บันทึกข้อมูลรถ';throw'stop'
-      }
-    });
-    var data={
-      'เบอร์รถ':ber,'จังหวัด':g('v_province'),'ทะเบียนหัว':g('v_hua'),'ทะเบียนหาง':g('v_hang'),
-      'ธพน.2 หมดอายุบัตร':normalizeDate(g('v_tho_e')),
-      'ภาษี หมดอายุบัตร':normalizeDate(g('v_pasi_e')),
-      'Thaioil SRC หมดอายุบัตร':normalizeDate(g('v_c1_e')),
-      'Esso SRC หมดอายุบัตร':normalizeDate(g('v_c2_e')),
-      'PTT-GC หมดอายุบัตร':normalizeDate(g('v_c3_e')),
-      'LLK Thappline หมดอายุบัตร':normalizeDate(g('v_c4_e')),
-      'SRB Thappline หมดอายุบัตร':normalizeDate(g('v_c5_e')),
-      'SPRC หมดอายุบัตร':normalizeDate(g('v_c6_e')),
-      'IRPC IRY & AU หมดอายุบัตร':normalizeDate(g('v_c7_e'))
-    };
-    var newImgs=await readImgs('v');
-    if(newImgs.length) data['รูปเอกสาร_base64']=newImgs;
-    else if(editImgsV) data['รูปเอกสาร']=editImgsV;
-    try{
-      var res=await apiPost({sheet:'รถ',data:data,editKey:editKeyV});
-      if(res.error){toast('ผิดพลาด: '+res.error);btn.disabled=false;btn.innerHTML='💾 บันทึกข้อมูลรถ';return}
-      toast((res.updated?'อัปเดตเบอร์ '+ber:'บันทึกเบอร์ '+ber)+' | รูป: '+((res.created||res.updated)?'ok':'บันทึก'));
-      clr();setTimeout(loadR,100);
-    }catch(e){toast('เกิดข้อผิดพลาด กรุณาลองใหม่')}
-    btn.disabled=false;btn.innerHTML='💾 บันทึกข้อมูลรถ';
-  }
-
-  // ==== SAVE DRIVER ====
-  async function saveD(){
-    var btn=$('btnSaveD');btn.disabled=true;btn.innerHTML='<span class="spinner"></span>กำลังบันทึก...';
-    var name=g('d_name');
-    if(!name){toast('กรุณากรอกชื่อ');btn.disabled=false;btn.innerHTML='💾 บันทึกข้อมูลพนักงาน';return}
-    var phone=g('d_phone');
-    if(phone&&phone.length==9){phone='0'+phone;g('d_phone').value=phone}
-    var ber=g('d_ber');
-    if(ber&&ber.length<3){toast('กรุณากรอกเบอร์รถให้ครบ 3 หลัก');btn.disabled=false;btn.innerHTML='💾 บันทึกข้อมูลพนักงาน';return}
-    if(!ber&&!phone){toast('กรุณากรอกข้อมูล');btn.disabled=false;btn.innerHTML='💾 บันทึกข้อมูลพนักงาน';return}
-    var code=g('d_code');
-    if(!code||code.length<4){toast('กรุณากรอกรหัสพนักงาน 4 หลัก');btn.disabled=false;btn.innerHTML='💾 บันทึกข้อมูลพนักงาน';return}
-    if(EMP_LIST.indexOf(code)<0){toast('❌ รหัส '+code+' ไม่มีในระบบ');btn.disabled=false;btn.innerHTML='💾 บันทึกข้อมูลพนักงาน';return}
-    var data={
-      'รหัสพนักงาน':code,'เบอร์รถ':ber,'ชื่อ':name,'เบอร์โทร':phone.replace(/^0+/, ''),
-      'Esso SRC หมดอายุบัตร':normalizeDate(g('d_c1_e')),
-      'PTT-GC หมดอายุบัตร':normalizeDate(g('d_c2_e')),
-      'LLK Thappline หมดอายุบัตร':normalizeDate(g('d_c3_e')),
-      'SRB Thappline หมดอายุบัตร':normalizeDate(g('d_c4_e')),
-      'SPRC หมดอายุบัตร':normalizeDate(g('d_c5_e')),
-      'Thaioil SRC หมดอายุบัตร':normalizeDate(g('d_c6_e')),
-      'IRPC IRY & AU หมดอายุบัตร':normalizeDate(g('d_c7_e'))
-    };
-    var newImgs=await readImgs('d');
-    if(newImgs.length) data['รูปเอกสาร_base64']=newImgs;
-    else if(editImgsD) data['รูปเอกสาร']=editImgsD;
-    try{
-      var res=await apiPost({sheet:'คน',data:data,editKey:editKeyD});
-      if(res.error){toast('ผิดพลาด: '+res.error);btn.disabled=false;btn.innerHTML='💾 บันทึกข้อมูลพนักงาน';return}
-      toast((res.updated?'อัปเดต '+name:'บันทึก '+name)+' | รูป: '+((res.created||res.updated)?'ok':'บันทึก'));
-      clr();setTimeout(loadR,100);
-    }catch(e){toast('เกิดข้อผิดพลาด กรุณาลองใหม่')}
-    btn.disabled=false;btn.innerHTML='💾 บันทึกข้อมูลพนักงาน';
-  }
-
-  // ==== LOAD RECENT ====
-  async function loadR(){
-    var el=$('recentList');
-    try{
-      var v=await apiGet({sheet:'รถ'});v=Array.isArray(v)?v:v.data||[];
-      var d=await apiGet({sheet:'คน'});d=Array.isArray(d)?d:d.data||[];
-      var html='<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">';
-
-      if(v&&v.length){
-        html+='<div><div style="font-size:13px;font-weight:600;color:#64748b;margin-bottom:8px">🚚 รถ</div>';
-        v.slice(-5).reverse().forEach(function(r){
-          var b=r['เบอร์รถ']||'';
-          var exp='';
-          Object.keys(r).forEach(function(k){if(k.indexOf('หมดอายุ')>=0&&r[k])exp=normalizeDate(r[k])});
-          var bs=b.replace(/\\/g,'\\\\').replace(/'/g,"\\'");
-          var hasImg=r['รูปเอกสาร']||'';var gal='';
-          if(hasImg){
-            var imgCount=hasImg.split(/[\n,]+/).filter(function(x){return x.trim()}).length;
-            var escaped=hasImg.replace(/\\/g,'\\\\').replace(/'/g,"\\'").replace(/\n/g,'\\n');
-            gal=' <span onclick="event.stopPropagation();openImgs(\''+escaped+'\')" style="display:inline-flex;align-items:center;gap:3px;padding:2px 8px;background:#e0f2fe;color:#0284c7;border-radius:20px;font-size:11px;cursor:pointer;font-weight:500;margin-left:6px">📷 '+imgCount+'</span>';
-          }
-          html+='<div class="list-item" onclick="editV(\''+bs+'\')"><div><div class="main">'+b+gal+'</div></div><span style="font-size:11px;color:#64748b">'+exp+'</span></div>';
-        });
-        html+='</div>';
-      }else{
-        html+='<div><div style="font-size:13px;color:#94a3b8">ยังไม่มีข้อมูลรถ</div></div>';
-      }
-
-      if(d&&d.length){
-        html+='<div><div style="font-size:13px;font-weight:600;color:#64748b;margin-bottom:8px">🧑 คน</div>';
-        d.slice(-5).reverse().forEach(function(r){
-          var n=r['ชื่อ']||'',p=r['เบอร์โทร']||'',c=r['รหัสพนักงาน']||'';
-          var cs=c.replace(/\\/g,'\\\\').replace(/'/g,"\\'");
-          var hasImg=r['รูปเอกสาร']||'';var galD='';
-          if(hasImg){
-            var imgCount=hasImg.split(/[\n,]+/).filter(function(x){return x.trim()}).length;
-            var escaped=hasImg.replace(/\\/g,'\\\\').replace(/'/g,"\\'").replace(/\n/g,'\\n');
-            galD=' <span onclick="event.stopPropagation();openImgs(\''+escaped+'\')" style="display:inline-flex;align-items:center;gap:3px;padding:2px 8px;background:#e0f2fe;color:#0284c7;border-radius:20px;font-size:11px;cursor:pointer;font-weight:500;margin-left:6px">📷 '+imgCount+'</span>';
-          }
-          html+='<div class="list-item" onclick="editD(\''+cs+'\')"><div><div class="main">'+n+galD+'</div></div></div>';
-        });
-        html+='</div>';
-      }else{
-        html+='<div><div style="font-size:13px;color:#94a3b8">ยังไม่มีข้อมูลคน</div></div>';
-      }
-
-      html+='</div>';
-      el.innerHTML=html;
-    }catch(e){
-      el.innerHTML='<div style="text-align:center;color:#ef4444;padding:20px">⚠️ โหลดไม่ได้ ตรวจสอบการเชื่อมต่อ</div>';
-    }
-  }
-
-  // ==== EDIT VEHICLE ====
-  function editV(ber){
-    editKeyV=ber;
-    apiGet({sheet:'รถ',key:ber}).then(function(r){
-      if(!r||r.error)return;if(Array.isArray(r)){r=r[0]}else{r=r.data&&r.data[0]?r.data[0]:r}
-      if(!r||!r['เบอร์รถ'])return;
-      $('v_ber').value=r['เบอร์รถ']||'';
-      $('v_province').value=(r['จังหวัด']||'').indexOf('กทม')>=0?'กทม':'อื่น ๆ';
-      $('v_hua').value=r['ทะเบียนหัว']||'';$('v_hang').value=r['ทะเบียนหาง']||'';
-      $('v_tho_e').value=normalizeDate(r['ธพน.2 หมดอายุบัตร']||'');
-      $('v_pasi_e').value=normalizeDate(r['ภาษี หมดอายุบัตร']||'');
-      $('v_c1_e').value=normalizeDate(r['Thaioil SRC หมดอายุบัตร']||'');
-      $('v_c2_e').value=normalizeDate(r['Esso SRC หมดอายุบัตร']||'');
-      $('v_c3_e').value=normalizeDate(r['PTT-GC หมดอายุบัตร']||'');
-      $('v_c4_e').value=normalizeDate(r['LLK Thappline หมดอายุบัตร']||'');
-      $('v_c5_e').value=normalizeDate(r['SRB Thappline หมดอายุบัตร']||'');
-      $('v_c6_e').value=normalizeDate(r['SPRC หมดอายุบัตร']||'');
-      $('v_c7_e').value=normalizeDate(r['IRPC IRY & AU หมดอายุบัตร']||'');
-      editImgsV=r['รูปเอกสาร']||'';
-      $('vMode').textContent='แก้ไข เบอร์ '+ber;
-      goV();window.scrollTo({top:0,behavior:'smooth'});
-    });
-  }
-
-  // ==== EDIT DRIVER ====
-  function editD(code){
-    editKeyD=code;
-    apiGet({sheet:'คน',key:code}).then(function(r){
-      if(!r||r.error)return;if(Array.isArray(r)){r=r[0]}else{r=r.data&&r.data[0]?r.data[0]:r}
-      if(!r||!r['รหัสพนักงาน'])return;
-      $('d_code').value=r['รหัสพนักงาน']||'';$('d_ber').value=r['เบอร์รถ']||'';$('d_name').value=r['ชื่อ']||'';$('d_phone').value=r['เบอร์โทร']||'';
-      $('d_c1_e').value=normalizeDate(r['Esso SRC หมดอายุบัตร']||'');
-      $('d_c2_e').value=normalizeDate(r['PTT-GC หมดอายุบัตร']||'');
-      $('d_c3_e').value=normalizeDate(r['LLK Thappline หมดอายุบัตร']||'');
-      $('d_c4_e').value=normalizeDate(r['SRB Thappline หมดอายุบัตร']||'');
-      $('d_c5_e').value=normalizeDate(r['SPRC หมดอายุบัตร']||'');
-      $('d_c6_e').value=normalizeDate(r['Thaioil SRC หมดอายุบัตร']||'');
-      $('d_c7_e').value=normalizeDate(r['IRPC IRY & AU หมดอายุบัตร']||'');
-      editImgsD=r['รูปเอกสาร']||'';
-      $('dMode').textContent='แก้ไข '+(r['ชื่อ']||'');
-      goD();window.scrollTo({top:0,behavior:'smooth'});
-    });
-  }
-
-  // ==== IMAGE VIEWER ====
-  function openImgs(urls){
-    var imgs=urls.split(/[\n,]+/);
-    var h='<div onclick="this.remove()" style="position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.92);z-index:9999;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:20px;overflow-y:auto">';
-    h+='<div onclick="event.stopPropagation();this.parentElement.remove()" style="position:fixed;top:16px;right:20px;color:#fff;font-size:28px;cursor:pointer;z-index:10">✕</div>';
-    h+='<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:12px;width:100%;max-width:900px">';
-    imgs.forEach(function(u){
-      u=u.trim();if(!u)return;
-      var src=u;
-      var idMatch=u.match(/[?&]id=([^&]+)/)||u.match(/\/file\/d\/([^/]+)/);
-      if(idMatch) src='https://drive.google.com/thumbnail?id='+idMatch[1]+'&sz=w800';
-      h+='<div style="background:#1e293b;border-radius:10px;overflow:hidden"><a href="'+u+'" target="_blank" rel="noopener"><img src="'+src+'" style="width:100%;display:block" loading="lazy"></a></div>';
-    });
-    h+='</div></div>';
-    var d=document.createElement('div');d.innerHTML=h;
-    document.body.appendChild(d.firstElementChild);
-  }
-
-  loadR();
-  
-  // ==== ADMIN ====
-  function showLogin(){$('loginModal').classList.add('show');$('adminUser').focus()}
-  function hide(id){$(id).classList.remove('show')}
-  function doLogin(){
-    var u=$('adminUser').value.trim(),p=$('adminPass').value.trim();
-    if(u==='tha1234'&&p==='4858'){
-      hide('loginModal');$('adminPanel').classList.add('show');$('adminBtn').classList.add('ok');
-      renderAdminVeh();renderAdminEmp();
-    }else{toast('❌ Username หรือ Password ไม่ถูกต้อง')}
-  }
-  function doLogout(){$('adminPanel').classList.remove('show');$('adminBtn').classList.remove('ok')}
-  function switchAdminTab(tab,btn){
-    document.querySelectorAll('.admin-section').forEach(function(el){el.classList.remove('show')});
-    document.querySelectorAll('.admin-tab').forEach(function(el){el.classList.remove('active')});
-    btn.classList.add('active');
-    if(tab==='veh'){$('adminVeh').classList.add('show');renderAdminVeh()}
-    else if(tab==='emp'){$('adminEmp').classList.add('show');renderAdminEmp()}
-    else{$('adminData').classList.add('show');renderAdminData()}
-  }
-  
-  function renderAdminData(){
-    var type=window._adminDataType||'\u0e04\u0e19';
-    var el=$('adminDataList');el.innerHTML='<div style="color:#94a3b8;font-size:13px;padding:10px">\u0e01\u0e33\u0e25\u0e31\u0e07\u0e42\u0e2b\u0e25\u0e14...</div>';
-    apiGet({sheet:type}).then(function(data){
-      var arr=Array.isArray(data)?data:data&&data.data||[];
-      if(!arr||!arr.length){el.innerHTML='<div style="color:#94a3b8;font-size:13px;padding:10px">\u0e44\u0e21\u0e48\u0e21\u0e35\u0e02\u0e49\u0e2d\u0e21\u0e39\u0e25</div>';return}
-      var h='';
-      arr.slice().reverse().forEach(function(r){
-        var name=r['\u0e0a\u0e37\u0e48\u0e2d']||'',code=r['\u0e23\u0e2b\u0e31\u0e2a\u0e1e\u0e19\u0e31\u0e01\u0e07\u0e32\u0e19']||'',ber=r['\u0e40\u0e1a\u0e2d\u0e23\u0e4c\u0e23\u0e16']||'',phone=r['\u0e40\u0e1a\u0e2d\u0e23\u0e4c\u0e42\u0e17\u0e23']||'';
-        var imgs=r['\u0e23\u0e39\u0e1b\u0e40\u0e2d\u0e01\u0e2a\u0e32\u0e23']||'';var gal='';
-        if(imgs){
-          var cnt=imgs.split(/[\n,]+/).filter(function(x){return x.trim()}).length;
-          var esc=imgs.replace(/\\/g,'\\\\').replace(/'/g,"\\'").replace(/\n/g,'\\n');
-          gal=' <span onclick="event.stopPropagation();openImgs(\''+esc+'\')" style="display:inline-flex;align-items:center;gap:3px;padding:2px 8px;background:#e0f2fe;color:#0284c7;border-radius:20px;font-size:11px;cursor:pointer;font-weight:500">\uD83D\uDCF7 '+cnt+'</span>';
-        }
-        h+='<div class="list-item" style="cursor:default"><div><div class="main">'+(code?code+' | ':'')+name+gal+'</div><div style="font-size:11px;color:#64748b">'+(ber?'\uD83D\uDE9A '+ber:'')+(phone?' | \uD83D\uDCF1 '+phone:'')+'</div></div></div>';
-      });
-      el.innerHTML=h;
-    }).catch(function(){el.innerHTML='<div style="color:#ef4444;font-size:13px;padding:10px">\u0e42\u0e2b\u0e25\u0e14\u0e02\u0e49\u0e2d\u0e21\u0e39\u0e25\u0e25\u0e49\u0e21\u0e40\u0e2b\u0e25\u0e27</div>'});
-  }
-  function switchAdminDataTab(type,btn){
-    window._adminDataType=type;
-    var parent=btn.parentElement;
-    parent.querySelectorAll('.admin-tab').forEach(function(el){el.style.background='#fff';el.style.color='#0f172a'});
-    btn.style.background='#0f172a';btn.style.color='#fff';
-    renderAdminData();
-  }
-
-  function renderAdminVeh(){
-    var keys=Object.keys(VEHICLE_DATA).sort(function(a,b){return parseInt(a)-parseInt(b)});
-    var h='';
-    keys.forEach(function(k){
-      var v=VEHICLE_DATA[k];
-      h+='<div class="admin-list-item"><span>'+k+'. '+v.h+(v.b?' / '+v.b:'')+'</span><span class="del" onclick="delVehicle(\''+k+'\')">✕</span></div>';
-    });
-    $('adminVehList').innerHTML=h||'<div style="color:#94a3b8;font-size:13px;padding:10px">ไม่มีข้อมูล</div>';
-  }
-  function addVehicle(){
-    var num=$('aVehNum').value.trim(),f=$('aVehFront').value.trim(),b=$('aVehBack').value.trim();
-    if(!num){toast('กรุณากรอกเบอร์รถ');return}
-    if(!f&&!b){toast('กรุณากรอกทะเบียน');return}
-    VEHICLE_DATA[num]={h:f,b:b};
-    if(f&&PLATE_LIST.indexOf(f)<0)PLATE_LIST.push(f);
-    if(b&&PLATE_LIST.indexOf(b)<0)PLATE_LIST.push(b);
-    $('aVehNum').value='';$('aVehFront').value='';$('aVehBack').value='';
-    renderAdminVeh();
-    toast('✅ เพิ่มเบอร์ '+num+' เรียบร้อย');
-  }
-  function delVehicle(k){
-    if(!confirm('ลบเบอร์ '+k+'?'))return;
-    delete VEHICLE_DATA[k];
-    renderAdminVeh();
-  }
-  function renderAdminEmp(){
-    var h='';
-    EMP_LIST.forEach(function(c){
-      h+='<div class="admin-list-item"><span>'+c+'</span><span class="del" onclick="delEmpCode(\''+c+'\')">✕</span></div>';
-    });
-    $('adminEmpList').innerHTML=h||'<div style="color:#94a3b8;font-size:13px;padding:10px">ไม่มีข้อมูล</div>';
-  }
-  function addEmpCode(){
-    var code=$('aEmpCode').value.trim();
-    if(!code||code.length<4){toast('กรุณากรอกรหัส 4 หลัก');return}
-    if(EMP_LIST.indexOf(code)>=0){toast('❌ รหัส '+code+' มีอยู่แล้ว');return}
-    EMP_LIST.push(code);
-    EMP_LIST.sort(function(a,b){return parseInt(a)-parseInt(b)});
-    EMP_RAW = EMP_LIST.join('\n');
-    $('aEmpCode').value='';
-    renderAdminEmp();
-    toast('✅ เพิ่มรหัส '+code+' เรียบร้อย');
-  }
-  function delEmpCode(code){
-    if(!confirm('ลบรหัส '+code+'?'))return;
-    var idx=EMP_LIST.indexOf(code);
-    if(idx>=0){
-      EMP_LIST.splice(idx,1);
-      EMP_RAW = EMP_LIST.join('\n');
-      renderAdminEmp();
-    }
-  }
-
+var EMP_LIST=EMP_RAW.split(/[\s\n,]+/).filter(function(s){return s.trim()});
 </script>
-  </body>
-  </html>
+</body>
+</html>
