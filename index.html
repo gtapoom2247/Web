@@ -1,1091 +1,1097 @@
-<!DOCTYPE html>
-<html lang="th">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>ระบบติดตามบัตร พขร.</title>
-<link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-<style>
-*{box-sizing:border-box;margin:0;padding:0}
-body{font-family:Prompt,Sarabun,sans-serif;background:#f1f5f9;color:#0f172a;padding:16px}
-.admin-btn{position:absolute;top:12px;right:14px;background:rgba(255,255,255,0.1);border:none;color:#94a3b8;font-size:16px;cursor:pointer;padding:6px 10px;border-radius:8px;transition:0.2s;font-family:Prompt,sans-serif}
-.admin-btn:hover{background:rgba(255,255,255,0.2);color:#fff}
-.admin-btn.ok{color:#4ade80}
-.modal-overlay{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);z-index:999;display:none;align-items:center;justify-content:center}
-.modal-overlay.show{display:flex}
-.modal-box{background:#fff;border-radius:16px;padding:24px;width:90%;max-width:400px;max-height:90vh;overflow-y:auto}
-.modal-box h3{font-size:18px;font-weight:600;margin-bottom:16px}
-.modal-box label{display:block;font-size:13px;color:#64748b;margin-bottom:4px;margin-top:12px}
-.modal-box input[type=text],.modal-box input[type=password]{width:100%;padding:10px 14px;border:2px solid #e2e8f0;border-radius:10px;font-size:15px;font-family:Prompt,sans-serif;outline:none;transition:0.2s}
-.modal-box input:focus{border-color:#38bdf8}
-.modal-box .btn-primary{background:#0f172a;color:#fff;border:none;padding:12px;border-radius:10px;font-size:15px;font-weight:600;cursor:pointer;width:100%;margin-top:18px;font-family:Prompt,sans-serif}
-.modal-box .btn-primary:hover{background:#1e293b}
-.modal-box .btn-close{float:right;background:none;border:none;font-size:22px;cursor:pointer;color:#94a3b8;line-height:1}
-.admin-panel{display:none}
-.admin-panel.show{display:block}
-.admin-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:14px}
-.admin-card{background:#f8fafc;border:2px dashed #e2e8f0;border-radius:12px;padding:20px;text-align:center;cursor:pointer;transition:0.2s}
-.admin-card:hover{border-color:#38bdf8;background:#f0f9ff}
-.admin-card .icon{font-size:28px;display:block;margin-bottom:6px}
-.admin-card .name{font-size:14px;font-weight:500;color:#0f172a}
-.admin-logout{background:none;border:1px solid #e2e8f0;color:#ef4444;padding:8px 16px;border-radius:8px;cursor:pointer;font-size:13px;margin-top:16px;width:100%;font-family:Prompt,sans-serif}
-.admin-logout:hover{background:#fef2f2}
-.admin-list{max-height:300px;overflow-y:auto;margin-top:10px}
-.admin-list-item{display:flex;align-items:center;justify-content:space-between;padding:8px 12px;border-bottom:1px solid #f1f5f9;font-size:14px}
-.admin-list-item .del{color:#ef4444;cursor:pointer;font-size:18px;padding:0 6px}
-.admin-add-row{display:flex;gap:8px;margin-top:10px}
-.admin-add-row input{flex:1;padding:8px 12px;border:2px solid #e2e8f0;border-radius:8px;font-size:14px;font-family:Prompt,sans-serif;outline:none}
-.admin-add-row input:focus{border-color:#38bdf8}
-.admin-add-row button{background:#0f172a;color:#fff;border:none;padding:8px 16px;border-radius:8px;cursor:pointer;font-family:Prompt,sans-serif;font-weight:500}
-.admin-add-row button:hover{background:#1e293b}
-.admin-tabs{display:flex;gap:8px;margin-bottom:14px}
-.admin-tab{padding:8px 16px;border-radius:8px;border:1px solid #e2e8f0;background:#fff;cursor:pointer;font-size:13px;font-family:Prompt,sans-serif;transition:0.2s}
-.admin-tab.active{background:#0f172a;color:#fff;border-color:#0f172a}
-.admin-tab:hover:not(.active){background:#f1f5f9}
-.admin-section{display:none}
-.admin-section.show{display:block}
-.app{max-width:860px;margin:0 auto}
-.header{background:linear-gradient(135deg,#0f172a,#1e293b);padding:24px;border-radius:16px;margin-bottom:16px;text-align:center}
-.header{position:relative}.header h1{color:#fff;font-size:22px;font-weight:700}
-.header h1 span{color:#38bdf8}
-.header p{color:#94a3b8;font-size:13px;margin-top:4px}
-.page{display:none}.page.active{display:block}
-.card{background:#fff;border-radius:16px;padding:20px;margin-bottom:14px;box-shadow:0 1px 3px rgba(0,0,0,0.06)}
-.card-title{font-size:16px;font-weight:600;margin-bottom:16px;padding-bottom:10px;border-bottom:2px solid #f1f5f9}
-.menu-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px}
-.menu-card{background:#fff;border-radius:16px;padding:32px 20px;text-align:center;cursor:pointer;box-shadow:0 1px 3px rgba(0,0,0,0.06);border:2px solid transparent;user-select:none;transition:0.2s}
-.menu-card:hover{border-color:#38bdf8;transform:translateY(-2px)}
-.menu-card .icon{font-size:40px;display:block;margin-bottom:10px}
-.menu-card .name{font-size:17px;font-weight:600}
-.menu-card .desc{font-size:12px;color:#64748b;margin-top:4px}
-@media(max-width:500px){.menu-grid{grid-template-columns:1fr}}
-.top-bar{display:flex;align-items:center;gap:12px;margin-bottom:14px;background:#fff;border-radius:12px;padding:10px 16px;box-shadow:0 1px 3px rgba(0,0,0,0.06)}
-.top-bar .back{background:none;border:none;font-size:20px;cursor:pointer;color:#0f172a;padding:4px 8px;font-family:Prompt,sans-serif}
-.top-bar .title{font-size:16px;font-weight:600;flex:1}
-.row{display:grid;gap:10px;margin-bottom:12px}
-.r2{grid-template-columns:1fr 1fr}.r3{grid-template-columns:1fr 1fr 1fr}
-@media(max-width:600px){.r2,.r3{grid-template-columns:1fr 1fr}}
-@media(max-width:400px){.r2,.r3{grid-template-columns:1fr}}
-label{font-size:13px;font-weight:500;color:#475569;display:block;margin-bottom:4px}
-input,select{width:100%;padding:10px 12px;border:2px solid #e2e8f0;border-radius:10px;font-size:15px;font-family:Prompt,sans-serif;background:#fff}
-input:focus,select:focus{outline:none;border-color:#38bdf8}
-input.ai-filled{border-color:#10b981;background:#f0fdf4}
-.btn{width:100%;padding:12px;border:none;border-radius:12px;font-size:16px;font-weight:600;font-family:Prompt,sans-serif;cursor:pointer;margin-bottom:14px;transition:0.2s}
-.btn:disabled{opacity:0.6;cursor:not-allowed}
-.btn-primary{background:#0f172a;color:#fff}.btn-success{background:#059669;color:#fff}
-.spinner{display:inline-block;width:18px;height:18px;border:3px solid rgba(255,255,255,0.3);border-top-color:#fff;border-radius:50%;animation:spin .6s linear infinite;vertical-align:middle;margin-right:6px}
-.spinner-dark{display:inline-block;width:14px;height:14px;border:2px solid rgba(0,0,0,0.15);border-top-color:#7c3aed;border-radius:50%;animation:spin .6s linear infinite;vertical-align:middle;margin-right:6px}
-@keyframes spin{to{transform:rotate(360deg)}}
-.toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#0f172a;color:#fff;padding:12px 24px;border-radius:12px;font-size:14px;z-index:999;opacity:0;transition:0.3s;pointer-events:none}
-.toast.show{opacity:1}
-.list-item{display:flex;justify-content:space-between;align-items:center;padding:12px 0;border-bottom:1px solid #f1f5f9;cursor:pointer}
-.list-item:last-child{border-bottom:none}
-.list-item .main{font-size:15px;font-weight:500}
-.list-item .sub{font-size:12px;color:#64748b;margin-top:2px}
-.section-label{font-size:13px;font-weight:600;color:#64748b;margin:16px 0 10px;padding:6px 12px;background:#f1f5f9;border-radius:8px}
-.upload-zone{border:2px dashed #cbd5e1;border-radius:12px;padding:20px;text-align:center;cursor:pointer;transition:0.2s;background:#fafafa;margin-bottom:8px}
-.upload-zone:hover{border-color:#38bdf8;background:#f0f9ff}
-.upload-zone .icn{font-size:28px;display:block;margin-bottom:4px}
-.upload-zone .txt{color:#94a3b8;font-size:13px}
-.preview-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(90px,1fr));gap:6px}
-.preview-item{position:relative;border-radius:8px;overflow:hidden;aspect-ratio:1;border:1px solid #e2e8f0}
-.preview-item img{width:100%;height:100%;object-fit:cover}
-.preview-item .del{position:absolute;top:2px;right:2px;width:20px;height:20px;background:rgba(0,0,0,0.55);color:#fff;border:none;border-radius:50%;font-size:12px;cursor:pointer;line-height:20px;text-align:center;font-family:Prompt,sans-serif}
-.preview-count{font-size:12px;color:#64748b;margin-top:4px}
+    <!DOCTYPE html>
+    <html lang="th">
+    <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1.0">
+    <title>ระบบติดตามบัตร พขร.</title>
+    <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
+  <script>
+  // บอก Tesseract.js ให้ใช้ non-SIMD core (兼容性更好)
+  if(typeof Tesseract !== 'undefined' && Tesseract.setWasmPath){
+    Tesseract.setWasmPath('https://cdn.jsdelivr.net/npm/tesseract.js-core@5/tesseract-core.wasm.js');
+  }
+  </script>
+    <style>
+    *{box-sizing:border-box;margin:0;padding:0}
+    body{font-family:Prompt,Sarabun,sans-serif;background:#f0ebe3;color:#1a1a2e;padding:20px;font-size:18px;line-height:1.6}
+    .admin-btn{position:absolute;top:14px;right:16px;background:rgba(255,255,255,0.15);border:none;color:#cbd5e1;font-size:20px;cursor:pointer;padding:10px 14px;border-radius:12px;transition:0.2s;font-family:Prompt,sans-serif;z-index:10}
+    .admin-btn:hover{background:rgba(255,255,255,0.25);color:#fff}
+    .admin-btn.ok{color:#4ade80}
+    .modal-overlay{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.55);z-index:999;display:none;align-items:center;justify-content:center}
+    .modal-overlay.show{display:flex}
+    .modal-box{background:#fff;border-radius:20px;padding:32px 28px;width:92%;max-width:440px;max-height:90vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,0.2)}
+    .modal-box h3{font-size:22px;font-weight:600;margin-bottom:20px;color:#1a1a2e}
+    .modal-box label{display:block;font-size:16px;color:#475569;margin-bottom:6px;margin-top:16px;font-weight:500}
+    .modal-box input[type=text],.modal-box input[type=password]{width:100%;padding:14px 16px;border:2px solid #d1d5db;border-radius:12px;font-size:18px;font-family:Prompt,sans-serif;outline:none;transition:0.2s;background:#fafafa}
+    .modal-box input:focus{border-color:#2563eb;background:#fff;box-shadow:0 0 0 3px rgba(37,99,235,0.15)}
+    .modal-box .btn-primary{background:#1e3a5f;color:#fff;border:none;padding:14px;border-radius:12px;font-size:18px;font-weight:600;cursor:pointer;width:100%;margin-top:22px;font-family:Prompt,sans-serif;transition:0.2s}
+    .modal-box .btn-primary:hover{background:#15294a;transform:translateY(-1px)}
+    .modal-box .btn-close{float:right;background:none;border:none;font-size:26px;cursor:pointer;color:#94a3b8;line-height:1;padding:4px}
+    .admin-panel{display:none}
+    .admin-panel.show{display:block}
+    .admin-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:16px}
+    .admin-card{background:#f8fafc;border:2px dashed #d1d5db;border-radius:14px;padding:24px;text-align:center;cursor:pointer;transition:0.2s}
+    .admin-card:hover{border-color:#2563eb;background:#eff6ff}
+    .admin-card .icon{font-size:34px;display:block;margin-bottom:8px}
+    .admin-card .name{font-size:18px;font-weight:600;color:#1a1a2e}
+    .admin-logout{background:none;border:2px solid #fecaca;color:#dc2626;padding:12px 20px;border-radius:12px;cursor:pointer;font-size:16px;margin-top:20px;width:100%;font-family:Prompt,sans-serif;font-weight:500;transition:0.2s}
+    .admin-logout:hover{background:#fef2f2}
+    .admin-list{max-height:350px;overflow-y:auto;margin-top:12px;border:1px solid #e5e7eb;border-radius:12px;padding:4px}
+    .admin-list-item{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;border-bottom:1px solid #f1f5f9;font-size:16px}
+    .admin-list-item:last-child{border-bottom:none}
+    .admin-list-item .del{color:#ef4444;cursor:pointer;font-size:20px;padding:4px 10px;border-radius:8px;transition:0.2s}
+    .admin-list-item .del:hover{background:#fef2f2}
+    .admin-add-row{display:flex;gap:10px;margin-top:12px;flex-wrap:wrap}
+    .admin-add-row input{flex:1;min-width:100px;padding:12px 14px;border:2px solid #d1d5db;border-radius:10px;font-size:16px;font-family:Prompt,sans-serif;outline:none;background:#fafafa}
+    .admin-add-row input:focus{border-color:#2563eb;background:#fff}
+    .admin-add-row button{background:#1e3a5f;color:#fff;border:none;padding:12px 20px;border-radius:10px;cursor:pointer;font-family:Prompt,sans-serif;font-weight:600;font-size:16px;transition:0.2s}
+    .admin-add-row button:hover{background:#15294a}
+    .admin-tabs{display:flex;gap:10px;margin-bottom:16px;flex-wrap:wrap}
+    .admin-tab{padding:10px 20px;border-radius:10px;border:2px solid #d1d5db;background:#fff;cursor:pointer;font-size:15px;font-family:Prompt,sans-serif;transition:0.2s;font-weight:500}
+    .admin-tab.active{background:#1e3a5f;color:#fff;border-color:#1e3a5f}
+    .admin-tab:hover:not(.active){background:#f1f5f9;border-color:#94a3b8}
+    .admin-section{display:none}
+    .admin-section.show{display:block}
+    .app{max-width:920px;margin:0 auto}
+    .header{background:linear-gradient(145deg,#1a2a4a,#243b5e);padding:32px 28px;border-radius:20px;margin-bottom:20px;text-align:center}
+    .header{position:relative}.header h1{color:#fff;font-size:28px;font-weight:700;letter-spacing:0.5px}
+    .header h1 span{color:#60b5ff}
+    .header p{color:#94b8d4;font-size:16px;margin-top:6px}
+    .page{display:none}.page.active{display:block}
+    .card{background:#fff;border-radius:20px;padding:28px;margin-bottom:18px;box-shadow:0 2px 8px rgba(0,0,0,0.06)}
+    .card-title{font-size:20px;font-weight:600;margin-bottom:18px;padding-bottom:12px;border-bottom:2px solid #eef2f6;color:#1a1a2e}
+    .menu-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:18px}
+    .menu-card{background:#fff;border-radius:20px;padding:40px 24px;text-align:center;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,0.06);border:3px solid transparent;user-select:none;transition:0.25s}
+    .menu-card:hover{border-color:#60b5ff;transform:translateY(-3px);box-shadow:0 8px 24px rgba(0,0,0,0.1)}
+    .menu-card .icon{font-size:52px;display:block;margin-bottom:12px}
+    .menu-card .name{font-size:22px;font-weight:700}
+    .menu-card .desc{font-size:15px;color:#64748b;margin-top:6px}
+    @media(max-width:500px){.menu-grid{grid-template-columns:1fr}}
+    .top-bar{display:flex;align-items:center;gap:14px;margin-bottom:18px;background:#fff;border-radius:14px;padding:14px 20px;box-shadow:0 2px 8px rgba(0,0,0,0.06)}
+    .top-bar .back{background:none;border:none;font-size:28px;cursor:pointer;color:#1a1a2e;padding:4px 10px;border-radius:10px;font-family:Prompt,sans-serif;transition:0.2s;font-weight:600}
+    .top-bar .back:hover{background:#f1f5f9}
+    .top-bar .title{font-size:20px;font-weight:700;flex:1;color:#1a1a2e}
+    .row{display:grid;gap:14px;margin-bottom:16px}
+    .r2{grid-template-columns:1fr 1fr}.r3{grid-template-columns:1fr 1fr 1fr}
+    @media(max-width:640px){.r2,.r3{grid-template-columns:1fr}}
+    label{font-size:16px;font-weight:600;color:#334155;display:block;margin-bottom:6px}
+    input,select{width:100%;padding:14px 16px;border:2px solid #d1d5db;border-radius:12px;font-size:18px;font-family:Prompt,sans-serif;background:#fafafa;outline:none;transition:0.2s;color:#1a1a2e}
+    input:focus,select:focus{border-color:#2563eb;background:#fff;box-shadow:0 0 0 3px rgba(37,99,235,0.12)}
+    .btn{width:100%;padding:16px;border:none;border-radius:14px;font-size:20px;font-weight:700;font-family:Prompt,sans-serif;cursor:pointer;margin-bottom:18px;transition:0.2s;letter-spacing:0.5px}
+    .btn:disabled{opacity:0.5;cursor:not-allowed}
+    .btn-primary{background:#1e3a5f;color:#fff}.btn-primary:hover{background:#15294a;transform:translateY(-1px)}
+    .btn-success{background:#0d6b4a;color:#fff}.btn-success:hover{background:#0a573c;transform:translateY(-1px)}
+    .spinner{display:inline-block;width:22px;height:22px;border:3px solid rgba(255,255,255,0.3);border-top-color:#fff;border-radius:50%;animation:spin .6s linear infinite;vertical-align:middle;margin-right:8px}
+    @keyframes spin{to{transform:rotate(360deg)}}
+    .toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#1a1a2e;color:#fff;padding:16px 28px;border-radius:14px;font-size:17px;z-index:999;opacity:0;transition:0.3s;pointer-events:none;box-shadow:0 8px 32px rgba(0,0,0,0.2);white-space:nowrap}
+    .toast.show{opacity:1}
+    .list-item{display:flex;justify-content:space-between;align-items:center;padding:14px 0;border-bottom:1px solid #eef2f6;cursor:pointer;transition:0.15s}
+    .list-item:hover{background:#f8fafc;margin:0 -12px;padding:14px 12px;border-radius:10px}
+    .list-item:last-child{border-bottom:none}
+    .list-item .main{font-size:17px;font-weight:600}
+    .list-item .sub{font-size:14px;color:#64748b;margin-top:4px}
+    .section-label{font-size:15px;font-weight:700;color:#1e3a5f;margin:20px 0 12px;padding:8px 16px;background:#eef2f6;border-radius:10px;border-left:4px solid #2563eb}
+    .upload-zone{border:2px dashed #cbd5e1;border-radius:14px;padding:28px;text-align:center;cursor:pointer;transition:0.2s;background:#fafafa;margin-bottom:10px}
+    .upload-zone:hover{border-color:#2563eb;background:#eff6ff}
+    .upload-zone .icn{font-size:36px;display:block;margin-bottom:6px}
+    .upload-zone .txt{color:#64748b;font-size:16px}
+    .preview-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(100px,1fr));gap:8px}
+    .preview-item{position:relative;border-radius:10px;overflow:hidden;aspect-ratio:1;border:1px solid #e2e8f0}
+    .preview-item img{width:100%;height:100%;object-fit:cover}
+    .preview-item .del{position:absolute;top:4px;right:4px;width:24px;height:24px;background:rgba(0,0,0,0.6);color:#fff;border:none;border-radius:50%;font-size:14px;cursor:pointer;line-height:24px;text-align:center;font-family:Prompt,sans-serif}
+    .preview-count{font-size:14px;color:#64748b;margin-top:6px}
+    /* Senior-friendly: bigger scrollbar */
+    ::-webkit-scrollbar{width:10px}::-webkit-scrollbar-track{background:#f1f5f9;border-radius:5px}::-webkit-scrollbar-thumb{background:#cbd5e1;border-radius:5px}::-webkit-scrollbar-thumb:hover{background:#94a3b8}
+    </style>
+    </head>
+    <body>
+    <div class="app">
 
-/* === Gemini OCR button === */
-.ocr-bar{display:none;align-items:center;gap:10px;margin:8px 0 4px;flex-wrap:wrap}
-.ocr-bar.show{display:flex}
-.btn-ocr{background:linear-gradient(135deg,#7c3aed,#4f46e5);color:#fff;border:none;padding:9px 18px;border-radius:10px;font-size:14px;font-weight:600;font-family:Prompt,sans-serif;cursor:pointer;display:flex;align-items:center;gap:6px;transition:0.2s;white-space:nowrap}
-.btn-ocr:hover{background:linear-gradient(135deg,#6d28d9,#4338ca);transform:translateY(-1px)}
-.btn-ocr:disabled{opacity:0.6;cursor:not-allowed;transform:none}
-.ocr-result-box{background:#f0fdf4;border:1px solid #bbf7d0;border-radius:10px;padding:12px 14px;font-size:13px;margin:6px 0 10px;display:none}
-.ocr-result-box.show{display:block}
-.ocr-result-box .ocr-title{font-weight:600;color:#059669;margin-bottom:6px;font-size:13px}
-.ocr-result-row{display:flex;justify-content:space-between;align-items:center;padding:3px 0;border-bottom:1px solid #d1fae5;font-size:13px}
-.ocr-result-row:last-child{border-bottom:none}
-.ocr-result-row .field{color:#475569}
-.ocr-result-row .val{font-weight:600;color:#065f46}
-.ocr-error-box{background:#fef2f2;border:1px solid #fecaca;border-radius:10px;padding:12px 14px;font-size:13px;color:#dc2626;margin:6px 0 10px;display:none}
-.ocr-error-box.show{display:block}
-</style>
-</head>
-<body>
-<div class="app">
-
-<div class="header">
-  <h1>ระบบติดตามบัตร <span>พขร.</span></h1>
-  <p>จัดการบัตรประจําตัวรถและพนักงานขับรถ</p>
-  <button class="admin-btn" id="adminBtn" onclick="showLogin()">🔐</button>
-
-<!-- === Admin Login Modal === -->
-<div class="modal-overlay" id="loginModal">
-  <div class="modal-box">
-    <button class="btn-close" onclick="hide('loginModal')">&times;</button>
-    <h3>🔐 แอดมิน</h3>
-    <label>Username</label>
-    <input type="text" id="adminUser" placeholder="username" onkeydown="if(event.key==='Enter')doLogin()">
-    <label>Password</label>
-    <input type="password" id="adminPass" placeholder="password" onkeydown="if(event.key==='Enter')doLogin()">
-    <button class="btn-primary" onclick="doLogin()">เข้าสู่ระบบ</button>
-  </div>
-</div>
-
-<!-- === Admin Panel === -->
-<div class="card admin-panel" id="adminPanel">
-  <div class="card-title">🛠️ แผงควบคุม</div>
-  <div class="admin-tabs">
-    <button class="admin-tab active" onclick="switchAdminTab('veh',this)">🚛 เบอร์รถ</button>
-    <button class="admin-tab" onclick="switchAdminTab('emp',this)">👤 รหัสพนักงาน</button>
-    <button class="admin-tab" onclick="switchAdminTab('data',this)">📋 ข้อมูล</button>
-  </div>
-  <div class="admin-section show" id="adminVeh">
-    <div style="font-size:13px;color:#64748b;margin-bottom:8px">เพิ่มเบอร์รถและทะเบียน</div>
-    <div class="admin-add-row">
-      <input id="aVehNum" placeholder="เบอร์รถ (3 หลัก)" maxlength="3" oninput="this.value=this.value.replace(/[^0-9]/g,'').slice(0,3)">
-      <input id="aVehFront" placeholder="ป้ายหน้า" style="max-width:120px">
-      <input id="aVehBack" placeholder="ป้ายหลัง" style="max-width:120px">
-      <button onclick="addVehicle()">+</button>
-    </div>
-    <div class="admin-list" id="adminVehList"></div>
-  </div>
-  <div class="admin-section" id="adminEmp">
-    <div style="font-size:13px;color:#64748b;margin-bottom:8px">เพิ่มรหัสพนักงาน</div>
-    <div class="admin-add-row">
-      <input id="aEmpCode" placeholder="เลข 4 หลัก" maxlength="4" oninput="this.value=this.value.replace(/[^0-9]/g,'').slice(0,4)">
-      <button onclick="addEmpCode()">+</button>
-    </div>
-    <div class="admin-list" id="adminEmpList"></div>
-  </div>
-  <div class="admin-section" id="adminData">
-    <div style="font-size:13px;color:#64748b;margin-bottom:8px">ข้อมูลที่บันทึกแล้ว</div>
-    <div style="display:flex;gap:8px;margin-bottom:10px">
-      <button class="admin-tab" onclick="switchAdminDataTab('รถ',this)" style="background:#fff;border:1px solid #e2e8f0;padding:6px 14px;border-radius:8px;cursor:pointer;font-size:13px;font-family:Prompt,sans-serif">🚚 รถ</button>
-      <button class="admin-tab active" onclick="switchAdminDataTab('คน',this)" style="background:#fff;border:1px solid #e2e8f0;padding:6px 14px;border-radius:8px;cursor:pointer;font-size:13px;font-family:Prompt,sans-serif;background:#0f172a;color:#fff">🧑 คน</button>
-    </div>
-    <input id="adminDataSearch" placeholder="🔍 ค้นหา ชื่อ / รหัส / เบอร์รถ / โทร..." oninput="renderAdminDataRows(_adminDataCache,this.value)" style="width:100%;padding:8px 12px;border:2px solid #e2e8f0;border-radius:8px;font-size:13px;font-family:Prompt,sans-serif;margin-bottom:8px;outline:none" onfocus="this.style.borderColor='#38bdf8'" onblur="this.style.borderColor='#e2e8f0'">
-    <div class="admin-list" id="adminDataList" style="max-height:400px"></div>
-  </div>
-  <button class="admin-logout" onclick="doLogout()">🚪 ออกจากระบบ</button>
-</div>
-
-</div>
-
-<!-- MENU -->
-<div id="pageMenu" class="page active">
-  <div class="menu-grid">
-    <div class="menu-card" onclick="goV()"><span class="icon">🚚</span><div class="name">อัพบัตรรถ</div><div class="desc">จัดการบัตรประจําตัวรถ</div></div>
-    <div class="menu-card" onclick="goD()"><span class="icon">🧑‍✈️</span><div class="name">อัพบัตรคน</div><div class="desc">จัดการบัตรพนักงานขับรถ</div></div>
-  </div>
-  <div class="card"><div class="card-title">📋 รายการล่าสุด</div><div id="recentList"><div style="text-align:center;color:#94a3b8;padding:20px">กำลังโหลด...</div></div></div>
-</div>
-
-<!-- VEHICLE FORM -->
-<div id="pageV" class="page">
-  <div class="top-bar"><button class="back" onclick="goM()">‹</button><span class="title" id="vMode">อัพบัตรรถ</span></div>
-  <div class="card">
-    <div class="card-title">🚚 ข้อมูลรถ</div>
-    <div class="row r2">
-      <div><label>เบอร์รถ</label><input id="v_ber" placeholder="000" oninput="fmtBer(this)" onblur="fillBer(this)" maxlength="3"></div>
-      <div><label>จังหวัด</label><select id="v_province"><option>กทม</option><option>อื่น ๆ</option></select></div>
-    </div>
-    <div class="row r2">
-      <div><label>ทะเบียนหัว</label>
-        <div style="display:flex;gap:6px">
-          <select id="v_fmt_hua" onchange="updatePlateFmt()" style="width:90px;flex-shrink:0;padding:10px 6px;font-size:13px">
-            <option value="2">2 ตัวหน้า</option><option value="3">3 ตัวหน้า</option>
-          </select>
-          <input id="v_hua" placeholder="00-0000" oninput="fmtPlate(this)" maxlength="8" style="flex:1">
-        </div>
-      </div>
-      <div><label>ทะเบียนหาง</label>
-        <div style="display:flex;gap:6px">
-          <select id="v_fmt_hang" onchange="updatePlateFmt()" style="width:90px;flex-shrink:0;padding:10px 6px;font-size:13px">
-            <option value="2">2 ตัวหน้า</option><option value="3">3 ตัวหน้า</option>
-          </select>
-          <input id="v_hang" placeholder="00-0000" oninput="fmtPlate(this)" maxlength="8" style="flex:1">
-        </div>
+    <div class="header">
+      <h1>ระบบติดตามบัตร <span>พขร.</span></h1>
+      <p>จัดการบัตรประจําตัวรถและพนักงานขับรถ</p>
+      <button class="admin-btn" id="adminBtn" onclick="showLogin()">🔐</button>
+    
+    <!-- === Admin Login Modal === -->
+    <div class="modal-overlay" id="loginModal">
+      <div class="modal-box">
+        <button class="btn-close" onclick="hide('loginModal')">&times;</button>
+        <h3>🔐 แอดมิน</h3>
+        <label>Username</label>
+        <input type="text" id="adminUser" placeholder="username" onkeydown="if(event.key==='Enter')doLogin()">
+        <label>Password</label>
+        <input type="password" id="adminPass" placeholder="password" onkeydown="if(event.key==='Enter')doLogin()">
+        <button class="btn-primary" onclick="doLogin()">เข้าสู่ระบบ</button>
       </div>
     </div>
+
+    <!-- === Admin Panel === -->
+    <div class="card admin-panel" id="adminPanel">
+      <div class="card-title">🛠️ แผงควบคุม</div>
+      <div class="admin-tabs">
+        <button class="admin-tab active" onclick="switchAdminTab('veh',this)">🚛 เบอร์รถ</button>
+        <button class="admin-tab" onclick="switchAdminTab('emp',this)">👤 รหัสพนักงาน</button>
+        <button class="admin-tab" onclick="switchAdminTab('data',this)">📋 ข้อมูล</button>
+      </div>
+
+      <!-- Vehicle management -->
+      <div class="admin-section show" id="adminVeh">
+        <div style="font-size:13px;color:#64748b;margin-bottom:8px">เพิ่มเบอร์รถและทะเบียน</div>
+        <div class="admin-add-row">
+          <input id="aVehNum" placeholder="เบอร์รถ (3 หลัก)" maxlength="3" oninput="this.value=this.value.replace(/[^0-9]/g,'').slice(0,3)">
+          <input id="aVehFront" placeholder="ป้ายหน้า" style="max-width:120px">
+          <input id="aVehBack" placeholder="ป้ายหลัง" style="max-width:120px">
+          <button onclick="addVehicle()">+</button>
+        </div>
+        <div class="admin-list" id="adminVehList"></div>
+      </div>
+
+      <!-- Employee management -->
+      <div class="admin-section" id="adminEmp">
+        <div style="font-size:13px;color:#64748b;margin-bottom:8px">เพิ่มรหัสพนักงาน</div>
+        <div class="admin-add-row">
+          <input id="aEmpCode" placeholder="เลข 4 หลัก" maxlength="4" oninput="this.value=this.value.replace(/[^0-9]/g,'').slice(0,4)">
+          <button onclick="addEmpCode()">+</button>
+        </div>
+        <div class="admin-list" id="adminEmpList"></div>
+      </div>
+
+      
+      <!-- Data view -->
+      <div class="admin-section" id="adminData">
+        <div style="font-size:13px;color:#64748b;margin-bottom:8px">ข้อมูลที่บันทึกแล้ว</div>
+        <div style="display:flex;gap:8px;margin-bottom:10px">
+          <button class="admin-tab" onclick="switchAdminDataTab('รถ',this)" style="background:#fff;border:1px solid #e2e8f0;padding:6px 14px;border-radius:8px;cursor:pointer;font-size:13px;font-family:Prompt,sans-serif">🚚 รถ</button>
+          <button class="admin-tab active" onclick="switchAdminDataTab('คน',this)" style="background:#fff;border:1px solid #e2e8f0;padding:6px 14px;border-radius:8px;cursor:pointer;font-size:13px;font-family:Prompt,sans-serif;background:#0f172a;color:#fff">🧑 คน</button>
+        </div>
+        <div class="admin-list" id="adminDataList" style="max-height:400px"></div>
+      </div>
+
+      <button class="admin-logout" onclick="doLogout()">🚪 ออกจากระบบ</button>
+    </div>
+
   </div>
-  <div class="card">
-    <div class="card-title">📄 บัตรต่าง ๆ ( ถ้ามีรูปอัพแค่รูปก็ได้ ) </div>
-    <div class="section-label">ธพน.2</div>
-    <div class="row"><div><label>ธพน.2 หมดอายุบัตร</label><input id="v_tho_e" placeholder="วัน/เดือน/ปี" oninput="fmtDate(this)" maxlength="10"></div></div>
-    <div class="section-label">ภาษี</div>
-    <div class="row"><div><label>ภาษี หมดอายุบัตร</label><input id="v_pasi_e" placeholder="วัน/เดือน/ปี" oninput="fmtDate(this)" maxlength="10"></div></div>
-    <div class="section-label">Thaioil SRC, Esso SRC, PTT-GC</div>
-    <div class="row r3">
-      <div><label>Thaioil SRC หมดอายุ</label><input id="v_c1_e" placeholder="วัน/เดือน/ปี" oninput="fmtDate(this)" maxlength="10"></div>
-      <div><label>Esso SRC หมดอายุ</label><input id="v_c2_e" placeholder="วัน/เดือน/ปี" oninput="fmtDate(this)" maxlength="10"></div>
-      <div><label>PTT-GC หมดอายุ</label><input id="v_c3_e" placeholder="วัน/เดือน/ปี" oninput="fmtDate(this)" maxlength="10"></div>
+
+    <!-- MENU -->
+    <div id="pageMenu" class="page active">
+      <div class="menu-grid">
+        <div class="menu-card" onclick="goV()"><span class="icon">🚚</span><div class="name">อัพบัตรรถ</div><div class="desc">จัดการบัตรประจําตัวรถ</div></div>
+        <div class="menu-card" onclick="goD()"><span class="icon">🧑‍✈️</span><div class="name">อัพบัตรคน</div><div class="desc">จัดการบัตรพนักงานขับรถ</div></div>
+      </div>
+      <div class="card"><div class="card-title">📋 รายการล่าสุด</div><div id="recentList"><div style="text-align:center;color:#94a3b8;padding:20px">กำลังโหลด...</div></div></div>
     </div>
-    <div class="section-label">LLK Thappline, SRB Thappline, SPRC</div>
-    <div class="row r3">
-      <div><label>LLK Thappline หมดอายุ</label><input id="v_c4_e" placeholder="วัน/เดือน/ปี" oninput="fmtDate(this)" maxlength="10"></div>
-      <div><label>SRB Thappline หมดอายุ</label><input id="v_c5_e" placeholder="วัน/เดือน/ปี" oninput="fmtDate(this)" maxlength="10"></div>
-      <div><label>SPRC หมดอายุ</label><input id="v_c6_e" placeholder="วัน/เดือน/ปี" oninput="fmtDate(this)" maxlength="10"></div>
+
+    <!-- VEHICLE FORM -->
+    <div id="pageV" class="page">
+      <div class="top-bar"><button class="back" onclick="goM()">‹</button><span class="title" id="vMode">อัพบัตรรถ</span></div>
+      <div class="card">
+        <div class="card-title">🚚 ข้อมูลรถ</div>
+        <div class="row r2">
+          <div><label>เบอร์รถ</label><input id="v_ber" placeholder="000" oninput="fmtBer(this)" onblur="fillBer(this)" maxlength="3"></div>
+          <div><label>จังหวัด</label><select id="v_province"><option>กทม</option><option>อื่น ๆ</option></select></div>
+        </div>
+        <div class="row r2">
+          <div><label>ทะเบียนหัว</label>
+            <div style="display:flex;gap:6px">
+              <select id="v_fmt_hua" onchange="updatePlateFmt()" style="width:90px;flex-shrink:0;padding:10px 6px;font-size:13px">
+                <option value="2">2 ตัวหน้า</option><option value="3">3 ตัวหน้า</option>
+              </select>
+              <input id="v_hua" placeholder="00-0000" oninput="fmtPlate(this)" maxlength="8" style="flex:1">
+            </div>
+          </div>
+          <div><label>ทะเบียนหาง</label>
+            <div style="display:flex;gap:6px">
+              <select id="v_fmt_hang" onchange="updatePlateFmt()" style="width:90px;flex-shrink:0;padding:10px 6px;font-size:13px">
+                <option value="2">2 ตัวหน้า</option><option value="3">3 ตัวหน้า</option>
+              </select>
+              <input id="v_hang" placeholder="00-0000" oninput="fmtPlate(this)" maxlength="8" style="flex:1">
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title">📄 บัตรต่าง ๆ</div>
+        <div class="section-label">ธพน.2</div>
+        <div class="row"><div><label>ธพน.2 หมดอายุบัตร</label><input id="v_tho_e" placeholder="วัน/เดือน/ปี" oninput="fmtDate(this)" maxlength="10"></div></div>
+        <div class="section-label">ภาษี</div>
+        <div class="row"><div><label>ภาษี หมดอายุบัตร</label><input id="v_pasi_e" placeholder="วัน/เดือน/ปี" oninput="fmtDate(this)" maxlength="10"></div></div>
+        <div class="section-label">Thaioil SRC, Esso SRC, PTT-GC</div>
+        <div class="row r3">
+          <div><label>Thaioil SRC หมดอายุ</label><input id="v_c1_e" placeholder="วัน/เดือน/ปี" oninput="fmtDate(this)" maxlength="10"></div>
+          <div><label>Esso SRC หมดอายุ</label><input id="v_c2_e" placeholder="วัน/เดือน/ปี" oninput="fmtDate(this)" maxlength="10"></div>
+          <div><label>PTT-GC หมดอายุ</label><input id="v_c3_e" placeholder="วัน/เดือน/ปี" oninput="fmtDate(this)" maxlength="10"></div>
+        </div>
+        <div class="section-label">LLK Thappline, SRB Thappline, SPRC</div>
+        <div class="row r3">
+          <div><label>LLK Thappline หมดอายุ</label><input id="v_c4_e" placeholder="วัน/เดือน/ปี" oninput="fmtDate(this)" maxlength="10"></div>
+          <div><label>SRB Thappline หมดอายุ</label><input id="v_c5_e" placeholder="วัน/เดือน/ปี" oninput="fmtDate(this)" maxlength="10"></div>
+          <div><label>SPRC หมดอายุ</label><input id="v_c6_e" placeholder="วัน/เดือน/ปี" oninput="fmtDate(this)" maxlength="10"></div>
+        </div>
+        <div class="section-label">IRPC IRY & AU</div>
+        <div class="row"><div><label>IRPC IRY & AU หมดอายุบัตร</label><input id="v_c7_e" placeholder="วัน/เดือน/ปี" oninput="fmtDate(this)" maxlength="10"></div></div>
+        <div class="section-label">รูปเอกสาร</div>
+        <div class="upload-zone" onclick="document.getElementById('v_img').click()">
+          <span class="icn">📁</span>
+          <div class="txt">คลิกเลือกรูปหลายไฟล์</div>
+        </div>
+        <input type="file" id="v_img" accept="image/*" multiple style="display:none" onchange="onImg('v')">
+        <div id="v_preview" class="preview-grid"></div>
+        <div id="v_imgCount" class="preview-count"></div>
+      </div>
+      <button class="btn btn-primary" id="btnSaveV" onclick="saveV()">💾 บันทึกข้อมูลรถ</button>
     </div>
-    <div class="section-label">IRPC IRY & AU</div>
-    <div class="row"><div><label>IRPC IRY & AU หมดอายุบัตร</label><input id="v_c7_e" placeholder="วัน/เดือน/ปี" oninput="fmtDate(this)" maxlength="10"></div></div>
-    <div class="section-label">รูปเอกสาร</div>
-    <div class="upload-zone" onclick="document.getElementById('v_img').click()">
-      <span class="icn">📁</span>
-      <div class="txt">คลิกเลือกรูปหลายไฟล์</div>
+
+    <!-- DRIVER FORM -->
+    <div id="pageD" class="page">
+      <div class="top-bar"><button class="back" onclick="goM()">‹</button><span class="title" id="dMode">อัพบัตรคน</span></div>
+      <div class="card">
+        <div class="card-title">🧑‍✈️ ข้อมูลพนักงานขับรถ</div>
+        <div class="row r2">
+          <div><label>รหัสพนักงาน</label><input id="d_code" placeholder="เลข 4 ตัว" oninput="fmtCode(this)" maxlength="4"></div>
+          <div><label>เบอร์รถ</label><input id="d_ber" placeholder="000" oninput="fmtBer(this)" maxlength="3"></div>
+        </div>
+        <div class="row r2">
+          <div><label>ชื่อ</label><input id="d_name" placeholder="ชื่อ-นามสกุล"></div>
+          <div><label>เบอร์โทร</label><input id="d_phone" placeholder="เบอร์มือถือ" oninput="fmtPhone(this)" maxlength="10"></div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title">📄 บัตรต่าง ๆ</div>
+        <div class="section-label">Esso SRC, PTT-GC, LLK Thappline</div>
+        <div class="row r3">
+          <div><label>Esso SRC หมดอายุ</label><input id="d_c1_e" placeholder="วัน/เดือน/ปี" oninput="fmtDate(this)" maxlength="10"></div>
+          <div><label>PTT-GC หมดอายุ</label><input id="d_c2_e" placeholder="วัน/เดือน/ปี" oninput="fmtDate(this)" maxlength="10"></div>
+          <div><label>LLK Thappline หมดอายุ</label><input id="d_c3_e" placeholder="วัน/เดือน/ปี" oninput="fmtDate(this)" maxlength="10"></div>
+        </div>
+        <div class="section-label">SRB Thappline, SPRC, Thaioil SRC, IRPC</div>
+        <div class="row r2">
+          <div><label>SRB Thappline หมดอายุ</label><input id="d_c4_e" placeholder="วัน/เดือน/ปี" oninput="fmtDate(this)" maxlength="10"></div>
+          <div><label>SPRC หมดอายุ</label><input id="d_c5_e" placeholder="วัน/เดือน/ปี" oninput="fmtDate(this)" maxlength="10"></div>
+          <div><label>Thaioil SRC หมดอายุ</label><input id="d_c6_e" placeholder="วัน/เดือน/ปี" oninput="fmtDate(this)" maxlength="10"></div>
+          <div><label>IRPC IRY & AU หมดอายุ</label><input id="d_c7_e" placeholder="วัน/เดือน/ปี" oninput="fmtDate(this)" maxlength="10"></div>
+        </div>
+        <div class="section-label">รูปเอกสาร</div>
+        <div class="upload-zone" onclick="document.getElementById('d_img').click()">
+          <span class="icn">📁</span>
+          <div class="txt">คลิกเลือกรูปหลายไฟล์</div>
+        </div>
+        <input type="file" id="d_img" accept="image/*" multiple style="display:none" onchange="onImg('d')">
+        <div id="d_preview" class="preview-grid"></div>
+        <div id="d_imgCount" class="preview-count"></div>
+      </div>
+      <button class="btn btn-success" id="btnSaveD" onclick="saveD()">💾 บันทึกข้อมูลพนักงาน</button>
     </div>
-    <input type="file" id="v_img" accept="image/*" multiple style="display:none" onchange="onImg('v')">
-    <div id="v_preview" class="preview-grid"></div>
-    <div id="v_imgCount" class="preview-count"></div>
-    <!-- OCR bar for vehicle -->
-    <div class="ocr-bar" id="v_ocrBar">
-      <button class="btn-ocr" id="v_ocrBtn" onclick="runOCR('v')">🤖 อ่านบัตรอัตโนมัติ</button>
-      <span style="font-size:12px;color:#94a3b8">Powered by Gemini AI</span>
+
+    <div class="toast" id="toast"></div>
     </div>
-    <div class="ocr-result-box" id="v_ocrResult"></div>
-    <div class="ocr-error-box" id="v_ocrError"></div>
-  </div>
-  <button class="btn btn-primary" id="btnSaveV" onclick="saveV()">💾 บันทึกข้อมูลรถ</button>
-</div>
 
-<!-- DRIVER FORM -->
-<div id="pageD" class="page">
-  <div class="top-bar"><button class="back" onclick="goM()">‹</button><span class="title" id="dMode">อัพบัตรคน</span></div>
-  <div class="card">
-    <div class="card-title">🧑‍✈️ ข้อมูลพนักงานขับรถ</div>
-    <div class="row r2">
-      <div><label>รหัสพนักงาน</label><input id="d_code" placeholder="เลข 4 ตัว" oninput="fmtCode(this)" maxlength="4"></div>
-      <div><label>เบอร์รถ</label><input id="d_ber" placeholder="000" oninput="fmtBer(this)" maxlength="3"></div>
-    </div>
-    <div class="row r2">
-      <div><label>ชื่อ</label><input id="d_name" placeholder="ชื่อ-นามสกุล"></div>
-      <div><label>เบอร์โทร</label><input id="d_phone" placeholder="เบอร์มือถือ" oninput="fmtPhone(this)" maxlength="10"></div>
-    </div>
-  </div>
-  <div class="card">
-    <div class="card-title">📄 บัตรต่าง ๆ ( ถ้ามีรูปอัพแค่รูปก็ได้ )</div>
-    <div class="section-label">Esso SRC, PTT-GC, LLK Thappline</div>
-    <div class="row r3">
-      <div><label>Esso SRC หมดอายุ</label><input id="d_c1_e" placeholder="วัน/เดือน/ปี" oninput="fmtDate(this)" maxlength="10"></div>
-      <div><label>PTT-GC หมดอายุ</label><input id="d_c2_e" placeholder="วัน/เดือน/ปี" oninput="fmtDate(this)" maxlength="10"></div>
-      <div><label>LLK Thappline หมดอายุ</label><input id="d_c3_e" placeholder="วัน/เดือน/ปี" oninput="fmtDate(this)" maxlength="10"></div>
-    </div>
-    <div class="section-label">SRB Thappline, SPRC, Thaioil SRC, IRPC</div>
-    <div class="row r2">
-      <div><label>SRB Thappline หมดอายุ</label><input id="d_c4_e" placeholder="วัน/เดือน/ปี" oninput="fmtDate(this)" maxlength="10"></div>
-      <div><label>SPRC หมดอายุ</label><input id="d_c5_e" placeholder="วัน/เดือน/ปี" oninput="fmtDate(this)" maxlength="10"></div>
-      <div><label>Thaioil SRC หมดอายุ</label><input id="d_c6_e" placeholder="วัน/เดือน/ปี" oninput="fmtDate(this)" maxlength="10"></div>
-      <div><label>IRPC IRY & AU หมดอายุ</label><input id="d_c7_e" placeholder="วัน/เดือน/ปี" oninput="fmtDate(this)" maxlength="10"></div>
-    </div>
-    <div class="section-label">รูปเอกสาร</div>
-    <div class="upload-zone" onclick="document.getElementById('d_img').click()">
-      <span class="icn">📁</span>
-      <div class="txt">คลิกเลือกรูปหลายไฟล์</div>
-    </div>
-    <input type="file" id="d_img" accept="image/*" multiple style="display:none" onchange="onImg('d')">
-    <div id="d_preview" class="preview-grid"></div>
-    <div id="d_imgCount" class="preview-count"></div>
-    <!-- OCR bar for driver -->
-    <div class="ocr-bar" id="d_ocrBar">
-      <button class="btn-ocr" id="d_ocrBtn" onclick="runOCR('d')">🤖 อ่านบัตรอัตโนมัติ</button>
-      <span style="font-size:12px;color:#94a3b8">Powered by Gemini AI</span>
-    </div>
-    <div class="ocr-result-box" id="d_ocrResult"></div>
-    <div class="ocr-error-box" id="d_ocrError"></div>
-  </div>
-  <button class="btn btn-success" id="btnSaveD" onclick="saveD()">💾 บันทึกข้อมูลพนักงาน</button>
-</div>
+    <script>
+    // *** วาง URL จาก Apps Script Deploy ตรงนี้ ***
+    const API = 'https://script.google.com/macros/s/AKfycbyuU-gGfMhIMKlEHbiRTd01Tcd2JGeXIDybGkg9VWPCEMJl6OsUf2qrCAgVudJ_Bg6v1A/exec';
 
-<div class="toast" id="toast"></div>
-</div>
+    function $(id){return document.getElementById(id)}
+    function goM(){$('pageMenu').className='page active';$('pageV').className='page';$('pageD').className='page';loadR()}
+    function goV(){$('pageMenu').className='page';$('pageV').className='page active';$('pageD').className='page'}
+    function goD(){$('pageMenu').className='page';$('pageV').className='page';$('pageD').className='page active'}
+    function g(id){return $(id).value.trim()}
+    function toast(m){var t=$('toast');t.textContent=m;t.className='toast show';setTimeout(function(){t.className='toast'},2500)}
 
-<script>
-const API = 'https://script.google.com/macros/s/AKfycbyuU-gGfMhIMKlEHbiRTd01Tcd2JGeXIDybGkg9VWPCEMJl6OsUf2qrCAgVudJ_Bg6v1A/exec';
-const GEMINI_API_KEY = 'AIzaSyDMFwAZWWFZx5lO9tPy6W4JeyV082Z-vj0';
-const GEMINI_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=' + GEMINI_API_KEY;
-
-function $(id){return document.getElementById(id)}
-function goM(){$('pageMenu').className='page active';$('pageV').className='page';$('pageD').className='page';loadR()}
-function goV(){$('pageMenu').className='page';$('pageV').className='page active';$('pageD').className='page'}
-function goD(){$('pageMenu').className='page';$('pageV').className='page';$('pageD').className='page active'}
-function g(id){return $(id).value.trim()}
-function toast(m){var t=$('toast');t.textContent=m;t.className='toast show';setTimeout(function(){t.className='toast'},2500)}
-
-function fmtPlate(el){
-  var fmt=$(el.id.replace('v_h','v_fmt_h'));
-  var n=fmt&&fmt.value==='3'?3:2;
-  var v=el.value.replace(/[^0-9]/g,'').slice(0,n+4);
-  if(v.length>n) v=v.slice(0,n)+'-'+v.slice(n);
-  el.value=v;
-}
-function updatePlateFmt(){
-  ['v_hua','v_hang'].forEach(function(id){
-    var el=$(id);if(!el)return;
-    var fmt=$(id.replace('v_h','v_fmt_h'));if(!fmt)return;
-    var n=fmt.value==='3'?3:2;
-    el.maxLength=n+5;el.placeholder=n===3?'000-0000':'00-0000';
-    var v=el.value.replace(/[^0-9]/g,'').slice(0,n+4);
-    if(v.length>n) v=v.slice(0,n)+'-'+v.slice(n);
-    el.value=v;
-  });
-}
-function fmtBer(el){
-  el.value=el.value.replace(/[^0-9]/g,'').slice(0,3);
-  var v=el.value;
-  if(v.length===3){
-    var key=v.slice(0,1)=='0'?v.slice(1):v;
-    var d=VEHICLE_DATA[key];
-    if(d){$('v_hua').value=d.h;$('v_hang').value=d.b;}
-  }
-}
-function fillBer(el){
-  if(!el.value) return;
-  el.value=el.value.padStart(3,'0');
-  var v=el.value,key=v.slice(0,1)=='0'?v.slice(1):v;
-  var d=VEHICLE_DATA[key];
-  if(d){$('v_hua').value=d.h;$('v_hang').value=d.b;}
-}
-function fmtPhone(el){el.value=el.value.replace(/[^0-9]/g,'').slice(0,10)}
-function fmtCode(el){el.value=el.value.replace(/[^0-9]/g,'').slice(0,4)}
-function fmtDate(el){el.value=el.value.replace(/[^0-9]/g,'').replace(/^(\d{2})(\d)/,'$1/$2').replace(/^(\d{2}\/\d{2})(\d)/,'$1/$2').slice(0,10)}
-
-function normalizeDate(v){
-  if(!v||!(v=v.trim()))return '';
-  var p=v.split('/');
-  if(p.length!==3)return v;
-  var d=parseInt(p[0]),m=parseInt(p[1]),y=parseInt(p[2]);
-  if(isNaN(d)||isNaN(m)||isNaN(y))return '';
-  if(d<1||d>31||m<1||m>12)return '';
-  var dd=d<10?'0'+d:''+d;
-  var mm=m<10?'0'+m:''+m;
-  if(y<100) y+=y>=60?2500:2543;
-  else if(y>1000&&y<2500)y+=543;
-  return dd+'/'+mm+'/'+y;
-}
-
-function fmtDateBlur(el){
-  var v=el.value.trim();
-  if(!v){el.value='';return}
-  var p=v.split('/');
-  if(p.length<3){toast('❌ กรุณากรอกวันเดือนปีให้ครบ (วว/ดด/ปปปป)');el.value='';el.focus();return}
-  var n=normalizeDate(v);
-  if(!n){toast('❌ รูปแบบวันที่ไม่ถูกต้อง');el.value='';return}
-  el.value=n;
-}
-
-window.addEventListener('DOMContentLoaded',function(){
-  document.querySelectorAll('input[maxlength="10"]').forEach(function(el){
-    if(el.getAttribute('oninput')&&el.getAttribute('oninput').indexOf('fmtDate')>=0)
-      el.addEventListener('blur',function(){fmtDateBlur(this)});
-  });
-});
-
-var editKeyV='',editKeyD='',editImgsV='',editImgsD='';
-
-function clr(){
-  ['v_ber','v_hua','v_hang','v_tho_e','v_pasi_e',
-  'v_c1_e','v_c2_e','v_c3_e','v_c4_e','v_c5_e','v_c6_e','v_c7_e'].forEach(function(id){$(id).value=''});
-  ['d_code','d_ber','d_name','d_phone',
-  'd_c1_e','d_c2_e','d_c3_e','d_c4_e','d_c5_e','d_c6_e','d_c7_e'].forEach(function(id){$(id).value=''});
-  $('vMode').textContent='อัพบัตรรถ';$('dMode').textContent='อัพบัตรคน';
-  editKeyV='';editKeyD='';editImgsV='';editImgsD='';
-  removeImgs('v');removeImgs('d');
-  ['v','d'].forEach(function(p){
-    $(p+'_ocrBar').classList.remove('show');
-    $(p+'_ocrResult').className='ocr-result-box';
-    $(p+'_ocrError').className='ocr-error-box';
-  });
-}
-
-function apiGet(params){
-  var url=API+'?'+Object.keys(params).map(function(k){return encodeURIComponent(k)+'='+encodeURIComponent(params[k])}).join('&');
-  return fetch(url).then(function(r){return r.json()})
-}
-function apiPost(body){
-  var payload=JSON.stringify(body);
-  if(payload.length>5000||payload.indexOf('data:image')>=0||payload.indexOf(';base64,')>=0){
-    return new Promise(function(resolve){
-      var x=new XMLHttpRequest();x.open('POST',API);
-      x.onload=function(){try{var d=JSON.parse(x.responseText);resolve(Array.isArray(d)?{created:1,updated:0}:d)}catch(e){resolve({created:1,updated:0})}};
-      x.onerror=function(){resolve({error:'network error'})};
-      x.send(payload);
-    });
-  }
-  return fetch(API+'?payload='+encodeURIComponent(payload)).then(function(r){return r.json()}).then(function(res){
-    if(res&&res.error)return res;if(Array.isArray(res))return{created:1,updated:0};return res;
-  }).catch(function(){
-    return new Promise(function(resolve){
-      var x=new XMLHttpRequest();x.open('POST',API);
-      x.onload=function(){try{var d=JSON.parse(x.responseText);resolve(Array.isArray(d)?{created:1,updated:0}:d)}catch(e){resolve({created:1,updated:0})}};
-      x.onerror=function(){resolve({error:'network error'})};
-      x.send(payload);
-    });
-  });
-}
-
-// ====== Image helpers ======
-function onImg(prefix){
-  var input=$(prefix+'_img');var files=input.files;
-  var container=$(prefix+'_preview');var count=$(prefix+'_imgCount');
-  container.innerHTML='';
-  $(prefix+'_ocrResult').className='ocr-result-box';
-  $(prefix+'_ocrError').className='ocr-error-box';
-  if(!files||files.length===0){
-    count.textContent='';
-    $(prefix+'_ocrBar').classList.remove('show');
-    return;
-  }
-  count.textContent='เลือก '+files.length+' รูป';
-  $(prefix+'_ocrBar').classList.add('show');
-  [].forEach.call(files,function(f){
-    if(!f.type.match('image.*'))return;
-    var reader=new FileReader();
-    reader.onload=function(e){
-      var div=document.createElement('div');div.className='preview-item';
-      div.innerHTML='<img src="'+e.target.result+'"><button class="del" onclick="removeImgs(\''+prefix+'\')">\u00D7</button>';
-      container.appendChild(div);
-    };
-    reader.readAsDataURL(f);
-  });
-}
-function removeImgs(prefix){
-  $(prefix+'_img').value='';$(prefix+'_preview').innerHTML='';$(prefix+'_imgCount').textContent='';
-  $(prefix+'_ocrBar').classList.remove('show');
-  $(prefix+'_ocrResult').className='ocr-result-box';
-  $(prefix+'_ocrError').className='ocr-error-box';
-}
-function readImgs(prefix){
-  return new Promise(function(resolve){
-    var input=$(prefix+'_img');var files=input.files;
-    if(!files||files.length===0){resolve([]);return}
-    var results=[];
-    function readNext(idx){
-      if(idx>=files.length){resolve(results);return}
-      var r=new FileReader();
-      r.onload=function(e){results.push(e.target.result);readNext(idx+1)};
-      r.onerror=function(){readNext(idx+1)};
-      r.readAsDataURL(files[idx]);
+    function fmtPlate(el){
+      var fmt=$(el.id.replace('v_h','v_fmt_h'));
+      var n=fmt&&fmt.value==='3'?3:2;
+      var v=el.value.replace(/[^0-9]/g,'').slice(0,n+4);
+      if(v.length>n) v=v.slice(0,n)+'-'+v.slice(n);
+      el.value=v;
     }
-    readNext(0);
-  });
-}
-
-// ====== GEMINI OCR ======
-// Map บัตรแต่ละประเภท → field ในฟอร์ม
-var OCR_FIELD_MAP_V = {
-  'thaioil': 'v_c1_e',
-  'esso':    'v_c2_e',
-  'ptt':     'v_c3_e',
-  'llk':     'v_c4_e',
-  'srb':     'v_c5_e',
-  'sprc':    'v_c6_e',
-  'irpc':    'v_c7_e',
-  'ธพน':    'v_tho_e',
-  'ภาษี':   'v_pasi_e'
-};
-var OCR_FIELD_MAP_D = {
-  'esso':    'd_c1_e',
-  'ptt':     'd_c2_e',
-  'llk':     'd_c3_e',
-  'srb':     'd_c4_e',
-  'sprc':    'd_c5_e',
-  'thaioil': 'd_c6_e',
-  'irpc':    'd_c7_e'
-};
-
-var OCR_LABEL_MAP = {
-  'v_c1_e':'Thaioil SRC','v_c2_e':'Esso SRC','v_c3_e':'PTT-GC',
-  'v_c4_e':'LLK Thappline','v_c5_e':'SRB Thappline','v_c6_e':'SPRC','v_c7_e':'IRPC IRY & AU',
-  'v_tho_e':'ธพน.2','v_pasi_e':'ภาษี',
-  'd_c1_e':'Esso SRC','d_c2_e':'PTT-GC','d_c3_e':'LLK Thappline',
-  'd_c4_e':'SRB Thappline','d_c5_e':'SPRC','d_c6_e':'Thaioil SRC','d_c7_e':'IRPC IRY & AU'
-};
-
-async function runOCR(prefix){
-  var btn=$(prefix+'_ocrBtn');
-  var resultBox=$(prefix+'_ocrResult');
-  var errorBox=$(prefix+'_ocrError');
-  resultBox.className='ocr-result-box';
-  errorBox.className='ocr-error-box';
-
-  var files=$(prefix+'_img').files;
-  if(!files||files.length===0){toast('กรุณาเลือกรูปก่อน');return}
-
-  btn.disabled=true;
-  btn.innerHTML='<span class="spinner-dark"></span>กำลังอ่านบัตร...';
-
-  try{
-    // อ่านรูปทุกใบแล้วส่งให้ Gemini
-    var imgDataList=await readImgs(prefix);
-
-    var parts=[{
-      text: `คุณคือผู้ช่วยอ่านบัตรผ่านเข้าคลังน้ำมัน กรุณาอ่านรูปบัตรที่แนบมาทั้งหมด แล้วระบุข้อมูลต่อไปนี้ในรูปแบบ JSON เท่านั้น (ไม่ต้องอธิบายเพิ่ม):
-
-{
-  "card_type": "ชื่อบัตร เช่น Thaioil SRC / Esso SRC / PTT-GC / LLK Thappline / SRB Thappline / SPRC / IRPC / ธพน.2 / ภาษี",
-  "expiry_date": "วันหมดอายุในรูปแบบ DD/MM/YYYY (ค.ศ.) หรือ DD/MM/BBBB (พ.ศ.)",
-  "start_date": "วันที่เริ่มต้น (ถ้ามี)",
-  "name": "ชื่อผู้ถือบัตร (ถ้ามี)",
-  "card_number": "หมายเลขบัตร (ถ้ามี)"
-}
-
-ถ้ามีบัตรหลายใบในรูป ให้ return เป็น array ของ object
-ถ้าอ่านวันหมดอายุไม่ได้ให้ใส่ null`
-    }];
-
-    imgDataList.forEach(function(dataUrl){
-      var match=dataUrl.match(/^data:([^;]+);base64,(.+)$/);
-      if(match){
-        parts.push({inline_data:{mime_type:match[1],data:match[2]}});
-      }
-    });
-
-    var resp=await fetch(GEMINI_URL,{
-      method:'POST',
-      headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({contents:[{parts:parts}],generationConfig:{temperature:0.1}})
-    });
-
-    if(!resp.ok){
-      var err=await resp.json();
-      throw new Error(err.error&&err.error.message?err.error.message:'Gemini API error '+resp.status);
-    }
-
-    var data=await resp.json();
-    var text=data.candidates&&data.candidates[0]&&data.candidates[0].content&&data.candidates[0].content.parts&&data.candidates[0].content.parts[0]&&data.candidates[0].content.parts[0].text;
-    if(!text)throw new Error('ไม่ได้รับข้อมูลจาก Gemini');
-
-    // parse JSON จาก response
-    var clean=text.replace(/```json|```/g,'').trim();
-    var parsed;
-    try{parsed=JSON.parse(clean)}catch(e){throw new Error('อ่านผลลัพธ์ไม่ได้: '+text.slice(0,100))}
-
-    if(!Array.isArray(parsed))parsed=[parsed];
-
-    var fieldMap=prefix==='v'?OCR_FIELD_MAP_V:OCR_FIELD_MAP_D;
-    var filled={};
-    var unfilled=[];
-
-    parsed.forEach(function(card){
-      if(!card)return;
-      var ct=(card.card_type||'').toLowerCase();
-      var exp=card.expiry_date;
-      if(!exp)return;
-
-      // หา field ที่ตรงกับบัตรประเภทนี้
-      var fieldId=null;
-      Object.keys(fieldMap).forEach(function(keyword){
-        if(ct.indexOf(keyword)>=0)fieldId=fieldMap[keyword];
+    function updatePlateFmt(){
+      ['v_hua','v_hang'].forEach(function(id){
+        var el=$(id);
+        if(!el)return;
+        var fmt=$(id.replace('v_h','v_fmt_h'));
+        if(!fmt)return;
+        var n=fmt.value==='3'?3:2;
+        el.maxLength=n+5;
+        el.placeholder=n===3?'000-0000':'00-0000';
+        var v=el.value.replace(/[^0-9]/g,'').slice(0,n+4);
+        if(v.length>n) v=v.slice(0,n)+'-'+v.slice(n);
+        el.value=v;
       });
-
-      if(fieldId&&exp){
-        var normalized=normalizeDate(exp.replace(/[^\d\/]/g,'/').replace(/\/+/g,'/'));
-        if(normalized){
-          $(fieldId).value=normalized;
-          $(fieldId).classList.add('ai-filled');
-          filled[fieldId]={label:OCR_LABEL_MAP[fieldId]||fieldId,date:normalized,name:card.name||''};
-        }
-      } else if(exp){
-        unfilled.push((card.card_type||'ไม่ทราบประเภท')+': '+exp);
+    }
+    function fmtBer(el){
+      el.value=el.value.replace(/[^0-9]/g,'').slice(0,3);
+      var v=el.value;
+      if(v.length===3){
+        var key=v.slice(0,1)=='0'?v.slice(1):v; // "001"→"01", "010"→"10", "100"→"100"
+        var d=VEHICLE_DATA[key];
+        if(d){$('v_hua').value=d.h;$('v_hang').value=d.b;}
       }
-    });
+    }
+    function fillBer(el){
+      if(!el.value) return;
+      el.value=el.value.padStart(3,'0');
+      var v=el.value,key=v.slice(0,1)=='0'?v.slice(1):v;
+      var d=VEHICLE_DATA[key];
+      if(d){$('v_hua').value=d.h;$('v_hang').value=d.b;}
+    }
+    function fmtPhone(el){el.value=el.value.replace(/[^0-9]/g,'').slice(0,10)}
+    function fmtCode(el){el.value=el.value.replace(/[^0-9]/g,'').slice(0,4)}
+    function fmtDate(el){el.value=el.value.replace(/[^0-9]/g,'').replace(/^(\d{2})(\d)/,'$1/$2').replace(/^(\d{2}\/\d{2})(\d)/,'$1/$2').slice(0,10)}
 
-    // แสดงผล
-    if(Object.keys(filled).length>0){
-      var html='<div class="ocr-title">✅ อ่านได้ '+Object.keys(filled).length+' บัตร — กรุณาตรวจสอบก่อนบันทึก</div>';
-      Object.keys(filled).forEach(function(fid){
-        var f=filled[fid];
-        html+='<div class="ocr-result-row"><span class="field">'+f.label+'</span><span class="val">'+f.date+'</span></div>';
-      });
-      if(unfilled.length){
-        html+='<div style="margin-top:8px;font-size:12px;color:#92400e">⚠️ อ่านได้แต่ไม่ตรงกับช่องในฟอร์ม: '+unfilled.join(', ')+'</div>';
-      }
-      resultBox.innerHTML=html;
-      resultBox.className='ocr-result-box show';
-      toast('✅ อ่านบัตรสำเร็จ '+Object.keys(filled).length+' รายการ');
-    } else {
-      var noMatch='ไม่พบวันหมดอายุที่ตรงกับช่องในฟอร์ม';
-      if(unfilled.length)noMatch+=' (พบ: '+unfilled.join(', ')+')';
-      errorBox.textContent='⚠️ '+noMatch;
-      errorBox.className='ocr-error-box show';
+    function normalizeDate(v){
+      if(!v||!(v=v.trim()))return '';
+      var p=v.split('/');
+      if(p.length!==3)return v;
+      var d=parseInt(p[0]),m=parseInt(p[1]),y=parseInt(p[2]);
+      if(isNaN(d)||isNaN(m)||isNaN(y))return '';
+      if(d<1||d>31||m<1||m>12)return '';
+      var dd=d<10?'0'+d:''+d;
+      var mm=m<10?'0'+m:''+m;
+      if(y<100) y+=y>=60?2500:2543; // ≥60 → พ.ศ. 2 หลัก (2560-2599), &lt;60 → ค.ศ. 2 หลัก (25+2543=2568)
+      else if(y>1000&&y<2500)y+=543; // ค.ศ. → พ.ศ.
+      return dd+'/'+mm+'/'+y;
     }
 
-  }catch(e){
-    errorBox.textContent='❌ '+e.message;
-    errorBox.className='ocr-error-box show';
-  }
+    function fmtDateBlur(el){
+      var v=el.value.trim();
+      if(!v){el.value='';return}
+      var p=v.split('/');
+      if(p.length<3){toast('❌ กรุณากรอกวันเดือนปีให้ครบ (วว/ดด/ปปปป)');el.value='';el.focus();return}
+      var n=normalizeDate(v);
+      if(!n){toast('❌ รูปแบบวันที่ไม่ถูกต้อง');el.value='';return}
+      el.value=n;
+    }
 
-  btn.disabled=false;
-  btn.innerHTML='🤖 อ่านบัตรอัตโนมัติ';
-}
-
-// ====== SAVE VEHICLE ======
-async function saveV(){
-  var btn=$('btnSaveV');btn.disabled=true;btn.innerHTML='<span class="spinner"></span>กำลังบันทึก...';
-  var ber=g('v_ber');
-  if(!ber||ber.length<3){toast('กรุณากรอกเบอร์รถให้ครบ 3 หลัก');btn.disabled=false;btn.innerHTML='💾 บันทึกข้อมูลรถ';return}
-  var veh=VEHICLE_DATA[ber];
-  if(!veh){toast('❌ เบอร์ '+ber+' ไม่มีในระบบ');btn.disabled=false;btn.innerHTML='💾 บันทึกข้อมูลรถ';return}
-  try{
-    ['v_hua','v_hang'].forEach(function(id){
-      var el=$(id);if(!el||!el.value)return;
-      var fmt=$(id.replace('v_h','v_fmt_h'));var n=fmt&&fmt.value==='3'?3:2;
-      var raw=el.value.replace(/[^0-9]/g,'').slice(0,n+4);
-      if(raw.length>n) raw=raw.slice(0,n)+'-'+raw.slice(n);
-      var isFront=id==='v_hua';var expected=isFront?veh.h:veh.b;
-      if(expected&&raw!==expected){
-        toast('❌ ทะเบียน'+(isFront?'หัว':'หาง')+' ไม่ตรงกับเบอร์ '+ber+' (ต้องเป็น '+expected+')');
-        btn.disabled=false;btn.innerHTML='💾 บันทึกข้อมูลรถ';throw'stop'
-      }
+    window.addEventListener('DOMContentLoaded',function(){
+      document.querySelectorAll('input[maxlength="10"]').forEach(function(el){
+        if(el.getAttribute('oninput')&&el.getAttribute('oninput').indexOf('fmtDate')>=0)
+          el.addEventListener('blur',function(){fmtDateBlur(this)});
+      });
     });
-  }catch(e){if(e==='stop')return}
-  var data={
-    'เบอร์รถ':ber,'จังหวัด':g('v_province'),'ทะเบียนหัว':g('v_hua'),'ทะเบียนหาง':g('v_hang'),
-    'ธพน.2 หมดอายุบัตร':normalizeDate(g('v_tho_e')),
-    'ภาษี หมดอายุบัตร':normalizeDate(g('v_pasi_e')),
-    'Thaioil SRC หมดอายุบัตร':normalizeDate(g('v_c1_e')),
-    'Esso SRC หมดอายุบัตร':normalizeDate(g('v_c2_e')),
-    'PTT-GC หมดอายุบัตร':normalizeDate(g('v_c3_e')),
-    'LLK Thappline หมดอายุบัตร':normalizeDate(g('v_c4_e')),
-    'SRB Thappline หมดอายุบัตร':normalizeDate(g('v_c5_e')),
-    'SPRC หมดอายุบัตร':normalizeDate(g('v_c6_e')),
-    'IRPC IRY & AU หมดอายุบัตร':normalizeDate(g('v_c7_e'))
+
+    var editKeyV='',editKeyD='',editImgsV='',editImgsD='';
+
+    function clr(){
+      ['v_ber','v_hua','v_hang','v_tho_e','v_pasi_e',
+      'v_c1_e','v_c2_e','v_c3_e','v_c4_e','v_c5_e','v_c6_e','v_c7_e'].forEach(function(id){$(id).value=''});
+      ['d_code','d_ber','d_name','d_phone',
+      'd_c1_e','d_c2_e','d_c3_e','d_c4_e','d_c5_e','d_c6_e','d_c7_e'].forEach(function(id){$(id).value=''});
+      $('vMode').textContent='อัพบัตรรถ';
+      $('dMode').textContent='อัพบัตรคน';
+      editKeyV='';editKeyD='';editImgsV='';editImgsD='';
+      removeImgs('v');removeImgs('d');
+    }
+    function apiGet(params){
+      var url=API+'?'+Object.keys(params).map(function(k){
+        return encodeURIComponent(k)+'='+encodeURIComponent(params[k]);
+      }).join('&');
+      return fetch(url).then(function(r){return r.json()});
+    }
+    function apiPost(body){
+      var payload=JSON.stringify(body);
+      // ถ้า payload มี base64 หรือใหญ่เกินไป ใช้ POST โดยตรง (GET+payload URL จะยาวเกินไป)
+      if (payload.length > 5000 || payload.indexOf('data:image') >= 0 || payload.indexOf(';base64,') >= 0) {
+        return new Promise(function(resolve){
+          var x=new XMLHttpRequest();
+          x.open('POST',API);
+          x.onload=function(){
+            try{
+              var d=JSON.parse(x.responseText);
+              resolve(Array.isArray(d)?{created:1,updated:0}:d);
+            }catch(e){resolve({created:1,updated:0})}
+          };
+          x.onerror=function(){resolve({error:'network error'})};
+          x.send(payload);
+        });
+      }
+      // payload เล็ก → ใช้ GET+payload (เลี่ยง 302 redirect, ได้ response จริงจาก doPost)
+      return fetch(API+'?payload='+encodeURIComponent(payload)).then(function(r){
+        return r.json();
+      }).then(function(res){
+        if(res&&res.error) return res;
+        if(Array.isArray(res)) return {created:1,updated:0};
+        return res;
+      }).catch(function(){
+        return new Promise(function(resolve){
+          var x=new XMLHttpRequest();
+          x.open('POST',API);
+          x.onload=function(){
+            try{
+              var d=JSON.parse(x.responseText);
+              resolve(Array.isArray(d)?{created:1,updated:0}:d);
+            }catch(e){resolve({created:1,updated:0})}
+          };
+          x.onerror=function(){resolve({error:'network error'})};
+          x.send(payload);
+        });
+      });
+    }
+
+    // ====== Vehicle plate data ======
+    // Map of vehicle number -> {h: front plate, b: back plate}
+    // 339 vehicles total. 298 have both front & back, 40 have front only (NO.238-277)
+    var VEHICLE_DATA = {
+  "01":{h:"62-0923",b:"62-0924"},"02":{h:"62-0925",b:"62-0926"},"03":{h:"62-0927",b:"62-0928"},"04":{h:"62-0929",b:"62-0930"},"05":{h:"62-0931",b:"62-0932"},
+  "06":{h:"62-2723",b:"62-2724"},"07":{h:"62-2725",b:"62-2726"},"08":{h:"62-2727",b:"62-2728"},"09":{h:"62-2729",b:"62-2730"},"10":{h:"62-2731",b:"62-2732"},
+  "11":{h:"62-3120",b:"62-3121"},"12":{h:"62-3122",b:"62-3123"},"13":{h:"62-3124",b:"62-3125"},"14":{h:"62-3308",b:"62-3309"},"15":{h:"62-3310",b:"62-3311"},
+  "16":{h:"62-3312",b:"62-3313"},"17":{h:"62-3314",b:"62-3315"},"18":{h:"62-3316",b:"62-3317"},"19":{h:"62-3318",b:"62-3319"},"20":{h:"62-3320",b:"62-3321"},
+  "21":{h:"62-3628",b:"62-3629"},"22":{h:"62-3630",b:"62-3631"},"23":{h:"62-3632",b:"62-3633"},"24":{h:"62-3634",b:"62-3635"},"25":{h:"62-3638",b:"62-3639"},
+  "26":{h:"62-3894",b:"62-3895"},"27":{h:"62-3896",b:"62-3897"},"28":{h:"62-3898",b:"62-3899"},"29":{h:"62-3900",b:"62-3901"},"30":{h:"62-3902",b:"62-3903"},
+  "31":{h:"62-3904",b:"62-3905"},"32":{h:"62-3906",b:"62-3907"},"33":{h:"62-3908",b:"62-3909"},"34":{h:"62-3910",b:"62-3911"},"35":{h:"62-3912",b:"62-3913"},
+  "36":{h:"62-5404",b:"62-5405"},"37":{h:"62-5406",b:"62-5407"},"38":{h:"62-5408",b:"62-5409"},"39":{h:"62-8717",b:"62-8718"},"40":{h:"62-8719",b:"62-8720"},
+  "41":{h:"62-8721",b:"62-8722"},"42":{h:"62-8723",b:"62-8724"},"43":{h:"62-8725",b:"62-8726"},"44":{h:"62-9542",b:"62-9543"},"45":{h:"62-9545",b:"62-9546"},
+  "46":{h:"62-9547",b:"62-9548"},"47":{h:"62-9549",b:"62-9550"},"48":{h:"62-9551",b:"62-9552"},"49":{h:"62-9553",b:"62-9554"},"50":{h:"62-9556",b:"62-9557"},
+  "51":{h:"62-9560",b:"62-9561"},"52":{h:"62-9562",b:"62-9563"},"53":{h:"62-9564",b:"62-9565"},"54":{h:"63-0695",b:"63-0696"},"55":{h:"63-0685",b:"63-0686"},
+  "56":{h:"63-0697",b:"63-0698"},"57":{h:"63-0699",b:"63-0700"},"58":{h:"63-0701",b:"63-0702"},"59":{h:"63-0703",b:"63-0704"},"60":{h:"63-0687",b:"63-0688"},
+  "61":{h:"63-0689",b:"63-0690"},"62":{h:"63-0693",b:"63-0694"},"63":{h:"63-0692",b:"63-0691"},"64":{h:"63-1139",b:"63-1140"},"65":{h:"63-1141",b:"63-1142"},
+  "66":{h:"63-1143",b:"63-1145"},"67":{h:"63-1146",b:"63-1147"},"68":{h:"63-1148",b:"63-1149"},"69":{h:"63-1150",b:"63-1151"},"70":{h:"63-1152",b:"63-1153"},
+  "71":{h:"63-1689",b:"63-1690"},"72":{h:"63-1691",b:"63-1692"},"73":{h:"63-1693",b:"63-1695"},"74":{h:"63-1696",b:"63-1697"},"75":{h:"63-1698",b:"63-1699"},
+  "76":{h:"63-1721",b:"63-1722"},"77":{h:"63-1723",b:"63-1724"},"78":{h:"63-1725",b:"63-1726"},"79":{h:"63-1727",b:"63-1728"},"80":{h:"63-1729",b:"63-1730"},
+  "81":{h:"63-3890",b:"63-3891"},"82":{h:"63-3892",b:"63-3895"},"83":{h:"63-3896",b:"63-3897"},"84":{h:"63-3898",b:"63-3899"},"85":{h:"63-3900",b:"63-3901"},
+  "86":{h:"63-3904",b:"63-3905"},"87":{h:"63-3906",b:"63-3907"},"88":{h:"63-3908",b:"63-3909"},"89":{h:"63-3910",b:"63-3911"},"90":{h:"63-3912",b:"63-3913"},
+  "91":{h:"63-3914",b:"63-3915"},"92":{h:"63-3916",b:"63-3917"},"93":{h:"63-3918",b:"63-3919"},"94":{h:"63-3920",b:"63-3921"},"95":{h:"63-3922",b:"63-3923"},
+  "96":{h:"63-4961",b:"63-4962"},"97":{h:"63-4963",b:"63-4964"},"98":{h:"63-4965",b:"63-4966"},"99":{h:"63-4967",b:"63-4968"},"100":{h:"63-4969",b:"63-4971"},
+  "101":{h:"63-6560",b:"63-6561"},"102":{h:"63-6562",b:"63-6563"},"103":{h:"63-6564",b:"63-6567"},"104":{h:"63-6568",b:"63-6569"},"105":{h:"63-6570",b:"63-6571"},
+  "106":{h:"63-6572",b:"63-6573"},"107":{h:"63-6574",b:"63-6575"},"108":{h:"63-6576",b:"63-6577"},"109":{h:"63-6578",b:"63-6579"},"110":{h:"63-6580",b:"63-6581"},
+  "111":{h:"63-7193",b:"63-7212"},"112":{h:"63-7194",b:"63-7195"},"113":{h:"63-7196",b:"63-7197"},"114":{h:"63-7198",b:"63-7199"},"115":{h:"63-7200",b:"63-7201"},
+  "116":{h:"63-7202",b:"63-7203"},"117":{h:"63-7204",b:"63-7205"},"118":{h:"63-7206",b:"63-7207"},"119":{h:"63-7208",b:"63-7209"},"120":{h:"63-7210",b:"63-7211"},
+  "121":{h:"63-8230",b:"63-8231"},"122":{h:"63-8232",b:"63-8233"},"123":{h:"63-8234",b:"63-8235"},"124":{h:"63-8236",b:"63-8237"},"125":{h:"63-8238",b:"63-8239"},
+  "126":{h:"63-9112",b:"63-9113"},"127":{h:"63-9114",b:"63-9115"},"128":{h:"63-9116",b:"63-9117"},"129":{h:"63-9118",b:"63-9119"},"130":{h:"63-9120",b:"63-9121"},
+  "131":{h:"63-9122",b:"63-9123"},"132":{h:"63-9124",b:"63-9125"},"133":{h:"63-9126",b:"63-9127"},"134":{h:"63-9128",b:"63-9129"},"135":{h:"63-9130",b:"63-9131"},
+  "136":{h:"64-0670",b:"64-0671"},"137":{h:"64-0672",b:"64-0673"},"138":{h:"64-0674",b:"64-0675"},"139":{h:"64-0676",b:"64-0677"},"140":{h:"64-0679",b:"64-0680"},
+  "141":{h:"64-0681",b:"64-0682"},"142":{h:"64-0683",b:"64-0684"},"143":{h:"64-0685",b:"64-0686"},"144":{h:"64-0687",b:"64-0688"},"145":{h:"64-0689",b:"64-0690"},
+  "146":{h:"64-1014",b:"64-1015"},"147":{h:"64-1016",b:"64-1017"},"148":{h:"64-1018",b:"64-1020"},"149":{h:"64-1021",b:"64-1022"},"150":{h:"64-1023",b:"64-1024"},
+  "SPARE_151":{h:"63-0393",b:"63-1147"},"152":{h:"64-9126",b:"64-9354"},"153":{h:"65-0293",b:"65-0294"},"154":{h:"65-0295",b:"65-0296"},"155":{h:"65-0297",b:"65-0298"},
+  "156":{h:"65-0299",b:"65-0300"},"157":{h:"65-0301",b:"65-0302"},"158":{h:"65-0303",b:"65-0304"},"159":{h:"65-0305",b:"65-0306"},"160":{h:"65-0307",b:"65-0308"},
+  "161":{h:"65-0309",b:"65-0310"},"162":{h:"65-0311",b:"65-0312"},"163":{h:"65-3829",b:"65-3830"},"164":{h:"65-3831",b:"65-3832"},"165":{h:"65-3833",b:"65-3834"},
+  "166":{h:"65-3835",b:"65-3836"},"167":{h:"65-3837",b:"65-3840"},"168":{h:"65-3841",b:"65-3842"},"169":{h:"65-3844",b:"65-3846"},"170":{h:"65-3847",b:"65-3849"},
+  "171":{h:"65-3850",b:"65-3851"},"172":{h:"65-3852",b:"65-3853"},"173":{h:"65-4570",b:"65-4571"},"174":{h:"65-4573",b:"65-4574"},"175":{h:"65-4575",b:"65-4576"},
+  "176":{h:"65-4577",b:"65-4578"},"177":{h:"65-4579",b:"65-4580"},"178":{h:"65-4582",b:"65-4583"},"179":{h:"65-4584",b:"65-4585"},"180":{h:"65-4586",b:"65-4587"},
+  "181":{h:"65-4588",b:"65-4591"},"182":{h:"65-4592",b:"65-4593"},"183":{h:"65-6415",b:"65-6416"},"184":{h:"65-6417",b:"65-6418"},"185":{h:"65-6419",b:"65-6420"},
+  "186":{h:"65-6421",b:"65-6422"},"187":{h:"65-6423",b:"65-6424"},"188":{h:"65-6425",b:"65-6426"},"189":{h:"65-6427",b:"65-6428"},"190":{h:"65-6429",b:"65-6430"},
+  "191":{h:"65-6431",b:"65-6432"},"192":{h:"65-6433",b:"65-6434"},"193":{h:"65-7536",b:"65-7537"},"194":{h:"65-7538",b:"65-7539"},"195":{h:"65-7540",b:"65-7541"},
+  "196":{h:"65-7542",b:"65-7543"},"197":{h:"65-7544",b:"65-7545"},"198":{h:"65-7546",b:"65-7547"},"199":{h:"65-7548",b:"65-7549"},"200":{h:"65-7550",b:"65-7551"},
+  "201":{h:"65-7552",b:"65-7553"},"202":{h:"65-7554",b:"65-7555"},"203":{h:"65-8444",b:"65-8445"},"204":{h:"65-8446",b:"65-8447"},"205":{h:"65-8448",b:"65-8449"},
+  "206":{h:"65-8450",b:"65-8451"},"207":{h:"65-8452",b:"65-8453"},"208":{h:"65-8454",b:"65-8455"},"209":{h:"65-8458",b:"65-8457"},"210":{h:"65-8460",b:"65-8459"},
+  "211":{h:"65-8462",b:"65-8461"},"212":{h:"65-8456",b:"65-8463"},"213":{h:"65-8614",b:"65-8615"},"214":{h:"65-8616",b:"65-8617"},"215":{h:"65-8618",b:"65-8619"},
+  "216":{h:"65-8620",b:"65-8621"},"217":{h:"65-8622",b:"65-8623"},"218":{h:"66-2512",b:"66-2513"},"219":{h:"66-2514",b:"66-2515"},"220":{h:"66-2516",b:"66-2517"},
+  "221":{h:"66-2518",b:"66-2519"},"222":{h:"66-2520",b:"66-2521"},"223":{h:"66-2522",b:"66-2523"},"224":{h:"66-2524",b:"66-2525"},"225":{h:"66-2526",b:"66-2527"},
+  "226":{h:"66-2528",b:"66-2529"},"227":{h:"66-2530",b:"66-2531"},"228":{h:"66-2921",b:"66-2925"},"229":{h:"66-2927",b:"66-2930"},"230":{h:"66-2932",b:"66-2933"},
+  "231":{h:"66-2935",b:"66-2936"},"232":{h:"66-2938",b:"66-2940"},"233":{h:"66-2942",b:"66-2944"},"234":{h:"66-2945",b:"66-2947"},"235":{h:"66-2949",b:"66-2951"},
+  "236":{h:"66-2953",b:"66-2955"},"237":{h:"66-2958",b:"66-2960"},"238":{h:"67-0228",b:""},"239":{h:"67-0229",b:""},"240":{h:"67-0231",b:""},
+  "241":{h:"67-0232",b:""},"242":{h:"67-0234",b:""},"243":{h:"67-0637",b:""},"244":{h:"67-0640",b:""},"245":{h:"67-0641",b:""},
+  "246":{h:"67-0642",b:""},"247":{h:"67-0643",b:""},"248":{h:"67-0947",b:""},"249":{h:"67-0948",b:""},"250":{h:"67-0949",b:""},
+  "251":{h:"67-0950",b:""},"252":{h:"67-0951",b:""},"253":{h:"67-0952",b:""},"254":{h:"67-0953",b:""},"255":{h:"67-0954",b:""},
+  "256":{h:"67-0955",b:""},"257":{h:"67-0956",b:""},"258":{h:"68-8661",b:""},"259":{h:"68-8662",b:""},"260":{h:"68-8663",b:""},
+  "261":{h:"68-8664",b:""},"262":{h:"68-8665",b:""},"263":{h:"68-8666",b:""},"264":{h:"68-8667",b:""},"265":{h:"68-8669",b:""},
+  "266":{h:"68-8670",b:""},"267":{h:"68-8671",b:""},"268":{h:"69-3761",b:""},"269":{h:"69-3762",b:""},"270":{h:"69-3763",b:""},
+  "271":{h:"69-3764",b:""},"272":{h:"69-3765",b:""},"273":{h:"69-3766",b:""},"274":{h:"69-3767",b:""},"275":{h:"69-3768",b:""},
+  "276":{h:"69-3769",b:""},"277":{h:"69-3770",b:""},"278":{h:"69-3919",b:"63-0696"},"279":{h:"69-3921",b:"63-9127"},"280":{h:"69-3923",b:"69-3898"},
+  "281":{h:"69-3924",b:"69-3900"},"282":{h:"69-3897",b:"69-3902"},"283":{h:"69-3899",b:"69-3904"},"284":{h:"69-3901",b:"69-3906"},"285":{h:"69-3903",b:"69-3908"},
+  "286":{h:"69-3905",b:"69-3910"},"287":{h:"69-3907",b:"69-3912"},"288":{h:"69-3909",b:"69-3914"},"289":{h:"69-3911",b:"69-3916"},"290":{h:"69-3913",b:"69-3918"},
+  "291":{h:"69-3915",b:"69-3920"},"292":{h:"69-3917",b:"69-3922"},"293":{h:"69-4685",b:"69-3946"},"294":{h:"69-4686",b:"69-3947"},"295":{h:"69-4687",b:"69-3948"},
+  "296":{h:"69-4688",b:"69-3949"},"297":{h:"69-4689",b:"69-3950"},"298":{h:"69-4690",b:"69-3951"},"299":{h:"69-4691",b:"69-3952"},"300":{h:"69-4692",b:"69-3953"},
+  "301":{h:"69-4693",b:"69-3954"},"302":{h:"69-4694",b:"69-3955"},"303":{h:"69-4695",b:"69-3956"},"304":{h:"69-4696",b:"69-3957"},"305":{h:"69-4697",b:"69-3958"},
+  "306":{h:"69-4698",b:"69-3959"},"307":{h:"69-4699",b:"69-3960"},"308":{h:"69-9717",b:"65-7551"},"309":{h:"700-2196",b:"700-1361"},"310":{h:"700-2197",b:"700-1362"},
+  "311":{h:"700-2198",b:"700-1363"},"312":{h:"700-2199",b:"700-1364"},"313":{h:"700-2200",b:"700-1365"},"314":{h:"700-2201",b:"700-1366"},"315":{h:"700-2202",b:"700-1367"},
+  "316":{h:"700-2203",b:"700-1368"},"317":{h:"700-2204",b:"700-1369"},"318":{h:"700-2205",b:"700-1370"},"319":{h:"700-2206",b:"700-1371"},"320":{h:"700-2207",b:"700-1372"},
+  "321":{h:"700-2208",b:"700-1373"},"322":{h:"700-2210",b:"700-1374"},"323":{h:"700-2211",b:"700-1375"},"324":{h:"700-2212",b:"700-1376"},"325":{h:"700-2214",b:"700-1377"},
+  "326":{h:"700-2215",b:"700-1378"},"327":{h:"700-2216",b:"700-1379"},"328":{h:"700-2217",b:"700-1380"},"329":{h:"700-2218",b:"700-1382"},"330":{h:"700-2219",b:"700-1383"},
+  "331":{h:"700-2220",b:"700-1384"},"332":{h:"700-2221",b:"700-1385"},"333":{h:"700-2223",b:"700-1386"},"334":{h:"700-2225",b:"700-1387"},"335":{h:"700-2226",b:"700-1388"},
+  "336":{h:"700-2227",b:"700-1390"},"337":{h:"700-2228",b:"700-1400"},"338":{h:"700-2230",b:"700-1401"}
   };
-  var newImgs=await readImgs('v');
-  if(newImgs.length) data['รูปเอกสาร_base64']=newImgs;
-  else if(editImgsV) data['รูปเอกสาร']=editImgsV;
-  try{
-    var res=await apiPost({sheet:'รถ',data:data,editKey:editKeyV});
-    if(res.error){toast('ผิดพลาด: '+res.error);btn.disabled=false;btn.innerHTML='💾 บันทึกข้อมูลรถ';return}
-    toast((res.updated?'อัปเดตเบอร์ '+ber:'บันทึกเบอร์ '+ber));
-    clr();setTimeout(loadR,100);
-  }catch(e){toast('เกิดข้อผิดพลาด กรุณาลองใหม่')}
-  btn.disabled=false;btn.innerHTML='💾 บันทึกข้อมูลรถ';
-}
+    var PLATE_LIST = [];
+    for(var k in VEHICLE_DATA){var d=VEHICLE_DATA[k];if(d.h)PLATE_LIST.push(d.h);if(d.b)PLATE_LIST.push(d.b);}
+    PLATE_LIST = PLATE_LIST.filter(function(s,i,a){return a.indexOf(s)===i});
 
-// ====== SAVE DRIVER ======
-async function saveD(){
-  var btn=$('btnSaveD');btn.disabled=true;btn.innerHTML='<span class="spinner"></span>กำลังบันทึก...';
-  var name=g('d_name');
-  if(!name){toast('กรุณากรอกชื่อ');btn.disabled=false;btn.innerHTML='💾 บันทึกข้อมูลพนักงาน';return}
-  var phone=g('d_phone');
-  if(phone&&phone.length==9){phone='0'+phone;}
-  var ber=g('d_ber');
-  if(ber&&ber.length<3){toast('กรุณากรอกเบอร์รถให้ครบ 3 หลัก');btn.disabled=false;btn.innerHTML='💾 บันทึกข้อมูลพนักงาน';return}
-  var code=g('d_code');
-  if(!code||code.length<4){toast('กรุณากรอกรหัสพนักงาน 4 หลัก');btn.disabled=false;btn.innerHTML='💾 บันทึกข้อมูลพนักงาน';return}
-  if(EMP_LIST.indexOf(code)<0){toast('❌ รหัส '+code+' ไม่มีในระบบ');btn.disabled=false;btn.innerHTML='💾 บันทึกข้อมูลพนักงาน';return}
-  var data={
-    'รหัสพนักงาน':code,'เบอร์รถ':ber,'ชื่อ':name,'เบอร์โทร':phone.replace(/^0+/,''),
-    'Esso SRC หมดอายุบัตร':normalizeDate(g('d_c1_e')),
-    'PTT-GC หมดอายุบัตร':normalizeDate(g('d_c2_e')),
-    'LLK Thappline หมดอายุบัตร':normalizeDate(g('d_c3_e')),
-    'SRB Thappline หมดอายุบัตร':normalizeDate(g('d_c4_e')),
-    'SPRC หมดอายุบัตร':normalizeDate(g('d_c5_e')),
-    'Thaioil SRC หมดอายุบัตร':normalizeDate(g('d_c6_e')),
-    'IRPC IRY & AU หมดอายุบัตร':normalizeDate(g('d_c7_e'))
-  };
-  var newImgs=await readImgs('d');
-  if(newImgs.length) data['รูปเอกสาร_base64']=newImgs;
-  else if(editImgsD) data['รูปเอกสาร']=editImgsD;
-  try{
-    var res=await apiPost({sheet:'คน',data:data,editKey:editKeyD});
-    if(res.error){toast('ผิดพลาด: '+res.error);btn.disabled=false;btn.innerHTML='💾 บันทึกข้อมูลพนักงาน';return}
-    toast((res.updated?'อัปเดต '+name:'บันทึก '+name));
-    clr();setTimeout(loadR,100);
-  }catch(e){toast('เกิดข้อผิดพลาด กรุณาลองใหม่')}
-  btn.disabled=false;btn.innerHTML='💾 บันทึกข้อมูลพนักงาน';
-}
+    // ====== รหัสพนักงาน ======
+    var EMP_RAW = `
+  1001,1002,1011,1016,1017,1020,1028,1034,1037,1039,1040,1041,1043,1046,1048
+  1061,1063,1067,1074,1076,1078,1079,1086,1100,1101,1102,1107,1110,1115,1116
+  1118,1122,1127,1128,1129,1131,1138,1141,1143,1144,1149,1161,1165,1167,1170
+  1175,1180,1181,1184,1185,1187,1191,1194,1195,1197,1204,1205,1206,1207,1210
+  1213,1218,1219,1229,1231,1232,1233,1235,1236,1237,1238,1244,1249,1254,1256
+  1258,1259,1260,1262,1268,1269,1270,1272,1275,1279,1280,1283,1288,1291,1297
+  1304,1305,1307,1310,1313,1317,1319,1320,1328,1330,1332,1333,1334,1337,1340
+  1344,1349,1352,1353,1356,1359,1362,1363,1364,1365,1366,1368,1370,1371,1372
+  1375,1376,1377,1378,1379,1381,1382,1383,1384,1385,1387,1388,1390,1392,1393
+  1395,1406,1409,1410,1415,1417,1419,1420,1421,1423,1425,1428,1429,1433,1434
+  1436,1437,1440,1441,1444,1446,1448,1449,1452,1455,1459,1460,1462,1464,1465
+  1467,1468,1469,1471,1473,1475,1476,1477,1479,1480,1483,1485,1487,1489,1490
+  1492,1494,1504,1505,1508,1509,1510,1511,1513,1514,1515,1517,1520,1521,1522
+  1524,1525,1527,1530,1531,1535,1536,1537,1538,1541,1546,1549,1550,1551,1552
+  1554,1557,1558,1560,1561,1563,1564,1565,1567,1570,1571,1572,1576,1577,1583
+  1586,1589,1590,1591,1594,1595,1596,1599,1602,1603,1604,1605,1606,1608,1609
+  1610,1612,1614,1615,1616,1617,1619,1620,1621,1622,1624,1626,1628,1629,1632
+  1633,1635,1637,1640,1641,1642,1643,1644,1645,1646,1647,1649,1650,1652,1658
+  1661,1662,1663,1664,1665,1667,1669,1670,1671,1674,1676,1679,1683,1686,1688
+  1690,1692,1693,1694,1697,1698,1699,1702,1704,1706,1709,1710,1711,1712,1713
+  1714,1715,1716,1717,1718,1719,1721,1722,1723,1724,1725,1726,1727,1728,1729
+  1731,1736,1739,1740,1741,1744,1745,1746,1747,1749,1752,1753,1754,1755,1756
+  1757,1758,1760,1761,1762,1763,1764,1766,1767,1768,1769,1770,1771,1772,1776
+  1777,1781,1782,1784,1786,1787,1788,1789,1790,1792,1793,1794,1795,1796,1797
+  1798,1799,1802,1803,1804,1806,1807,1811,1812,1813,1814,1816,1817,1818,1821
+  1822,1823,1825,1827,1828,1829,1830,1831,1833,1834,1836,1838,1840,1841,1842
+  1843,1845,1846,1847,1848,1849,1850,1851,1852,1853,1854,1856,1859,1860,1862
+  1863,1864,1865,1866,1870,1871,1872,1873,1874,1876,1877,1878,1879,1880,1881
+  1882,1883,1884,1885,1886,1887,1888,1889,1890,1892,1893,1894,1895,1896,1897
+  1899,1900,1901,1902,1903,1904,1905,1906,1907,1908,1910,1911,1912,1913,1914
+  1915,1916,1917,1918,1919,1920,1921,1922,1923,1924,1925,1926,1927,1928,1929
+  1931,1932,1933,1934,1935,1936,1937,1938,1939,1940,1941,1942,1943,1944,1945
+  1946,1947,1948,1949,1950,1951,1952,1953,1954,1955,1956,1957,1958,1959,1960
+  1961,1962,1963,1964,1965,1966,1967,1968,1969,1970,1971,1972,1973,1974,1975
+  1976,1992,1993,1999,2066,3011,3017,3018,3026,3032,3034,3040,3045,3057,3067
+  3069,3074,3077,3079,3089,3091,3092,3097,3115,3118,3154,3158,3166,3175,3189
+  3190,3193,3195,3199,3202,3214,3218,3223,3236,3265,3273,3297,3302,3312,3314
+  3320,3321,3330,3331,3334,3338,3352,3363,3381,3382,3385,3401,3420,3424,3425
+  3429,3443,3444,3449,3450,3451,3461,3467,3480,3487,3489,3491,3493,3506,3507
+  3513,3515,3517,3526,3527,3528,3533,3534,3537,3543,3545,3546,3547,3552,3566
+  3569,3570,3573,3579,3587,3590,3591,3594,3595,3606,3609,3611,3622,3626,3627
+  3631,3632,3633,3635,3639,3643,3653,3666,3673,3677,3701,3709,3712,3724,3725
+  3731,3735,3753,3757,3765,3770,3771,3782,3783,3784,3790,3792,3795,3799,3805
+  3820,3822,3911,3921,3932,3938,3940,3944,3948,3952,3956,3957,3968,3976,3978
+  3979,3980,3983,3989,3991,3995
+  `;
 
-// ====== LOAD RECENT ======
-async function loadR(){
-  var el=$('recentList');
-  try{
-    var v=await apiGet({sheet:'รถ'});v=Array.isArray(v)?v:v.data||[];
-    var d=await apiGet({sheet:'คน'});d=Array.isArray(d)?d:d.data||[];
-    var html='<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">';
-    if(v&&v.length){
-      html+='<div><div style="font-size:13px;font-weight:600;color:#64748b;margin-bottom:8px">🚚 รถ</div>';
-      v.slice(-5).reverse().forEach(function(r){
-        var b=r['เบอร์รถ']||'';var exp='';
-        Object.keys(r).forEach(function(k){if(k.indexOf('หมดอายุ')>=0&&r[k])exp=normalizeDate(r[k])});
-        var bs=b.replace(/\\/g,'\\\\').replace(/'/g,"\\'");
-        var hasImg=r['รูปเอกสาร']||'';var gal='';
-        if(hasImg){
-          var imgCount=hasImg.split(/[\n,]+/).filter(function(x){return x.trim()}).length;
-          var escaped=hasImg.replace(/\\/g,'\\\\').replace(/'/g,"\\'").replace(/\n/g,'\\n');
-          gal=' <span onclick="event.stopPropagation();openImgs(\''+escaped+'\')" style="display:inline-flex;align-items:center;gap:3px;padding:2px 8px;background:#e0f2fe;color:#0284c7;border-radius:20px;font-size:11px;cursor:pointer;font-weight:500;margin-left:6px">📷 '+imgCount+'</span>';
+    var EMP_LIST = EMP_RAW.split(/[\s\n,]+/).filter(function(s){return s.trim()});
+
+    // ==== SAVE VEHICLE ====
+    // ====== Image upload helpers ======
+    function onImg(prefix){
+      var input=$(prefix+'_img');var files=input.files;
+      var container=$(prefix+'_preview');var count=$(prefix+'_imgCount');
+      container.innerHTML='';
+      if(!files||files.length===0){count.textContent='';return}
+      count.textContent='\u0E40\u0E25\u0E37\u0E2D\u0E01 '+files.length+' \u0E23\u0E39\u0E1B';
+      [].forEach.call(files,function(f,i){
+        if(!f.type.match('image.*'))return;
+        var reader=new FileReader();
+        reader.onload=function(e){
+          var div=document.createElement('div');div.className='preview-item';
+          div.innerHTML='<img src="'+e.target.result+'"><button class="del" onclick="removeImgs(\''+prefix+'\')">\u00D7</button>';
+          container.appendChild(div);
+        };
+        reader.readAsDataURL(f);
+      });
+      // OCR \u0E2D\u0E31\u0E15\u0E42\u0E19\u0E21\u0E31\u0E15\u0E34\u0E40\u0E21\u0E37\u0E48\u0E2D\u0E40\u0E25\u0E37\u0E2D\u0E01\u0E23\u0E39\u0E1B
+      setTimeout(function(){autoRunOCR(prefix)},800);
+    }
+    function removeImgs(prefix){
+      $(prefix+'_img').value='';$(prefix+'_preview').innerHTML='';$(prefix+'_imgCount').textContent='';
+    }
+
+    // ==== OCR Auto-fill (\u0E2D\u0E48\u0E32\u0E19\u0E1A\u0E31\u0E15\u0E23\u0E2D\u0E31\u0E15\u0E42\u0E19\u0E21\u0E31\u0E15\u0E34) ====
+
+    function readFileAsDataURL(file){
+      return new Promise(function(resolve,reject){
+        var r=new FileReader();
+        r.onload=function(e){resolve(e.target.result)};
+        r.onerror=function(){reject('read error')};
+        r.readAsDataURL(file);
+      });
+    }
+
+    async function autoRunOCR(prefix){
+      var input=$(prefix+'_img');
+      var files=input.files;
+      if(!files||files.length===0) return;
+      toast('\u0E01\u0E33\u0E25\u0E31\u0E07\u0E2D\u0E48\u0E32\u0E19\u0E1A\u0E31\u0E15\u0E23...');
+      try{
+        var usePy=false;
+        try{var r=await fetch(PYTHON_OCR+'/ping');if(r.ok) usePy=true;}catch(e){}
+        var allIds=prefix==='v'?['v_c1_e','v_c2_e','v_c3_e','v_c4_e','v_c5_e','v_c6_e','v_c7_e','v_tho_e','v_pasi_e']:['d_c1_e','d_c2_e','d_c3_e','d_c4_e','d_c5_e','d_c6_e'];
+        var filled=0;
+        for(var i=0;i<files.length;i++){
+          var dataUrl=await readFileAsDataURL(files[i]);
+          if(usePy){
+            try{
+              var j=await callPythonOCR(dataUrl);
+              console.log('[OCR] result:',j);
+              // show OCR result for debugging (always)
+              var preview=$(prefix+'_preview');
+              if(preview){
+                var d=document.createElement('div');
+                d.style.cssText='background:#f5f5f5;padding:4px 8px;margin:2px 0;font-size:11px;border-radius:3px;border-left:3px solid '+(j.expiry?'#4caf50':'#f44336')+';white-space:pre-wrap;word-break:break-all';
+                var info='['+files[i].name+']';
+                if(j.expiry) info+=' \u2705 '+j.expiry;
+                else info+=' \u274C no date';
+                if(j.card_type) info+=' | '+j.card_type;
+                if(j.text) info+=' | OCR: '+(j.text||'').substring(0,80);
+                // raw debug: show ALL OCR text so user sees what Tesseract reads
+                if(!j.expiry && j.debug){
+                  var rawTexts=Object.values(j.debug).filter(Boolean).join(' | ');
+                  if(rawTexts) info+='\nRAW: '+rawTexts.substring(0,300);
+                }
+                d.textContent=info;
+                preview.appendChild(d);
+              }
+              if(j.expiry){
+                // card_type mapping — ส่งเข้าฟิลด์ที่ตรงกัน
+                var CARD_FIELD_MAP={
+                  'v':{
+                    'Thaioil SRC':'v_c1_e','Esso SRC':'v_c2_e','PTT-GC':'v_c3_e',
+                    'LLK Thappline':'v_c4_e','SRB Thappline':'v_c5_e','SPRC':'v_c6_e',
+                    'IRPC':'v_c7_e','ธพน.2':'v_tho_e','ภาษี':'v_pasi_e'
+                  },
+                  'd':{
+                    'Esso SRC':'d_c1_e','PTT-GC':'d_c2_e','LLK Thappline':'d_c3_e',
+                    'SRB Thappline':'d_c4_e','SPRC':'d_c5_e','Thaioil SRC':'d_c6_e',
+                    'IRPC':'d_c7_e'
+                  }
+                };
+                var target=null;
+                var map=CARD_FIELD_MAP[prefix]||{};
+                if(j.card_type && map[j.card_type]){
+                  target=map[j.card_type]; // ใช้ card_type จับคู่ฟิลด์
+                }else{
+                  // fallback sequential (กรณีไม่รู้จัก card_type)
+                  for(var fi=0;fi<allIds.length;fi++){var el=$(allIds[fi]);if(el&&!el.value.trim()){target=allIds[fi];break}}
+                }
+                if(target&&$(target)){
+                  $(target).value=normalizeDate(j.expiry);
+                  filled++;
+                }
+              }
+            }catch(e){}
+          }
         }
-        html+='<div class="list-item" onclick="editV(\''+bs+'\')"><div><div class="main">'+b+gal+'</div></div><span style="font-size:11px;color:#64748b">'+exp+'</span></div>';
-      });
-      html+='</div>';
-    } else {
-      html+='<div><div style="font-size:13px;color:#94a3b8">ยังไม่มีข้อมูลรถ</div></div>';
+        if(filled>0) toast('\u2705 \u0E2D\u0E48\u0E32\u0E19\u0E1E\u0E1A '+filled+' \u0E23\u0E32\u0E22\u0E01\u0E32\u0E23');
+      }catch(e){console.log('OCR error:',e)}
     }
-    if(d&&d.length){
-      html+='<div><div style="font-size:13px;font-weight:600;color:#64748b;margin-bottom:8px">🧑 คน</div>';
-      d.slice(-5).reverse().forEach(function(r){
-        var n=r['ชื่อ']||'',c=r['รหัสพนักงาน']||'';
-        var cs=c.replace(/\\/g,'\\\\').replace(/'/g,"\\'");
-        var hasImg=r['รูปเอกสาร']||'';var galD='';
-        if(hasImg){
-          var imgCount=hasImg.split(/[\n,]+/).filter(function(x){return x.trim()}).length;
-          var escaped=hasImg.replace(/\\/g,'\\\\').replace(/'/g,"\\'").replace(/\n/g,'\\n');
-          galD=' <span onclick="event.stopPropagation();openImgs(\''+escaped+'\')" style="display:inline-flex;align-items:center;gap:3px;padding:2px 8px;background:#e0f2fe;color:#0284c7;border-radius:20px;font-size:11px;cursor:pointer;font-weight:500;margin-left:6px">📷 '+imgCount+'</span>';
+
+    function extractExpiry(text){
+      // 05/05/2028
+      var m=text.match(/(\d{2})\/(\d{2})\/(20\d{2}|25\d{2})/g);
+      if(m){
+        // เลือกวันที่ล่าสุด (มักเป็นวันหมดอายุ)
+        return m[m.length - 1];
+      }
+      // 08 ต.ค. 2570
+      m=text.match(/(\d{1,2})\s*(ม\.ค\.|ก\.พ\.|มี\.ค\.|เม\.ย\.|พ\.ค\.|มิ\.ย\.|ก\.ค\.|ส\.ค\.|ก\.ย\.|ต\.ค\.|พ\.ย\.|ธ\.ค\.)\s*(25\d{2})/);
+      if(m){
+        var monthMap={
+          'ม.ค.':'01','ก.พ.':'02','มี.ค.':'03','เม.ย.':'04',
+          'พ.ค.':'05','มิ.ย.':'06','ก.ค.':'07','ส.ค.':'08',
+          'ก.ย.':'09','ต.ค.':'10','พ.ย.':'11','ธ.ค.':'12'
+        };
+        return m[1].padStart(2,'0')+'/'+monthMap[m[2]]+'/'+m[3];
+      }
+      // 28 ธันวาคม 2569
+      m=text.match(/(\d{1,2})\s*(มกราคม|กุมภาพันธ์|มีนาคม|เมษายน|พฤษภาคม|มิถุนายน|กรกฎาคม|สิงหาคม|กันยายน|ตุลาคม|พฤศจิกายน|ธันวาคม)\s*(25\d{2})/);
+      if(m){
+        var monthMap={
+          'มกราคม':'01','กุมภาพันธ์':'02','มีนาคม':'03',
+          'เมษายน':'04','พฤษภาคม':'05','มิถุนายน':'06',
+          'กรกฎาคม':'07','สิงหาคม':'08','กันยายน':'09',
+          'ตุลาคม':'10','พฤศจิกายน':'11','ธันวาคม':'12'
+        };
+        return m[1].padStart(2,'0')+'/'+monthMap[m[2]]+'/'+m[3];
+      }
+      return null;
+    }
+
+    var TESS_WORKER=null;
+    var PYTHON_OCR='http://localhost:5051';  // Python OCR server
+    var USE_PYTHON_OCR=false;
+
+    function checkPythonOCR(){
+      return fetch(PYTHON_OCR+'/ping').then(function(r){
+        if(r.ok) USE_PYTHON_OCR=true;
+      }).catch(function(){USE_PYTHON_OCR=false});
+    }
+    function callPythonOCR(dataUrl){
+      var b64=dataUrl.split(',')[1];
+      return fetch(PYTHON_OCR+'/ocr',{
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({image:b64})
+      }).then(function(r){return r.json()}).then(function(j){
+        if(j.error) throw new Error(j.error);
+        return j;  // return {text, expiry}
+      });
+    }
+
+    function getTessWorker(){
+      if(TESS_WORKER) return Promise.resolve(TESS_WORKER);
+      toast('.');
+      return Tesseract.createWorker('tha+eng',1,{
+        corePath:'https://cdn.jsdelivr.net/npm/tesseract.js-core@5/tesseract-core.wasm.js',
+        logger:function(){}
+      }).then(function(w){TESS_WORKER=w;toast('');return w});
+    }
+    function tesseractOCR(dataUrl){
+      if(!dataUrl) return Promise.resolve('');
+      return getTessWorker().then(function(w){
+        return w.recognize(dataUrl).then(function(r){return r.data.text});
+      });
+    }
+    // Pre-load OCR
+    window.addEventListener('DOMContentLoaded',function(){
+      checkPythonOCR().then(function(){if(USE_PYTHON_OCR)console.log('')});
+      setTimeout(getTessWorker,2000);
+    });
+
+    function parseCardText(text){
+      var lower=text.toLowerCase();
+      var cards=[
+        {kw:['\u0E18\u0E1E\u0E19.2','\u0E18\u0E1E\u0E19 2','\u0E18\u0E1E\u0E19'],type:'\u0E18\u0E1E\u0E19.2'},
+        {kw:['\u0E20\u0E32\u0E29\u0E35','\u0E20\u0E32\u0E29'],type:'\u0E20\u0E32\u0E29\u0E35'},
+        {kw:['thaioil','\u0E44\u0E17\u0E22\u0E2D\u0E49\u0E2D\u0E22','\u0E44\u0E17\u0E22\u0E2D\u0E49\u0E2D\u0E22\u0E25\u0E4C'],type:'Thaioil SRC'},
+        {kw:['esso','\u0E40\u0E2D\u0E2A\u0E42\u0E0B'],type:'Esso SRC'},
+        {kw:['ptt-gc','ptt gc','ptt','\u0E1E\u0E35\u0E17\u0E35\u0E17\u0E35'],type:'PTT-GC'},
+        {kw:['llk thappline','llk','\u0E41\u0E2D\u0E25\u0E41\u0E2D\u0E25\u0E40\u0E04'],type:'LLK Thappline'},
+        {kw:['srb thappline','srb'],type:'SRB Thappline'},
+        {kw:['sprc'],type:'SPRC'},
+        {kw:['irpc iry','irpc au','irpc','iry'],type:'IRPC'}
+      ];
+      var mt=null;
+      cards.forEach(function(c){c.kw.forEach(function(k){if(lower.indexOf(k)>=0)mt=c.type})});
+      if(!mt) return null;
+      var exp=extractExpiry(text)||'';
+      return {card_type:mt,expiry:exp};
+    }
+
+    function mapCardFieldV(type){
+      var t=type.toLowerCase();
+      if(t.indexOf('\u0E18\u0E1E\u0E19')>=0)return'v_tho_e';
+      if(t.indexOf('\u0E20\u0E32\u0E29')>=0)return'v_pasi_e';
+      if(t.indexOf('thaioil')>=0||t.indexOf('\u0E44\u0E17\u0E22\u0E2D\u0E49\u0E2D\u0E22')>=0)return'v_c1_e';
+      if(t.indexOf('esso')>=0)return'v_c2_e';
+      if(t.indexOf('ptt')>=0)return'v_c3_e';
+      if(t.indexOf('llk')>=0)return'v_c4_e';
+      if(t.indexOf('srb')>=0)return'v_c5_e';
+      if(t.indexOf('sprc')>=0)return'v_c6_e';
+      if(t.indexOf('irpc')>=0||t.indexOf('iry')>=0)return'v_c7_e';
+      return null;
+    }
+
+    function mapCardFieldD(type){
+      var t=type.toLowerCase();
+      if(t.indexOf('esso')>=0)return'd_c1_e';
+      if(t.indexOf('ptt')>=0)return'd_c2_e';
+      if(t.indexOf('llk')>=0)return'd_c3_e';
+      if(t.indexOf('srb')>=0)return'd_c4_e';
+      if(t.indexOf('sprc')>=0)return'd_c5_e';
+      if(t.indexOf('thaioil')>=0||t.indexOf('\u0E44\u0E17\u0E22\u0E2D\u0E49\u0E2D\u0E22')>=0)return'd_c6_e';
+      if(t.indexOf('irpc')>=0||t.indexOf('iry')>=0)return'd_c7_e';
+      return null;
+    }
+
+    function readImgs(prefix){
+      return new Promise(function(resolve){
+        var input=$(prefix+'_img');var files=input.files;
+        if(!files||files.length===0){resolve([]);return}
+        var results=[];
+
+        function readNext(idx){
+          if(idx>=files.length){resolve(results);return}
+          var r=new FileReader();
+          r.onload=function(e){
+            results.push(e.target.result);
+            readNext(idx+1);
+          };
+          r.onerror=function(){readNext(idx+1)};
+          r.readAsDataURL(files[idx]);
         }
-        html+='<div class="list-item" onclick="editD(\''+cs+'\')"><div><div class="main">'+n+galD+'</div></div></div>';
-      });
-      html+='</div>';
-    } else {
-      html+='<div><div style="font-size:13px;color:#94a3b8">ยังไม่มีข้อมูลคน</div></div>';
-    }
-    html+='</div>';
-    el.innerHTML=html;
-  }catch(e){
-    el.innerHTML='<div style="text-align:center;color:#ef4444;padding:20px">⚠️ โหลดไม่ได้ ตรวจสอบการเชื่อมต่อ</div>';
-  }
-}
-
-// ====== EDIT ======
-function editV(ber){
-  editKeyV=ber;
-  apiGet({sheet:'รถ',key:ber}).then(function(r){
-    if(!r||r.error)return;if(Array.isArray(r)){r=r[0]}else{r=r.data&&r.data[0]?r.data[0]:r}
-    if(!r||!r['เบอร์รถ'])return;
-    $('v_ber').value=r['เบอร์รถ']||'';
-    $('v_province').value=(r['จังหวัด']||'').indexOf('กทม')>=0?'กทม':'อื่น ๆ';
-    $('v_hua').value=r['ทะเบียนหัว']||'';$('v_hang').value=r['ทะเบียนหาง']||'';
-    $('v_tho_e').value=normalizeDate(r['ธพน.2 หมดอายุบัตร']||'');
-    $('v_pasi_e').value=normalizeDate(r['ภาษี หมดอายุบัตร']||'');
-    $('v_c1_e').value=normalizeDate(r['Thaioil SRC หมดอายุบัตร']||'');
-    $('v_c2_e').value=normalizeDate(r['Esso SRC หมดอายุบัตร']||'');
-    $('v_c3_e').value=normalizeDate(r['PTT-GC หมดอายุบัตร']||'');
-    $('v_c4_e').value=normalizeDate(r['LLK Thappline หมดอายุบัตร']||'');
-    $('v_c5_e').value=normalizeDate(r['SRB Thappline หมดอายุบัตร']||'');
-    $('v_c6_e').value=normalizeDate(r['SPRC หมดอายุบัตร']||'');
-    $('v_c7_e').value=normalizeDate(r['IRPC IRY & AU หมดอายุบัตร']||'');
-    editImgsV=r['รูปเอกสาร']||'';
-    $('vMode').textContent='แก้ไข เบอร์ '+ber;
-    goV();window.scrollTo({top:0,behavior:'smooth'});
-  });
-}
-function editD(code){
-  editKeyD=code;
-  apiGet({sheet:'คน',key:code}).then(function(r){
-    if(!r||r.error)return;if(Array.isArray(r)){r=r[0]}else{r=r.data&&r.data[0]?r.data[0]:r}
-    if(!r||!r['รหัสพนักงาน'])return;
-    $('d_code').value=r['รหัสพนักงาน']||'';$('d_ber').value=r['เบอร์รถ']||'';
-    $('d_name').value=r['ชื่อ']||'';$('d_phone').value=r['เบอร์โทร']||'';
-    $('d_c1_e').value=normalizeDate(r['Esso SRC หมดอายุบัตร']||'');
-    $('d_c2_e').value=normalizeDate(r['PTT-GC หมดอายุบัตร']||'');
-    $('d_c3_e').value=normalizeDate(r['LLK Thappline หมดอายุบัตร']||'');
-    $('d_c4_e').value=normalizeDate(r['SRB Thappline หมดอายุบัตร']||'');
-    $('d_c5_e').value=normalizeDate(r['SPRC หมดอายุบัตร']||'');
-    $('d_c6_e').value=normalizeDate(r['Thaioil SRC หมดอายุบัตร']||'');
-    $('d_c7_e').value=normalizeDate(r['IRPC IRY & AU หมดอายุบัตร']||'');
-    editImgsD=r['รูปเอกสาร']||'';
-    $('dMode').textContent='แก้ไข '+(r['ชื่อ']||'');
-    goD();window.scrollTo({top:0,behavior:'smooth'});
-  });
-}
-
-// ====== IMAGE VIEWER ======
-function openImgs(urls){
-  var imgs=urls.split(/[\n,]+/);
-  var h='<div onclick="this.remove()" style="position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.92);z-index:9999;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:20px;overflow-y:auto">';
-  h+='<div onclick="event.stopPropagation();this.parentElement.remove()" style="position:fixed;top:16px;right:20px;color:#fff;font-size:28px;cursor:pointer;z-index:10">✕</div>';
-  h+='<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:12px;width:100%;max-width:900px">';
-  imgs.forEach(function(u){
-    u=u.trim();if(!u)return;
-    var src=u;
-    var idMatch=u.match(/[?&]id=([^&]+)/)||u.match(/\/file\/d\/([^/]+)/);
-    if(idMatch) src='https://drive.google.com/thumbnail?id='+idMatch[1]+'&sz=w800';
-    h+='<div style="background:#1e293b;border-radius:10px;overflow:hidden"><a href="'+u+'" target="_blank" rel="noopener"><img src="'+src+'" style="width:100%;display:block" loading="lazy"></a></div>';
-  });
-  h+='</div></div>';
-  var d=document.createElement('div');d.innerHTML=h;
-  document.body.appendChild(d.firstElementChild);
-}
-
-lsLoadAll();
-loadR();
-
-// ====== ADMIN ======
-function showLogin(){$('loginModal').classList.add('show');$('adminUser').focus()}
-function hide(id){$(id).classList.remove('show')}
-function doLogin(){
-  var u=$('adminUser').value.trim(),p=$('adminPass').value.trim();
-  if(u==='tha1234'&&p==='4858'){
-    hide('loginModal');$('adminPanel').classList.add('show');$('adminBtn').classList.add('ok');
-    renderAdminVeh();renderAdminEmp();
-  }else{toast('❌ Username หรือ Password ไม่ถูกต้อง')}
-}
-function doLogout(){$('adminPanel').classList.remove('show');$('adminBtn').classList.remove('ok')}
-function switchAdminTab(tab,btn){
-  document.querySelectorAll('.admin-section').forEach(function(el){el.classList.remove('show')});
-  document.querySelectorAll('.admin-tab').forEach(function(el){el.classList.remove('active')});
-  btn.classList.add('active');
-  if(tab==='veh'){$('adminVeh').classList.add('show');renderAdminVeh()}
-  else if(tab==='emp'){$('adminEmp').classList.add('show');renderAdminEmp()}
-  else{$('adminData').classList.add('show');renderAdminData()}
-}
-// ====== localStorage helpers ======
-var LS_VEH_KEY='admin_extra_veh';
-var LS_EMP_KEY='admin_extra_emp';
-
-function lsSaveVeh(){
-  // บันทึกเฉพาะรายการที่เพิ่มผ่าน admin (ไม่รวม hardcode)
-  try{localStorage.setItem(LS_VEH_KEY,JSON.stringify(window._extraVeh||{}));}catch(e){}
-}
-function lsSaveEmp(){
-  try{localStorage.setItem(LS_EMP_KEY,JSON.stringify(window._extraEmp||[]));}catch(e){}
-}
-function lsLoadAll(){
-  // โหลด extra vehicle
-  try{
-    var ev=localStorage.getItem(LS_VEH_KEY);
-    if(ev){
-      window._extraVeh=JSON.parse(ev);
-      Object.keys(window._extraVeh).forEach(function(k){
-        VEHICLE_DATA[k]=window._extraVeh[k];
-        var d=window._extraVeh[k];
-        if(d.h&&PLATE_LIST.indexOf(d.h)<0)PLATE_LIST.push(d.h);
-        if(d.b&&PLATE_LIST.indexOf(d.b)<0)PLATE_LIST.push(d.b);
+        readNext(0);
       });
     }
-  }catch(e){}
-  // โหลด extra emp
-  try{
-    var ee=localStorage.getItem(LS_EMP_KEY);
-    if(ee){
-      window._extraEmp=JSON.parse(ee);
-      window._extraEmp.forEach(function(c){if(EMP_LIST.indexOf(c)<0)EMP_LIST.push(c)});
+
+    async function saveV(){
+      var btn=$('btnSaveV');btn.disabled=true;btn.innerHTML='<span class="spinner"></span>กำลังบันทึก...';
+      var ber=g('v_ber');
+      if(!ber||ber.length<3){toast('กรุณากรอกเบอร์รถให้ครบ 3 หลัก');btn.disabled=false;btn.innerHTML='💾 บันทึกข้อมูลรถ';return}
+      var veh=VEHICLE_DATA[ber];
+      if(!veh){toast('❌ เบอร์ '+ber+' ไม่มีในระบบ');btn.disabled=false;btn.innerHTML='💾 บันทึกข้อมูลรถ';return}
+      ['v_hua','v_hang'].forEach(function(id){
+        var el=$(id);if(!el||!el.value)return;
+        var fmt=$(id.replace('v_h','v_fmt_h'));var n=fmt&&fmt.value==='3'?3:2;
+        var raw=el.value.replace(/[^0-9]/g,'').slice(0,n+4);
+        if(raw.length>n) raw=raw.slice(0,n)+'-'+raw.slice(n);
+        var isFront=id==='v_hua';
+        var expected=isFront?veh.h:veh.b;
+        if(expected&&raw!==expected){
+          toast('❌ ทะเบียน'+ (isFront?'หัว':'หาง') +' ไม่ตรงกับเบอร์ '+ber+' (ต้องเป็น '+expected+')');
+          btn.disabled=false;btn.innerHTML='💾 บันทึกข้อมูลรถ';throw'stop'
+        }
+      });
+      var data={
+        'เบอร์รถ':ber,'จังหวัด':g('v_province'),'ทะเบียนหัว':g('v_hua'),'ทะเบียนหาง':g('v_hang'),
+        'ธพน.2 หมดอายุบัตร':normalizeDate(g('v_tho_e')),
+        'ภาษี หมดอายุบัตร':normalizeDate(g('v_pasi_e')),
+        'Thaioil SRC หมดอายุบัตร':normalizeDate(g('v_c1_e')),
+        'Esso SRC หมดอายุบัตร':normalizeDate(g('v_c2_e')),
+        'PTT-GC หมดอายุบัตร':normalizeDate(g('v_c3_e')),
+        'LLK Thappline หมดอายุบัตร':normalizeDate(g('v_c4_e')),
+        'SRB Thappline หมดอายุบัตร':normalizeDate(g('v_c5_e')),
+        'SPRC หมดอายุบัตร':normalizeDate(g('v_c6_e')),
+        'IRPC IRY & AU หมดอายุบัตร':normalizeDate(g('v_c7_e'))
+      };
+      var newImgs=await readImgs('v');
+      if(newImgs.length) data['รูปเอกสาร_base64']=newImgs;
+      else if(editImgsV) data['รูปเอกสาร']=editImgsV;
+      try{
+        var res=await apiPost({sheet:'รถ',data:data,editKey:editKeyV});
+        if(res.error){toast('ผิดพลาด: '+res.error);btn.disabled=false;btn.innerHTML='💾 บันทึกข้อมูลรถ';return}
+        toast((res.updated?'อัปเดตเบอร์ '+ber:'บันทึกเบอร์ '+ber)+' | รูป: '+((res.created||res.updated)?'ok':'บันทึก'));
+        clr();setTimeout(loadR,100);
+      }catch(e){toast('เกิดข้อผิดพลาด กรุณาลองใหม่')}
+      btn.disabled=false;btn.innerHTML='💾 บันทึกข้อมูลรถ';
+    }
+
+    // ==== SAVE DRIVER ====
+    async function saveD(){
+      var btn=$('btnSaveD');btn.disabled=true;btn.innerHTML='<span class="spinner"></span>กำลังบันทึก...';
+      var name=g('d_name');
+      if(!name){toast('กรุณากรอกชื่อ');btn.disabled=false;btn.innerHTML='💾 บันทึกข้อมูลพนักงาน';return}
+      var phone=g('d_phone');
+      if(phone&&phone.length==9){phone='0'+phone;g('d_phone').value=phone}
+      var ber=g('d_ber');
+      if(ber&&ber.length<3){toast('กรุณากรอกเบอร์รถให้ครบ 3 หลัก');btn.disabled=false;btn.innerHTML='💾 บันทึกข้อมูลพนักงาน';return}
+      if(!ber&&!phone){toast('กรุณากรอกข้อมูล');btn.disabled=false;btn.innerHTML='💾 บันทึกข้อมูลพนักงาน';return}
+      var code=g('d_code');
+      if(!code||code.length<4){toast('กรุณากรอกรหัสพนักงาน 4 หลัก');btn.disabled=false;btn.innerHTML='💾 บันทึกข้อมูลพนักงาน';return}
+      if(EMP_LIST.indexOf(code)<0){toast('❌ รหัส '+code+' ไม่มีในระบบ');btn.disabled=false;btn.innerHTML='💾 บันทึกข้อมูลพนักงาน';return}
+      var data={
+        'รหัสพนักงาน':code,'เบอร์รถ':ber,'ชื่อ':name,'เบอร์โทร':phone.replace(/^0+/, ''),
+        'Esso SRC หมดอายุบัตร':normalizeDate(g('d_c1_e')),
+        'PTT-GC หมดอายุบัตร':normalizeDate(g('d_c2_e')),
+        'LLK Thappline หมดอายุบัตร':normalizeDate(g('d_c3_e')),
+        'SRB Thappline หมดอายุบัตร':normalizeDate(g('d_c4_e')),
+        'SPRC หมดอายุบัตร':normalizeDate(g('d_c5_e')),
+        'Thaioil SRC หมดอายุบัตร':normalizeDate(g('d_c6_e')),
+        'IRPC IRY & AU หมดอายุบัตร':normalizeDate(g('d_c7_e'))
+      };
+      var newImgs=await readImgs('d');
+      if(newImgs.length) data['รูปเอกสาร_base64']=newImgs;
+      else if(editImgsD) data['รูปเอกสาร']=editImgsD;
+      try{
+        var res=await apiPost({sheet:'คน',data:data,editKey:editKeyD});
+        if(res.error){toast('ผิดพลาด: '+res.error);btn.disabled=false;btn.innerHTML='💾 บันทึกข้อมูลพนักงาน';return}
+        toast((res.updated?'อัปเดต '+name:'บันทึก '+name)+' | รูป: '+((res.created||res.updated)?'ok':'บันทึก'));
+        clr();setTimeout(loadR,100);
+      }catch(e){toast('เกิดข้อผิดพลาด กรุณาลองใหม่')}
+      btn.disabled=false;btn.innerHTML='💾 บันทึกข้อมูลพนักงาน';
+    }
+
+    // ==== LOAD RECENT ====
+    async function loadR(){
+      var el=$('recentList');
+      try{
+        var v=await apiGet({sheet:'รถ'});v=Array.isArray(v)?v:v.data||[];
+        var d=await apiGet({sheet:'คน'});d=Array.isArray(d)?d:d.data||[];
+        var html='<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">';
+
+        if(v&&v.length){
+          html+='<div><div style="font-size:13px;font-weight:600;color:#64748b;margin-bottom:8px">🚚 รถ</div>';
+          v.slice(-5).reverse().forEach(function(r){
+            var b=r['เบอร์รถ']||'';
+            var exp='';
+            Object.keys(r).forEach(function(k){if(k.indexOf('หมดอายุ')>=0&&r[k])exp=normalizeDate(r[k])});
+            var bs=b.replace(/\\/g,'\\\\').replace(/'/g,"\\'");
+            var hasImg=r['รูปเอกสาร']||'';var gal='';
+            if(hasImg){
+              var imgCount=hasImg.split(/[\n,]+/).filter(function(x){return x.trim()}).length;
+              var escaped=hasImg.replace(/\\/g,'\\\\').replace(/'/g,"\\'").replace(/\n/g,'\\n');
+              gal=' <span onclick="event.stopPropagation();openImgs(\''+escaped+'\')" style="display:inline-flex;align-items:center;gap:3px;padding:2px 8px;background:#e0f2fe;color:#0284c7;border-radius:20px;font-size:11px;cursor:pointer;font-weight:500;margin-left:6px">📷 '+imgCount+'</span>';
+            }
+            html+='<div class="list-item" onclick="editV(\''+bs+'\')"><div><div class="main">'+b+gal+'</div></div><span style="font-size:11px;color:#64748b">'+exp+'</span></div>';
+          });
+          html+='</div>';
+        }else{
+          html+='<div><div style="font-size:13px;color:#94a3b8">ยังไม่มีข้อมูลรถ</div></div>';
+        }
+
+        if(d&&d.length){
+          html+='<div><div style="font-size:13px;font-weight:600;color:#64748b;margin-bottom:8px">🧑 คน</div>';
+          d.slice(-5).reverse().forEach(function(r){
+            var n=r['ชื่อ']||'',p=r['เบอร์โทร']||'',c=r['รหัสพนักงาน']||'';
+            var cs=c.replace(/\\/g,'\\\\').replace(/'/g,"\\'");
+            var hasImg=r['รูปเอกสาร']||'';var galD='';
+            if(hasImg){
+              var imgCount=hasImg.split(/[\n,]+/).filter(function(x){return x.trim()}).length;
+              var escaped=hasImg.replace(/\\/g,'\\\\').replace(/'/g,"\\'").replace(/\n/g,'\\n');
+              galD=' <span onclick="event.stopPropagation();openImgs(\''+escaped+'\')" style="display:inline-flex;align-items:center;gap:3px;padding:2px 8px;background:#e0f2fe;color:#0284c7;border-radius:20px;font-size:11px;cursor:pointer;font-weight:500;margin-left:6px">📷 '+imgCount+'</span>';
+            }
+            html+='<div class="list-item" onclick="editD(\''+cs+'\')"><div><div class="main">'+n+galD+'</div></div></div>';
+          });
+          html+='</div>';
+        }else{
+          html+='<div><div style="font-size:13px;color:#94a3b8">ยังไม่มีข้อมูลคน</div></div>';
+        }
+
+        html+='</div>';
+        el.innerHTML=html;
+      }catch(e){
+        el.innerHTML='<div style="text-align:center;color:#ef4444;padding:20px">⚠️ โหลดไม่ได้ ตรวจสอบการเชื่อมต่อ</div>';
+      }
+    }
+
+    // ==== EDIT VEHICLE ====
+    function editV(ber){
+      editKeyV=ber;
+      apiGet({sheet:'รถ',key:ber}).then(function(r){
+        if(!r||r.error)return;if(Array.isArray(r)){r=r[0]}else{r=r.data&&r.data[0]?r.data[0]:r}
+        if(!r||!r['เบอร์รถ'])return;
+        $('v_ber').value=r['เบอร์รถ']||'';
+        $('v_province').value=(r['จังหวัด']||'').indexOf('กทม')>=0?'กทม':'อื่น ๆ';
+        $('v_hua').value=r['ทะเบียนหัว']||'';$('v_hang').value=r['ทะเบียนหาง']||'';
+        $('v_tho_e').value=normalizeDate(r['ธพน.2 หมดอายุบัตร']||'');
+        $('v_pasi_e').value=normalizeDate(r['ภาษี หมดอายุบัตร']||'');
+        $('v_c1_e').value=normalizeDate(r['Thaioil SRC หมดอายุบัตร']||'');
+        $('v_c2_e').value=normalizeDate(r['Esso SRC หมดอายุบัตร']||'');
+        $('v_c3_e').value=normalizeDate(r['PTT-GC หมดอายุบัตร']||'');
+        $('v_c4_e').value=normalizeDate(r['LLK Thappline หมดอายุบัตร']||'');
+        $('v_c5_e').value=normalizeDate(r['SRB Thappline หมดอายุบัตร']||'');
+        $('v_c6_e').value=normalizeDate(r['SPRC หมดอายุบัตร']||'');
+        $('v_c7_e').value=normalizeDate(r['IRPC IRY & AU หมดอายุบัตร']||'');
+        editImgsV=r['รูปเอกสาร']||'';
+        $('vMode').textContent='แก้ไข เบอร์ '+ber;
+        goV();window.scrollTo({top:0,behavior:'smooth'});
+      });
+    }
+
+    // ==== EDIT DRIVER ====
+    function editD(code){
+      editKeyD=code;
+      apiGet({sheet:'คน',key:code}).then(function(r){
+        if(!r||r.error)return;if(Array.isArray(r)){r=r[0]}else{r=r.data&&r.data[0]?r.data[0]:r}
+        if(!r||!r['รหัสพนักงาน'])return;
+        $('d_code').value=r['รหัสพนักงาน']||'';$('d_ber').value=r['เบอร์รถ']||'';$('d_name').value=r['ชื่อ']||'';$('d_phone').value=r['เบอร์โทร']||'';
+        $('d_c1_e').value=normalizeDate(r['Esso SRC หมดอายุบัตร']||'');
+        $('d_c2_e').value=normalizeDate(r['PTT-GC หมดอายุบัตร']||'');
+        $('d_c3_e').value=normalizeDate(r['LLK Thappline หมดอายุบัตร']||'');
+        $('d_c4_e').value=normalizeDate(r['SRB Thappline หมดอายุบัตร']||'');
+        $('d_c5_e').value=normalizeDate(r['SPRC หมดอายุบัตร']||'');
+        $('d_c6_e').value=normalizeDate(r['Thaioil SRC หมดอายุบัตร']||'');
+        $('d_c7_e').value=normalizeDate(r['IRPC IRY & AU หมดอายุบัตร']||'');
+        editImgsD=r['รูปเอกสาร']||'';
+        $('dMode').textContent='แก้ไข '+(r['ชื่อ']||'');
+        goD();window.scrollTo({top:0,behavior:'smooth'});
+      });
+    }
+
+    // ==== IMAGE VIEWER ====
+    function openImgs(urls){
+      var imgs=urls.split(/[\n,]+/);
+      var h='<div onclick="this.remove()" style="position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.92);z-index:9999;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:20px;overflow-y:auto">';
+      h+='<div onclick="event.stopPropagation();this.parentElement.remove()" style="position:fixed;top:16px;right:20px;color:#fff;font-size:28px;cursor:pointer;z-index:10">✕</div>';
+      h+='<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:12px;width:100%;max-width:900px">';
+      imgs.forEach(function(u){
+        u=u.trim();if(!u)return;
+        var src=u;
+        var idMatch=u.match(/[?&]id=([^&]+)/)||u.match(/\/file\/d\/([^/]+)/);
+        if(idMatch) src='https://drive.google.com/thumbnail?id='+idMatch[1]+'&sz=w800';
+        h+='<div style="background:#1e293b;border-radius:10px;overflow:hidden"><a href="'+u+'" target="_blank" rel="noopener"><img src="'+src+'" style="width:100%;display:block" loading="lazy"></a></div>';
+      });
+      h+='</div></div>';
+      var d=document.createElement('div');d.innerHTML=h;
+      document.body.appendChild(d.firstElementChild);
+    }
+
+    loadR();
+    
+    // ==== ADMIN ====
+    function showLogin(){$('loginModal').classList.add('show');$('adminUser').focus()}
+    function hide(id){$(id).classList.remove('show')}
+    function doLogin(){
+      var u=$('adminUser').value.trim(),p=$('adminPass').value.trim();
+      if(u==='tha1234'&&p==='4858'){
+        hide('loginModal');$('adminPanel').classList.add('show');$('adminBtn').classList.add('ok');
+        renderAdminVeh();renderAdminEmp();
+      }else{toast('❌ Username หรือ Password ไม่ถูกต้อง')}
+    }
+    function doLogout(){$('adminPanel').classList.remove('show');$('adminBtn').classList.remove('ok')}
+    function switchAdminTab(tab,btn){
+      document.querySelectorAll('.admin-section').forEach(function(el){el.classList.remove('show')});
+      document.querySelectorAll('.admin-tab').forEach(function(el){el.classList.remove('active')});
+      btn.classList.add('active');
+      if(tab==='veh'){$('adminVeh').classList.add('show');renderAdminVeh()}
+      else if(tab==='emp'){$('adminEmp').classList.add('show');renderAdminEmp()}
+      else{$('adminData').classList.add('show');renderAdminData()}
+    }
+    
+    function renderAdminData(){
+      var type=window._adminDataType||'\u0e04\u0e19';
+      var el=$('adminDataList');el.innerHTML='<div style="color:#94a3b8;font-size:13px;padding:10px">\u0e01\u0e33\u0e25\u0e31\u0e07\u0e42\u0e2b\u0e25\u0e14...</div>';
+      apiGet({sheet:type}).then(function(data){
+        var arr=Array.isArray(data)?data:data&&data.data||[];
+        if(!arr||!arr.length){el.innerHTML='<div style="color:#94a3b8;font-size:13px;padding:10px">\u0e44\u0e21\u0e48\u0e21\u0e35\u0e02\u0e49\u0e2d\u0e21\u0e39\u0e25</div>';return}
+        var h='';
+        arr.slice().reverse().forEach(function(r){
+          var name=r['\u0e0a\u0e37\u0e48\u0e2d']||'',code=r['\u0e23\u0e2b\u0e31\u0e2a\u0e1e\u0e19\u0e31\u0e01\u0e07\u0e32\u0e19']||'',ber=r['\u0e40\u0e1a\u0e2d\u0e23\u0e4c\u0e23\u0e16']||'',phone=r['\u0e40\u0e1a\u0e2d\u0e23\u0e4c\u0e42\u0e17\u0e23']||'';
+          var imgs=r['\u0e23\u0e39\u0e1b\u0e40\u0e2d\u0e01\u0e2a\u0e32\u0e23']||'';var gal='';
+          if(imgs){
+            var cnt=imgs.split(/[\n,]+/).filter(function(x){return x.trim()}).length;
+            var esc=imgs.replace(/\\/g,'\\\\').replace(/'/g,"\\'").replace(/\n/g,'\\n');
+            gal=' <span onclick="event.stopPropagation();openImgs(\''+esc+'\')" style="display:inline-flex;align-items:center;gap:3px;padding:2px 8px;background:#e0f2fe;color:#0284c7;border-radius:20px;font-size:11px;cursor:pointer;font-weight:500">\uD83D\uDCF7 '+cnt+'</span>';
+          }
+          h+='<div class="list-item" style="cursor:default"><div><div class="main">'+(code?code+' | ':'')+name+gal+'</div><div style="font-size:11px;color:#64748b">'+(ber?'\uD83D\uDE9A '+ber:'')+(phone?' | \uD83D\uDCF1 '+phone:'')+'</div></div></div>';
+        });
+        el.innerHTML=h;
+      }).catch(function(){el.innerHTML='<div style="color:#ef4444;font-size:13px;padding:10px">\u0e42\u0e2b\u0e25\u0e14\u0e02\u0e49\u0e2d\u0e21\u0e39\u0e25\u0e25\u0e49\u0e21\u0e40\u0e2b\u0e25\u0e27</div>'});
+    }
+    function switchAdminDataTab(type,btn){
+      window._adminDataType=type;
+      var parent=btn.parentElement;
+      parent.querySelectorAll('.admin-tab').forEach(function(el){el.style.background='#fff';el.style.color='#0f172a'});
+      btn.style.background='#0f172a';btn.style.color='#fff';
+      renderAdminData();
+    }
+
+    function renderAdminVeh(){
+      var keys=Object.keys(VEHICLE_DATA).sort(function(a,b){return parseInt(a)-parseInt(b)});
+      var h='';
+      keys.forEach(function(k){
+        var v=VEHICLE_DATA[k];
+        h+='<div class="admin-list-item"><span>'+k+'. '+v.h+(v.b?' / '+v.b:'')+'</span><span class="del" onclick="delVehicle(\''+k+'\')">✕</span></div>';
+      });
+      $('adminVehList').innerHTML=h||'<div style="color:#94a3b8;font-size:13px;padding:10px">ไม่มีข้อมูล</div>';
+    }
+    function addVehicle(){
+      var num=$('aVehNum').value.trim(),f=$('aVehFront').value.trim(),b=$('aVehBack').value.trim();
+      if(!num){toast('กรุณากรอกเบอร์รถ');return}
+      if(!f&&!b){toast('กรุณากรอกทะเบียน');return}
+      VEHICLE_DATA[num]={h:f,b:b};
+      if(f&&PLATE_LIST.indexOf(f)<0)PLATE_LIST.push(f);
+      if(b&&PLATE_LIST.indexOf(b)<0)PLATE_LIST.push(b);
+      $('aVehNum').value='';$('aVehFront').value='';$('aVehBack').value='';
+      renderAdminVeh();
+      toast('✅ เพิ่มเบอร์ '+num+' เรียบร้อย');
+    }
+    function delVehicle(k){
+      if(!confirm('ลบเบอร์ '+k+'?'))return;
+      delete VEHICLE_DATA[k];
+      renderAdminVeh();
+    }
+    function renderAdminEmp(){
+      var h='';
+      EMP_LIST.forEach(function(c){
+        h+='<div class="admin-list-item"><span>'+c+'</span><span class="del" onclick="delEmpCode(\''+c+'\')">✕</span></div>';
+      });
+      $('adminEmpList').innerHTML=h||'<div style="color:#94a3b8;font-size:13px;padding:10px">ไม่มีข้อมูล</div>';
+    }
+    function addEmpCode(){
+      var code=$('aEmpCode').value.trim();
+      if(!code||code.length<4){toast('กรุณากรอกรหัส 4 หลัก');return}
+      if(EMP_LIST.indexOf(code)>=0){toast('❌ รหัส '+code+' มีอยู่แล้ว');return}
+      EMP_LIST.push(code);
       EMP_LIST.sort(function(a,b){return parseInt(a)-parseInt(b)});
+      EMP_RAW = EMP_LIST.join('\n');
+      $('aEmpCode').value='';
+      renderAdminEmp();
+      toast('✅ เพิ่มรหัส '+code+' เรียบร้อย');
     }
-  }catch(e){}
-}
-
-// ====== Admin Data with search ======
-var _adminDataCache=[];
-function renderAdminData(){
-  var type=window._adminDataType||'คน';
-  var el=$('adminDataList');
-  var searchBox=$('adminDataSearch');
-  if(searchBox)searchBox.value='';
-  el.innerHTML='<div style="color:#94a3b8;font-size:13px;padding:10px">กำลังโหลด...</div>';
-  apiGet({sheet:type}).then(function(data){
-    _adminDataCache=Array.isArray(data)?data:data&&data.data||[];
-    renderAdminDataRows(_adminDataCache,'');
-  }).catch(function(){el.innerHTML='<div style="color:#ef4444;font-size:13px;padding:10px">โหลดข้อมูลล้มเหลว</div>'});
-}
-function renderAdminDataRows(arr,q){
-  var el=$('adminDataList');
-  if(!arr||!arr.length){el.innerHTML='<div style="color:#94a3b8;font-size:13px;padding:10px">ไม่มีข้อมูล</div>';return}
-  var filtered=arr;
-  if(q&&q.trim()){
-    var ql=q.trim().toLowerCase();
-    filtered=arr.filter(function(r){
-      return Object.values(r).some(function(v){return v&&String(v).toLowerCase().indexOf(ql)>=0});
-    });
-  }
-  if(!filtered.length){el.innerHTML='<div style="color:#94a3b8;font-size:13px;padding:10px">ไม่พบผลลัพธ์ "'+q+'"</div>';return}
-  var h='';
-  filtered.slice().reverse().forEach(function(r){
-    var name=r['ชื่อ']||'',code=r['รหัสพนักงาน']||'',ber=r['เบอร์รถ']||'',phone=r['เบอร์โทร']||'';
-    var imgs=r['รูปเอกสาร']||'';var gal='';
-    if(imgs){
-      var cnt=imgs.split(/[\n,]+/).filter(function(x){return x.trim()}).length;
-      var esc=imgs.replace(/\\/g,'\\\\').replace(/'/g,"\\'").replace(/\n/g,'\\n');
-      gal=' <span onclick="event.stopPropagation();openImgs(\''+esc+'\')" style="display:inline-flex;align-items:center;gap:3px;padding:2px 8px;background:#e0f2fe;color:#0284c7;border-radius:20px;font-size:11px;cursor:pointer;font-weight:500">📷 '+cnt+'</span>';
+    function delEmpCode(code){
+      if(!confirm('ลบรหัส '+code+'?'))return;
+      var idx=EMP_LIST.indexOf(code);
+      if(idx>=0){
+        EMP_LIST.splice(idx,1);
+        EMP_RAW = EMP_LIST.join('\n');
+        renderAdminEmฟp();
+      }
     }
-    h+='<div class="list-item" style="cursor:default"><div><div class="main">'+(code?code+' | ':'')+name+gal+'</div><div style="font-size:11px;color:#64748b">'+(ber?'🚚 '+ber:'')+(phone?' | 📱 '+phone:'')+'</div></div></div>';
-  });
-  el.innerHTML=h;
-}
-function switchAdminDataTab(type,btn){
-  window._adminDataType=type;
-  var parent=btn.parentElement;
-  parent.querySelectorAll('.admin-tab').forEach(function(el){el.style.background='#fff';el.style.color='#0f172a'});
-  btn.style.background='#0f172a';btn.style.color='#fff';
-  renderAdminData();
-}
-function renderAdminVeh(){
-  var keys=Object.keys(VEHICLE_DATA).sort(function(a,b){return parseInt(a)-parseInt(b)});
-  var h='';
-  keys.forEach(function(k){
-    var v=VEHICLE_DATA[k];
-    h+='<div class="admin-list-item"><span>'+k+'. '+v.h+(v.b?' / '+v.b:'')+'</span><span class="del" onclick="delVehicle(\''+k+'\')">✕</span></div>';
-  });
-  $('adminVehList').innerHTML=h||'<div style="color:#94a3b8;font-size:13px;padding:10px">ไม่มีข้อมูล</div>';
-}
-function addVehicle(){
-  var num=$('aVehNum').value.trim(),f=$('aVehFront').value.trim(),b=$('aVehBack').value.trim();
-  if(!num){toast('กรุณากรอกเบอร์รถ');return}
-  if(!f&&!b){toast('กรุณากรอกทะเบียน');return}
-  VEHICLE_DATA[num]={h:f,b:b};
-  if(f&&PLATE_LIST.indexOf(f)<0)PLATE_LIST.push(f);
-  if(b&&PLATE_LIST.indexOf(b)<0)PLATE_LIST.push(b);
-  if(!window._extraVeh)window._extraVeh={};
-  window._extraVeh[num]={h:f,b:b};
-  lsSaveVeh();
-  $('aVehNum').value='';$('aVehFront').value='';$('aVehBack').value='';
-  renderAdminVeh();toast('✅ เพิ่มเบอร์ '+num+' เรียบร้อย (บันทึกแล้ว)');
-}
-function delVehicle(k){
-  if(!confirm('ลบเบอร์ '+k+'?'))return;
-  delete VEHICLE_DATA[k];
-  if(window._extraVeh&&window._extraVeh[k]){delete window._extraVeh[k];lsSaveVeh();}
-  renderAdminVeh();
-}
-function renderAdminEmp(){
-  var h='';
-  EMP_LIST.forEach(function(c){
-    h+='<div class="admin-list-item"><span>'+c+'</span><span class="del" onclick="delEmpCode(\''+c+'\')">✕</span></div>';
-  });
-  $('adminEmpList').innerHTML=h||'<div style="color:#94a3b8;font-size:13px;padding:10px">ไม่มีข้อมูล</div>';
-}
-function addEmpCode(){
-  var code=$('aEmpCode').value.trim();
-  if(!code||code.length<4){toast('กรุณากรอกรหัส 4 หลัก');return}
-  if(EMP_LIST.indexOf(code)>=0){toast('❌ รหัส '+code+' มีอยู่แล้ว');return}
-  EMP_LIST.push(code);EMP_LIST.sort(function(a,b){return parseInt(a)-parseInt(b)});
-  EMP_RAW=EMP_LIST.join('\n');
-  if(!window._extraEmp)window._extraEmp=[];
-  if(window._extraEmp.indexOf(code)<0)window._extraEmp.push(code);
-  lsSaveEmp();
-  $('aEmpCode').value='';
-  renderAdminEmp();toast('✅ เพิ่มรหัส '+code+' เรียบร้อย (บันทึกแล้ว)');
-}
-function delEmpCode(code){
-  if(!confirm('ลบรหัส '+code+'?'))return;
-  var idx=EMP_LIST.indexOf(code);
-  if(idx>=0){EMP_LIST.splice(idx,1);EMP_RAW=EMP_LIST.join('\n');}
-  if(window._extraEmp){var ei=window._extraEmp.indexOf(code);if(ei>=0){window._extraEmp.splice(ei,1);lsSaveEmp();}}
-  renderAdminEmp();
-}
 
-// ====== VEHICLE DATA ======
-var VEHICLE_DATA = {
-"001":{h:"62-0923",b:"62-0924"},"002":{h:"62-0925",b:"62-0926"},"003":{h:"62-0927",b:"62-0928"},"004":{h:"62-0929",b:"62-0930"},"005":{h:"62-0931",b:"62-0932"},
-"006":{h:"62-2723",b:"62-2724"},"007":{h:"62-2725",b:"62-2726"},"008":{h:"62-2727",b:"62-2728"},"009":{h:"62-2729",b:"62-2730"},"010":{h:"62-2731",b:"62-2732"},
-"011":{h:"62-3120",b:"62-3121"},"012":{h:"62-3122",b:"62-3123"},"013":{h:"62-3124",b:"62-3125"},"014":{h:"62-3308",b:"62-3309"},"015":{h:"62-3310",b:"62-3311"},
-"016":{h:"62-3312",b:"62-3313"},"017":{h:"62-3314",b:"62-3315"},"018":{h:"62-3316",b:"62-3317"},"019":{h:"62-3318",b:"62-3319"},"020":{h:"62-3320",b:"62-3321"},
-"021":{h:"62-3628",b:"62-3629"},"022":{h:"62-3630",b:"62-3631"},"023":{h:"62-3632",b:"62-3633"},"024":{h:"62-3634",b:"62-3635"},"025":{h:"62-3638",b:"62-3639"},
-"026":{h:"62-3894",b:"62-3895"},"027":{h:"62-3896",b:"62-3897"},"028":{h:"62-3898",b:"62-3899"},"029":{h:"62-3900",b:"62-3901"},"030":{h:"62-3902",b:"62-3903"},
-"031":{h:"62-3904",b:"62-3905"},"032":{h:"62-3906",b:"62-3907"},"033":{h:"62-3908",b:"62-3909"},"034":{h:"62-3910",b:"62-3911"},"035":{h:"62-3912",b:"62-3913"},
-"036":{h:"62-5404",b:"62-5405"},"037":{h:"62-5406",b:"62-5407"},"038":{h:"62-5408",b:"62-5409"},"039":{h:"62-8717",b:"62-8718"},"040":{h:"62-8719",b:"62-8720"},
-"041":{h:"62-8721",b:"62-8722"},"042":{h:"62-8723",b:"62-8724"},"043":{h:"62-8725",b:"62-8726"},"044":{h:"62-9542",b:"62-9543"},"045":{h:"62-9545",b:"62-9546"},
-"046":{h:"62-9547",b:"62-9548"},"047":{h:"62-9549",b:"62-9550"},"048":{h:"62-9551",b:"62-9552"},"049":{h:"62-9553",b:"62-9554"},"050":{h:"62-9556",b:"62-9557"},
-"051":{h:"62-9560",b:"62-9561"},"052":{h:"62-9562",b:"62-9563"},"053":{h:"62-9564",b:"62-9565"},"054":{h:"63-0695",b:"63-0696"},"055":{h:"63-0685",b:"63-0686"},
-"056":{h:"63-0697",b:"63-0698"},"057":{h:"63-0699",b:"63-0700"},"058":{h:"63-0701",b:"63-0702"},"059":{h:"63-0703",b:"63-0704"},"060":{h:"63-0687",b:"63-0688"},
-"061":{h:"63-0689",b:"63-0690"},"062":{h:"63-0693",b:"63-0694"},"063":{h:"63-0692",b:"63-0691"},"064":{h:"63-1139",b:"63-1140"},"065":{h:"63-1141",b:"63-1142"},
-"066":{h:"63-1143",b:"63-1145"},"067":{h:"63-1146",b:"63-1147"},"068":{h:"63-1148",b:"63-1149"},"069":{h:"63-1150",b:"63-1151"},"070":{h:"63-1152",b:"63-1153"},
-"071":{h:"63-1689",b:"63-1690"},"072":{h:"63-1691",b:"63-1692"},"073":{h:"63-1693",b:"63-1695"},"074":{h:"63-1696",b:"63-1697"},"075":{h:"63-1698",b:"63-1699"},
-"076":{h:"63-1721",b:"63-1722"},"077":{h:"63-1723",b:"63-1724"},"078":{h:"63-1725",b:"63-1726"},"079":{h:"63-1727",b:"63-1728"},"080":{h:"63-1729",b:"63-1730"},
-"081":{h:"63-3890",b:"63-3891"},"082":{h:"63-3892",b:"63-3895"},"083":{h:"63-3896",b:"63-3897"},"084":{h:"63-3898",b:"63-3899"},"085":{h:"63-3900",b:"63-3901"},
-"086":{h:"63-3904",b:"63-3905"},"087":{h:"63-3906",b:"63-3907"},"088":{h:"63-3908",b:"63-3909"},"089":{h:"63-3910",b:"63-3911"},"090":{h:"63-3912",b:"63-3913"},
-"091":{h:"63-3914",b:"63-3915"},"092":{h:"63-3916",b:"63-3917"},"093":{h:"63-3918",b:"63-3919"},"094":{h:"63-3920",b:"63-3921"},"095":{h:"63-3922",b:"63-3923"},
-"096":{h:"63-4961",b:"63-4962"},"097":{h:"63-4963",b:"63-4964"},"098":{h:"63-4965",b:"63-4966"},"099":{h:"63-4967",b:"63-4968"},"100":{h:"63-4969",b:"63-4971"},
-"101":{h:"63-6560",b:"63-6561"},"102":{h:"63-6562",b:"63-6563"},"103":{h:"63-6564",b:"63-6567"},"104":{h:"63-6568",b:"63-6569"},"105":{h:"63-6570",b:"63-6571"},
-"106":{h:"63-6572",b:"63-6573"},"107":{h:"63-6574",b:"63-6575"},"108":{h:"63-6576",b:"63-6577"},"109":{h:"63-6578",b:"63-6579"},"110":{h:"63-6580",b:"63-6581"},
-"111":{h:"63-7193",b:"63-7212"},"112":{h:"63-7194",b:"63-7195"},"113":{h:"63-7196",b:"63-7197"},"114":{h:"63-7198",b:"63-7199"},"115":{h:"63-7200",b:"63-7201"},
-"116":{h:"63-7202",b:"63-7203"},"117":{h:"63-7204",b:"63-7205"},"118":{h:"63-7206",b:"63-7207"},"119":{h:"63-7208",b:"63-7209"},"120":{h:"63-7210",b:"63-7211"},
-"121":{h:"63-8230",b:"63-8231"},"122":{h:"63-8232",b:"63-8233"},"123":{h:"63-8234",b:"63-8235"},"124":{h:"63-8236",b:"63-8237"},"125":{h:"63-8238",b:"63-8239"},
-"126":{h:"63-9112",b:"63-9113"},"127":{h:"63-9114",b:"63-9115"},"128":{h:"63-9116",b:"63-9117"},"129":{h:"63-9118",b:"63-9119"},"130":{h:"63-9120",b:"63-9121"},
-"131":{h:"63-9122",b:"63-9123"},"132":{h:"63-9124",b:"63-9125"},"133":{h:"63-9126",b:"63-9127"},"134":{h:"63-9128",b:"63-9129"},"135":{h:"63-9130",b:"63-9131"},
-"136":{h:"64-0670",b:"64-0671"},"137":{h:"64-0672",b:"64-0673"},"138":{h:"64-0674",b:"64-0675"},"139":{h:"64-0676",b:"64-0677"},"140":{h:"64-0679",b:"64-0680"},
-"141":{h:"64-0681",b:"64-0682"},"142":{h:"64-0683",b:"64-0684"},"143":{h:"64-0685",b:"64-0686"},"144":{h:"64-0687",b:"64-0688"},"145":{h:"64-0689",b:"64-0690"},
-"146":{h:"64-1014",b:"64-1015"},"147":{h:"64-1016",b:"64-1017"},"148":{h:"64-1018",b:"64-1020"},"149":{h:"64-1021",b:"64-1022"},"150":{h:"64-1023",b:"64-1024"},
-"SPARE_151":{h:"63-0393",b:"63-1147"},"152":{h:"64-9126",b:"64-9354"},"153":{h:"65-0293",b:"65-0294"},"154":{h:"65-0295",b:"65-0296"},"155":{h:"65-0297",b:"65-0298"},
-"156":{h:"65-0299",b:"65-0300"},"157":{h:"65-0301",b:"65-0302"},"158":{h:"65-0303",b:"65-0304"},"159":{h:"65-0305",b:"65-0306"},"160":{h:"65-0307",b:"65-0308"},
-"161":{h:"65-0309",b:"65-0310"},"162":{h:"65-0311",b:"65-0312"},"163":{h:"65-3829",b:"65-3830"},"164":{h:"65-3831",b:"65-3832"},"165":{h:"65-3833",b:"65-3834"},
-"166":{h:"65-3835",b:"65-3836"},"167":{h:"65-3837",b:"65-3840"},"168":{h:"65-3841",b:"65-3842"},"169":{h:"65-3844",b:"65-3846"},"170":{h:"65-3847",b:"65-3849"},
-"171":{h:"65-3850",b:"65-3851"},"172":{h:"65-3852",b:"65-3853"},"173":{h:"65-4570",b:"65-4571"},"174":{h:"65-4573",b:"65-4574"},"175":{h:"65-4575",b:"65-4576"},
-"176":{h:"65-4577",b:"65-4578"},"177":{h:"65-4579",b:"65-4580"},"178":{h:"65-4582",b:"65-4583"},"179":{h:"65-4584",b:"65-4585"},"180":{h:"65-4586",b:"65-4587"},
-"181":{h:"65-4588",b:"65-4591"},"182":{h:"65-4592",b:"65-4593"},"183":{h:"65-6415",b:"65-6416"},"184":{h:"65-6417",b:"65-6418"},"185":{h:"65-6419",b:"65-6420"},
-"186":{h:"65-6421",b:"65-6422"},"187":{h:"65-6423",b:"65-6424"},"188":{h:"65-6425",b:"65-6426"},"189":{h:"65-6427",b:"65-6428"},"190":{h:"65-6429",b:"65-6430"},
-"191":{h:"65-6431",b:"65-6432"},"192":{h:"65-6433",b:"65-6434"},"193":{h:"65-7536",b:"65-7537"},"194":{h:"65-7538",b:"65-7539"},"195":{h:"65-7540",b:"65-7541"},
-"196":{h:"65-7542",b:"65-7543"},"197":{h:"65-7544",b:"65-7545"},"198":{h:"65-7546",b:"65-7547"},"199":{h:"65-7548",b:"65-7549"},"200":{h:"65-7550",b:"65-7551"},
-"201":{h:"65-7552",b:"65-7553"},"202":{h:"65-7554",b:"65-7555"},"203":{h:"65-8444",b:"65-8445"},"204":{h:"65-8446",b:"65-8447"},"205":{h:"65-8448",b:"65-8449"},
-"206":{h:"65-8450",b:"65-8451"},"207":{h:"65-8452",b:"65-8453"},"208":{h:"65-8454",b:"65-8455"},"209":{h:"65-8458",b:"65-8457"},"210":{h:"65-8460",b:"65-8459"},
-"211":{h:"65-8462",b:"65-8461"},"212":{h:"65-8456",b:"65-8463"},"213":{h:"65-8614",b:"65-8615"},"214":{h:"65-8616",b:"65-8617"},"215":{h:"65-8618",b:"65-8619"},
-"216":{h:"65-8620",b:"65-8621"},"217":{h:"65-8622",b:"65-8623"},"218":{h:"66-2512",b:"66-2513"},"219":{h:"66-2514",b:"66-2515"},"220":{h:"66-2516",b:"66-2517"},
-"221":{h:"66-2518",b:"66-2519"},"222":{h:"66-2520",b:"66-2521"},"223":{h:"66-2522",b:"66-2523"},"224":{h:"66-2524",b:"66-2525"},"225":{h:"66-2526",b:"66-2527"},
-"226":{h:"66-2528",b:"66-2529"},"227":{h:"66-2530",b:"66-2531"},"228":{h:"66-2921",b:"66-2925"},"229":{h:"66-2927",b:"66-2930"},"230":{h:"66-2932",b:"66-2933"},
-"231":{h:"66-2935",b:"66-2936"},"232":{h:"66-2938",b:"66-2940"},"233":{h:"66-2942",b:"66-2944"},"234":{h:"66-2945",b:"66-2947"},"235":{h:"66-2949",b:"66-2951"},
-"236":{h:"66-2953",b:"66-2955"},"237":{h:"66-2958",b:"66-2960"},"238":{h:"67-0228",b:""},"239":{h:"67-0229",b:""},"240":{h:"67-0231",b:""},
-"241":{h:"67-0232",b:""},"242":{h:"67-0234",b:""},"243":{h:"67-0637",b:""},"244":{h:"67-0640",b:""},"245":{h:"67-0641",b:""},
-"246":{h:"67-0642",b:""},"247":{h:"67-0643",b:""},"248":{h:"67-0947",b:""},"249":{h:"67-0948",b:""},"250":{h:"67-0949",b:""},
-"251":{h:"67-0950",b:""},"252":{h:"67-0951",b:""},"253":{h:"67-0952",b:""},"254":{h:"67-0953",b:""},"255":{h:"67-0954",b:""},
-"256":{h:"67-0955",b:""},"257":{h:"67-0956",b:""},"258":{h:"68-8661",b:""},"259":{h:"68-8662",b:""},"260":{h:"68-8663",b:""},
-"261":{h:"68-8664",b:""},"262":{h:"68-8665",b:""},"263":{h:"68-8666",b:""},"264":{h:"68-8667",b:""},"265":{h:"68-8669",b:""},
-"266":{h:"68-8670",b:""},"267":{h:"68-8671",b:""},"268":{h:"69-3761",b:""},"269":{h:"69-3762",b:""},"270":{h:"69-3763",b:""},
-"271":{h:"69-3764",b:""},"272":{h:"69-3765",b:""},"273":{h:"69-3766",b:""},"274":{h:"69-3767",b:""},"275":{h:"69-3768",b:""},
-"276":{h:"69-3769",b:""},"277":{h:"69-3770",b:""},"278":{h:"69-3919",b:"63-0696"},"279":{h:"69-3921",b:"63-9127"},"280":{h:"69-3923",b:"69-3898"},
-"281":{h:"69-3924",b:"69-3900"},"282":{h:"69-3897",b:"69-3902"},"283":{h:"69-3899",b:"69-3904"},"284":{h:"69-3901",b:"69-3906"},"285":{h:"69-3903",b:"69-3908"},
-"286":{h:"69-3905",b:"69-3910"},"287":{h:"69-3907",b:"69-3912"},"288":{h:"69-3909",b:"69-3914"},"289":{h:"69-3911",b:"69-3916"},"290":{h:"69-3913",b:"69-3918"},
-"291":{h:"69-3915",b:"69-3920"},"292":{h:"69-3917",b:"69-3922"},"293":{h:"69-4685",b:"69-3946"},"294":{h:"69-4686",b:"69-3947"},"295":{h:"69-4687",b:"69-3948"},
-"296":{h:"69-4688",b:"69-3949"},"297":{h:"69-4689",b:"69-3950"},"298":{h:"69-4690",b:"69-3951"},"299":{h:"69-4691",b:"69-3952"},"300":{h:"69-4692",b:"69-3953"},
-"301":{h:"69-4693",b:"69-3954"},"302":{h:"69-4694",b:"69-3955"},"303":{h:"69-4695",b:"69-3956"},"304":{h:"69-4696",b:"69-3957"},"305":{h:"69-4697",b:"69-3958"},
-"306":{h:"69-4698",b:"69-3959"},"307":{h:"69-4699",b:"69-3960"},"308":{h:"69-9717",b:"65-7551"},"309":{h:"700-2196",b:"700-1361"},"310":{h:"700-2197",b:"700-1362"},
-"311":{h:"700-2198",b:"700-1363"},"312":{h:"700-2199",b:"700-1364"},"313":{h:"700-2200",b:"700-1365"},"314":{h:"700-2201",b:"700-1366"},"315":{h:"700-2202",b:"700-1367"},
-"316":{h:"700-2203",b:"700-1368"},"317":{h:"700-2204",b:"700-1369"},"318":{h:"700-2205",b:"700-1370"},"319":{h:"700-2206",b:"700-1371"},"320":{h:"700-2207",b:"700-1372"},
-"321":{h:"700-2208",b:"700-1373"},"322":{h:"700-2210",b:"700-1374"},"323":{h:"700-2211",b:"700-1375"},"324":{h:"700-2212",b:"700-1376"},"325":{h:"700-2214",b:"700-1377"},
-"326":{h:"700-2215",b:"700-1378"},"327":{h:"700-2216",b:"700-1379"},"328":{h:"700-2217",b:"700-1380"},"329":{h:"700-2218",b:"700-1382"},"330":{h:"700-2219",b:"700-1383"},
-"331":{h:"700-2220",b:"700-1384"},"332":{h:"700-2221",b:"700-1385"},"333":{h:"700-2223",b:"700-1386"},"334":{h:"700-2225",b:"700-1387"},"335":{h:"700-2226",b:"700-1388"},
-"336":{h:"700-2227",b:"700-1390"},"337":{h:"700-2228",b:"700-1400"},"338":{h:"700-2230",b:"700-1401"}
-};
-
-var PLATE_LIST=[];
-for(var k in VEHICLE_DATA){var d=VEHICLE_DATA[k];if(d.h)PLATE_LIST.push(d.h);if(d.b)PLATE_LIST.push(d.b);}
-PLATE_LIST=PLATE_LIST.filter(function(s,i,a){return a.indexOf(s)===i});
-
-var EMP_RAW=`1001,1002,1011,1016,1017,1020,1028,1034,1037,1039,1040,1041,1043,1046,1048
-1061,1063,1067,1074,1076,1078,1079,1086,1100,1101,1102,1107,1110,1115,1116
-1118,1122,1127,1128,1129,1131,1138,1141,1143,1144,1149,1161,1165,1167,1170
-1175,1180,1181,1184,1185,1187,1191,1194,1195,1197,1204,1205,1206,1207,1210
-1213,1218,1219,1229,1231,1232,1233,1235,1236,1237,1238,1244,1249,1254,1256
-1258,1259,1260,1262,1268,1269,1270,1272,1275,1279,1280,1283,1288,1291,1297
-1304,1305,1307,1310,1313,1317,1319,1320,1328,1330,1332,1333,1334,1337,1340
-1344,1349,1352,1353,1356,1359,1362,1363,1364,1365,1366,1368,1370,1371,1372
-1375,1376,1377,1378,1379,1381,1382,1383,1384,1385,1387,1388,1390,1392,1393
-1395,1406,1409,1410,1415,1417,1419,1420,1421,1423,1425,1428,1429,1433,1434
-1436,1437,1440,1441,1444,1446,1448,1449,1452,1455,1459,1460,1462,1464,1465
-1467,1468,1469,1471,1473,1475,1476,1477,1479,1480,1483,1485,1487,1489,1490
-1492,1494,1504,1505,1508,1509,1510,1511,1513,1514,1515,1517,1520,1521,1522
-1524,1525,1527,1530,1531,1535,1536,1537,1538,1541,1546,1549,1550,1551,1552
-1554,1557,1558,1560,1561,1563,1564,1565,1567,1570,1571,1572,1576,1577,1583
-1586,1589,1590,1591,1594,1595,1596,1599,1602,1603,1604,1605,1606,1608,1609
-1610,1612,1614,1615,1616,1617,1619,1620,1621,1622,1624,1626,1628,1629,1632
-1633,1635,1637,1640,1641,1642,1643,1644,1645,1646,1647,1649,1650,1652,1658
-1661,1662,1663,1664,1665,1667,1669,1670,1671,1674,1676,1679,1683,1686,1688
-1690,1692,1693,1694,1697,1698,1699,1702,1704,1706,1709,1710,1711,1712,1713
-1714,1715,1716,1717,1718,1719,1721,1722,1723,1724,1725,1726,1727,1728,1729
-1731,1736,1739,1740,1741,1744,1745,1746,1747,1749,1752,1753,1754,1755,1756
-1757,1758,1760,1761,1762,1763,1764,1766,1767,1768,1769,1770,1771,1772,1776
-1777,1781,1782,1784,1786,1787,1788,1789,1790,1792,1793,1794,1795,1796,1797
-1798,1799,1802,1803,1804,1806,1807,1811,1812,1813,1814,1816,1817,1818,1821
-1822,1823,1825,1827,1828,1829,1830,1831,1833,1834,1836,1838,1840,1841,1842
-1843,1845,1846,1847,1848,1849,1850,1851,1852,1853,1854,1856,1859,1860,1862
-1863,1864,1865,1866,1870,1871,1872,1873,1874,1876,1877,1878,1879,1880,1881
-1882,1883,1884,1885,1886,1887,1888,1889,1890,1892,1893,1894,1895,1896,1897
-1899,1900,1901,1902,1903,1904,1905,1906,1907,1908,1910,1911,1912,1913,1914
-1915,1916,1917,1918,1919,1920,1921,1922,1923,1924,1925,1926,1927,1928,1929
-1931,1932,1933,1934,1935,1936,1937,1938,1939,1940,1941,1942,1943,1944,1945
-1946,1947,1948,1949,1950,1951,1952,1953,1954,1955,1956,1957,1958,1959,1960
-1961,1962,1963,1964,1965,1966,1967,1968,1969,1970,1971,1972,1973,1974,1975
-1976,1992,1993,1999,2066,3011,3017,3018,3026,3032,3034,3040,3045,3057,3067
-3069,3074,3077,3079,3089,3091,3092,3097,3115,3118,3154,3158,3166,3175,3189
-3190,3193,3195,3199,3202,3214,3218,3223,3236,3265,3273,3297,3302,3312,3314
-3320,3321,3330,3331,3334,3338,3352,3363,3381,3382,3385,3401,3420,3424,3425
-3429,3443,3444,3449,3450,3451,3461,3467,3480,3487,3489,3491,3493,3506,3507
-3513,3515,3517,3526,3527,3528,3533,3534,3537,3543,3545,3546,3547,3552,3566
-3569,3570,3573,3579,3587,3590,3591,3594,3595,3606,3609,3611,3622,3626,3627
-3631,3632,3633,3635,3639,3643,3653,3666,3673,3677,3701,3709,3712,3724,3725
-3731,3735,3753,3757,3765,3770,3771,3782,3783,3784,3790,3792,3795,3799,3805
-3820,3822,3911,3921,3932,3938,3940,3944,3948,3952,3956,3957,3968,3976,3978
-3979,3980,3983,3989,3991,3995`;
-
-var EMP_LIST=EMP_RAW.split(/[\s\n,]+/).filter(function(s){return s.trim()});
-</script>
-</body>
-</html>
+  </script>
+    </body>
+    </html>
