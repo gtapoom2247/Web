@@ -166,9 +166,26 @@ tr:hover td { background:#f8fafc; }
 #updatePopup .up-body .up-actions .up-save:hover { background:#1d4ed8; }
 #updatePopup .up-body .up-actions .up-dismiss { background:#f1f5f9; color:#64748b; }
 #updatePopup .up-body .up-actions .up-dismiss:hover { background:#e2e8f0; }
+/* === XLSX Upload Progress === */
+#xlsxProgressOverlay{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.4);z-index:6000;justify-content:center;align-items:center}
+#xlsxProgressOverlay.show{display:flex}
+#xlsxProgressBox{background:#fff;border-radius:16px;padding:30px 36px;text-align:center;box-shadow:0 8px 40px rgba(0,0,0,.25);min-width:340px}
+#xlsxProgressBox .pct{font-size:52px;font-weight:800;color:#16a34a}
+#xlsxProgressBox .pct-label{font-size:15px;color:#64748b;margin-top:4px}
+#xlsxProgressBox .pct-bar{height:6px;background:#e2e8f0;border-radius:3px;margin-top:16px;overflow:hidden}
+#xlsxProgressBox .pct-bar-fill{height:100%;background:linear-gradient(90deg,#16a34a,#22c55e);border-radius:3px;width:0%;transition:width .15s ease}
 </style>
 </head>
 <body>
+
+<!-- XLSX UPLOAD PROGRESS OVERLAY -->
+<div id="xlsxProgressOverlay">
+  <div id="xlsxProgressBox">
+    <div class="pct" id="xlsxPctNum">0%</div>
+    <div class="pct-label" id="xlsxPctLabel">กำลังอ่านข้อมูล...</div>
+    <div class="pct-bar"><div class="pct-bar-fill" id="xlsxPctBar"></div></div>
+  </div>
+</div>
 
 <div class="header">
   <div style="display:flex;align-items:center;gap:12px">
@@ -269,7 +286,7 @@ tr:hover td { background:#f8fafc; }
   </div>
 </div>
 
-<script src="data340_truck.js"></script></script>
+<script src="data340_truck.js"></script>
 <script>var _PRE_VEHICLES = JSON.parse(JSON.stringify(_VEHICLES));
 // โหลดข้อมูลที่เคยแก้ไขจาก localStorage
 var _EDITS = {};
@@ -1063,13 +1080,34 @@ function xlsxDate(v){
   return String(v).trim();
 }
 
+function showXlsxProgress(pct, label){
+  var el = document.getElementById('xlsxProgressOverlay');
+  if(!el) return;
+  el.classList.add('show');
+  document.getElementById('xlsxPctNum').textContent = pct + '%';
+  document.getElementById('xlsxPctBar').style.width = pct + '%';
+  if(label) document.getElementById('xlsxPctLabel').textContent = label;
+}
+function hideXlsxProgress(){
+  var el = document.getElementById('xlsxProgressOverlay');
+  if(el) el.classList.remove('show');
+}
 function handleXlsxUpload(ev){
   var file = ev.target.files[0];
   if(!file) return;
   ev.target.value = '';
+  hideXlsxProgress();
+  showXlsxProgress(0, 'กำลังอ่านไฟล์...');
   var reader = new FileReader();
+  reader.onprogress = function(e){
+    if(e.lengthComputable){
+      var pct = Math.round(e.loaded/e.total*100);
+      showXlsxProgress(pct, 'กำลังอ่านไฟล์...');
+    }
+  };
   reader.onload = function(e){
     try {
+      showXlsxProgress(50, 'กำลังประมวลผล...');
       var data = new Uint8Array(e.target.result);
       var wb = XLSX.read(data, {type:'array', cellDates:true, dateNF:'d/m/yyyy'});
       // หา sheet ที่มีข้อมูลมากที่สุด (สรุปยอดขาย)
@@ -1121,88 +1159,67 @@ function handleXlsxUpload(ev){
         {col:28, key:'sp'}, {col:29, key:'to'}, {col:30, key:'ir'}
       ];
 
-      for(var i=start; i<rows.length; i++){
-        var row = rows[i];
-        var noVal = String(row[1]||'').trim();
-        if(!noVal || !noVal.match(/NO\.?\s*\d+/i)) continue;
-        // Normalize NO.xx format
-        noVal = noVal.replace(/^NO\s*\.?\s*/i, '');
-        if(!noVal.match(/^\d+$/)) continue;
-        noVal = 'NO.'+String(parseInt(noVal)).padStart(2,'0');
+      var totalRows = rows.length;
+      var batchSize = 50;
+      var i = start;
+      function processBatch(){
+        var batchEnd = Math.min(i + batchSize, totalRows);
+        for(; i<batchEnd; i++){
+          var row = rows[i];
+          var noVal = String(row[1]||'').trim();
+          if(!noVal || !noVal.match(/NO\.?\s*\d+/i)) continue;
+          noVal = noVal.replace(/^NO\s*\.?\s*/i, '');
+          if(!noVal.match(/^\d+$/)) continue;
+          noVal = 'NO.'+String(parseInt(noVal)).padStart(2,'0');
 
-        var pf = String(row[2]||'').trim();
-        var pr = String(row[3]||'').trim();
-        var rg = String(row[4]||'').trim();
+          var pf = String(row[2]||'').trim();
+          var pr = String(row[3]||'').trim();
+          var rg = String(row[4]||'').trim();
 
-        var idx = noIndex[noVal];
-        if(idx !== undefined){
-          // อัปเดตข้อมูลเดิมในที่ (ไม่ต้อง rebuild)
-          var vObj = _VEHICLES[idx];
-          vObj.pf = pf;
-          vObj.pr = pr;
-          vObj.rg = rg;
-
-          // Vehicle cards
-          vMap.forEach(function(m){
-            vObj.v[m.key] = xlsxDate(row[m.col]);
-          });
-
-          // Driver 1
-          vObj.d1.n = String(row[13]||'').trim();
-          vObj.d1.p = String(row[14]||'').trim();
-          d1Map.forEach(function(m){
-            vObj.d1[m.key] = xlsxDate(row[m.col]);
-          });
-
-          // Driver 2
-          vObj.d2.n = String(row[22]||'').trim();
-          vObj.d2.p = String(row[23]||'').trim();
-          d2Map.forEach(function(m){
-            vObj.d2[m.key] = xlsxDate(row[m.col]);
-          });
-
-          updated++;
+          var idx = noIndex[noVal];
+          if(idx !== undefined){
+            var vObj = _VEHICLES[idx];
+            vObj.pf = pf; vObj.pr = pr; vObj.rg = rg;
+            vMap.forEach(function(m){ vObj.v[m.key] = xlsxDate(row[m.col]); });
+            vObj.d1.n = String(row[13]||'').trim();
+            vObj.d1.p = String(row[14]||'').trim();
+            d1Map.forEach(function(m){ vObj.d1[m.key] = xlsxDate(row[m.col]); });
+            vObj.d2.n = String(row[22]||'').trim();
+            vObj.d2.p = String(row[23]||'').trim();
+            d2Map.forEach(function(m){ vObj.d2[m.key] = xlsxDate(row[m.col]); });
+            updated++;
+          } else {
+            var vObj = {id:noVal, no:noVal, pf:pf, pr:pr, rg:rg, tr:[], v:{}, d1:{n:'',p:''}, d2:{n:'',p:''}};
+            vMap.forEach(function(m){ var val = xlsxDate(row[m.col]); if(val) vObj.v[m.key] = val; });
+            var d1n = String(row[13]||'').trim(), d1p = String(row[14]||'').trim();
+            if(d1n) vObj.d1.n = d1n; if(d1p) vObj.d1.p = d1p;
+            d1Map.forEach(function(m){ var val = xlsxDate(row[m.col]); if(val) vObj.d1[m.key] = val; });
+            var d2n = String(row[22]||'').trim(), d2p = String(row[23]||'').trim();
+            if(d2n) vObj.d2.n = d2n; if(d2p) vObj.d2.p = d2p;
+            d2Map.forEach(function(m){ var val = xlsxDate(row[m.col]); if(val) vObj.d2[m.key] = val; });
+            noIndex[noVal] = _VEHICLES.length;
+            _VEHICLES.push(vObj);
+            added++;
+          }
+        }
+        var pct = 50 + Math.round((i - start) / (totalRows - start) * 48);
+        showXlsxProgress(Math.min(pct,98), 'กำลังประมวลผล...');
+        if(i < totalRows){
+          setTimeout(processBatch, 1);
         } else {
-          // เพิ่มรายการใหม่ต่อท้าย array
-          var vObj = {id:noVal, no:noVal, pf:pf, pr:pr, rg:rg, tr:[], v:{}, d1:{n:'',p:''}, d2:{n:'',p:''}};
-
-          vMap.forEach(function(m){
-            var val = xlsxDate(row[m.col]);
-            if(val) vObj.v[m.key] = val;
+          // เรียงลำดับ _VEHICLES ตาม NO
+          _VEHICLES.sort(function(a,b){
+            var na = parseInt((a.no||'').replace(/NO\.?\s*/i,'')) || 0;
+            var nb = parseInt((b.no||'').replace(/NO\.?\s*/i,'')) || 0;
+            return na - nb;
           });
-
-          var d1n = String(row[13]||'').trim();
-          var d1p = String(row[14]||'').trim();
-          if(d1n) vObj.d1.n = d1n;
-          if(d1p) vObj.d1.p = d1p;
-          d1Map.forEach(function(m){
-            var val = xlsxDate(row[m.col]);
-            if(val) vObj.d1[m.key] = val;
-          });
-
-          var d2n = String(row[22]||'').trim();
-          var d2p = String(row[23]||'').trim();
-          if(d2n) vObj.d2.n = d2n;
-          if(d2p) vObj.d2.p = d2p;
-          d2Map.forEach(function(m){
-            var val = xlsxDate(row[m.col]);
-            if(val) vObj.d2[m.key] = val;
-          });
-
-          noIndex[noVal] = _VEHICLES.length;
-          _VEHICLES.push(vObj);
-          added++;
+          showXlsxProgress(100, 'เสร็จเรียบร้อย!');
+          localStorage.setItem('_XLSX_LAST_UPLOAD', Date.now().toString());
+          document.getElementById('headerCount').textContent = _VEHICLES.length+' รายการ | '+fmtDate(new Date())+getUploadTs();
+          setTimeout(function(){ hideXlsxProgress(); showXlsxResult(added, updated, _VEHICLES.length); }, 300);
         }
       }
-
-      // เรียงลำดับ _VEHICLES ตาม NO (in-place ไม่ต้อง rebuild)
-      _VEHICLES.sort(function(a,b){
-        var na = parseInt((a.no||'').replace(/NO\.?\s*/i,'')) || 0;
-        var nb = parseInt((b.no||'').replace(/NO\.?\s*/i,'')) || 0;
-        return na - nb;
-      });
-
-      showXlsxResult(added, updated, _VEHICLES.length);
+      processBatch();
       // บันทึกเวลาอัปโหลด
       var _ulNow = new Date();
       localStorage.setItem('_XLSX_LAST_UPLOAD', _ulNow.getTime());
@@ -1259,66 +1276,6 @@ function downloadUpdatedJS(){
   URL.revokeObjectURL(url);
 }
 
-/* === ซิงก์ข้อมูลไป GAS (อัปเดต index.html อัตโนมัติ) === */
-function syncXlsxToGAS(){
-  var rows = [];
-  var labelMap = {
-    v:{tax:'ภาษี',to:'Thaioil SRC',es:'Esso SRC',pg:'PTT-GC',ll:'LLK Thappline',sr:'SRB Thappline',sp:'SPRC',ir:'IRPC IRY & AU'},
-    d1:{es:'Esso SRC',pg:'PTT-GC',ll:'LLK Thappline',sr:'SRB Thappline',sp:'SPRC',to:'Thaioil SRC',ir:'IRPC IRY & AU'},
-    d2:{es:'Esso SRC',pg:'PTT-GC',ll:'LLK Thappline',sr:'SRB Thappline',sp:'SPRC',to:'Thaioil SRC',ir:'IRPC IRY & AU'}
-  };
-
-  _VEHICLES.forEach(function(v){
-    if(!v || !v.v || !v.no) return;
-    var row = {'เบอร์รถ':v.no,'ทะเบียนหัว':v.pf||'','ทะเบียนหาง':v.pr||'','ธพน.2 หมดอายุบัตร':v.rg||''};
-    Object.keys(labelMap.v).forEach(function(k){ if(v.v[k]) row[labelMap.v[k]+' หมดอายุบัตร']=v.v[k]; });
-    rows.push({sheet:'รถ',data:row,editKey:''});
-    if(v.d1 && v.d1.n){
-      var d1row={'รหัสพนักงาน':'','เบอร์รถ':v.no,'ชื่อ':v.d1.n,'เบอร์โทร':v.d1.p||''};
-      Object.keys(labelMap.d1).forEach(function(k){ if(v.d1[k]) d1row[labelMap.d1[k]+' หมดอายุบัตร']=v.d1[k]; });
-      rows.push({sheet:'คน',data:d1row,editKey:''});
-    }
-    if(v.d2 && v.d2.n){
-      var d2row={'รหัสพนักงาน':'','เบอร์รถ':v.no,'ชื่อ':v.d2.n,'เบอร์โทร':v.d2.p||''};
-      Object.keys(labelMap.d2).forEach(function(k){ if(v.d2[k]) d2row[labelMap.d2[k]+' หมดอายุบัตร']=v.d2[k]; });
-      rows.push({sheet:'คน',data:d2row,editKey:''});
-    }
-  });
-
-  // ส่งทั้งหมดพร้อมกัน โดยใช้ POST เสมอ (force doPost ที่ GAS)
-  var statusEl = document.getElementById('xlsxGasStatus');
-  var total = rows.length, sent = 0, failed = 0;
-  if(statusEl) statusEl.innerHTML = '<span style="color:#64748b">⏳ ซิงก์ GAS... 0/'+total+'</span>';
-
-  function postOne(data){
-    return new Promise(function(resolve){
-      var x = new XMLHttpRequest();
-      x.open('POST', API);
-      x.onload = function(){
-        try { var d = JSON.parse(x.responseText); resolve(!d || d.error ? false : true); }
-        catch(e){ resolve(false); }
-      };
-      x.onerror = function(){ resolve(false); };
-      x.send(JSON.stringify(data));
-    });
-  }
-
-  Promise.all(rows.map(function(r){
-    return postOne(r).then(function(ok){
-      if(ok) sent++; else failed++;
-      if(statusEl && (sent+failed)%20===0){
-        statusEl.innerHTML = '<span style="color:#64748b">⏳ ซิงก์ GAS... '+sent+'/'+total+'</span>';
-      }
-    });
-  })).then(function(){
-    if(statusEl){
-      var txt = failed>0
-        ? '⚠️ ซิงก์ GAS '+sent+'/'+total+' รายการ (ล้มเหลว '+failed+')'
-        : '✅ ซิงก์ GAS เสร็จสิ้น '+total+' รายการ';
-      statusEl.innerHTML = '<span style="color:'+(failed>0?'#d97706':'#16a34a')+'">'+txt+'</span>';
-    }
-  });
-}
 </script>
 </body>
 </html>
