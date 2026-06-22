@@ -1257,10 +1257,65 @@ function showXlsxResult(added, updated, total){
       '<div style="margin-bottom:8px">➕ เพิ่มใหม่: <strong>'+added+'</strong> รายการ</div>'+
       '<div style="margin-bottom:8px">📊 รวม: <strong>'+total+'</strong> คัน</div>'+
       '<div id="xlsxGasStatus" style="margin-bottom:16px;padding:10px 12px;background:#f8fafc;border-radius:8px;font-size:13px">'+gasStatus+'</div>'+
-      '<button onclick="downloadUpdatedJS()" style="width:100%;padding:10px;background:#f1f5f9;color:#475569;border:1px solid #e2e8f0;border-radius:8px;font-size:13px;font-weight:500;cursor:pointer">⬇ ดาวน์โหลด data340_truck.js (สำรอง)</button>'+
-      '<button onclick="renderTable();updateExpiryBanner();updateExpiryTab();this.parentNode.parentNode.style.display=\'none\';document.getElementById(\'xlsxResultBackdrop\').style.display=\'none\'" style="width:100%;padding:10px;background:#2563eb;color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;margin-top:8px">👍 เสร็จแล้ว</button>'+
+      '<div style="display:flex;gap:8px"><button onclick="downloadUpdatedJS()" style="flex:1;padding:10px;background:#f1f5f9;color:#475569;border:1px solid #e2e8f0;border-radius:8px;font-size:13px;font-weight:500;cursor:pointer">⬇ ดาวน์โหลด</button>'+
+      '<button onclick="renderTable();updateExpiryBanner();updateExpiryTab();this.parentNode.parentNode.style.display=\'none\';document.getElementById(\'xlsxResultBackdrop\').style.display=\'none\'" style="flex:1;padding:10px;background:#2563eb;color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer">👍 เสร็จแล้ว</button></div>'+
     '</div>';
   document.getElementById('headerCount').textContent = _VEHICLES.length+' รายการ | '+fmtDate(_now)+getUploadTs();
+
+  // ส่งไป GAS แบบมี % ความคืบหน้า
+  syncToGAS(_VEHICLES, function(pct, done, total){
+    var el = document.getElementById('xlsxGasStatus');
+    if(!el) return;
+    if(pct < 0){
+      el.innerHTML = '<span style="color:#dc2626">⚠️ ส่งล้มเหลวบางส่วน ('+done+'/'+total+')</span>';
+    } else {
+      el.innerHTML = '<div style="display:flex;align-items:center;gap:8px"><span style="flex:1">⏳ กำลังส่งไปยัง GAS...</span><span style="font-weight:700;color:#16a34a">'+pct+'%</span></div>'+
+        '<div style="margin-top:6px;height:4px;background:#e2e8f0;border-radius:2px;overflow:hidden">'+
+        '<div style="height:100%;width:'+pct+'%;background:#16a34a;border-radius:2px;transition:width .2s"></div></div>'+
+        '<div style="margin-top:4px;font-size:11px;color:#94a3b8">ส่งแล้ว '+done+'/'+total+' รายการ</div>';
+    }
+  }).then(function(res){
+    var el = document.getElementById('xlsxGasStatus');
+    if(!el) return;
+    if(res && res.error){
+      el.innerHTML = '<span style="color:#dc2626">⚠️ ส่งล้มเหลว: '+res.error+'</span>';
+    } else {
+      var c = Number(res.created)||0, u = Number(res.updated)||0;
+      el.innerHTML = '<span style="color:#16a34a">✅ ส่ง GAS สำเร็จ (เพิ่ม '+c+' / อัปเดต '+u+')</span>';
+    }
+  });
+}
+
+function syncToGAS(items, onProgress){
+  var total = items.length;
+  if(!total) return Promise.resolve({created:0,updated:0});
+  var created = 0, updated = 0;
+  var batchSize = 10;
+  var i = 0;
+  return new Promise(function(resolve){
+    function sendBatch(){
+      var batch = items.slice(i, i + batchSize);
+      var start = i;
+      i += batch.length;
+      var body = JSON.stringify({data:batch});
+      var x = new XMLHttpRequest();
+      x.open('POST', API);
+      x.onload = function(){
+        try{var d=JSON.parse(x.responseText); created+=Number(d.created)||0; updated+=Number(d.updated)||0;}
+        catch(e){}
+        var pct = Math.min(99, Math.round(i/total*100));
+        if(onProgress) onProgress(pct, created+updated, total);
+        if(i < total) setTimeout(sendBatch, 10);
+        else resolve({created:created, updated:updated});
+      };
+      x.onerror = function(){
+        if(onProgress) onProgress(-1, created+updated, total);
+        resolve({created:created, updated:updated, error:'network error'});
+      };
+      x.send(body);
+    }
+    sendBatch();
+  });
 }
 
 function downloadUpdatedJS(){
