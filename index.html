@@ -5,8 +5,7 @@
     <meta name="viewport" content="width=device-width,initial-scale=1.0">
     <title>ระบบติดตามบัตร พขร.</title>
     <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
-  <script>
+    <script>
   // บอก Tesseract.js ให้ใช้ non-SIMD core (兼容性更好)
   if(typeof Tesseract !== 'undefined' && Tesseract.setWasmPath){
     Tesseract.setWasmPath('https://cdn.jsdelivr.net/npm/tesseract.js-core@5/tesseract-core.wasm.js');
@@ -108,7 +107,7 @@
     <body>
     <div class="app">
 
-    <div class="header">
+<div class="header">
       <h1>ระบบติดตามบัตร <span>พขร.</span></h1>
       <p>จัดการบัตรประจําตัวรถและพนักงานขับรถ</p>
       <button class="admin-btn" id="adminBtn" onclick="showLogin()">🔐</button>
@@ -133,6 +132,7 @@
         <button class="admin-tab active" onclick="switchAdminTab('veh',this)">🚛 เบอร์รถ</button>
         <button class="admin-tab" onclick="switchAdminTab('emp',this)">👤 รหัสพนักงาน</button>
         <button class="admin-tab" onclick="switchAdminTab('data',this)">📋 ข้อมูล</button>
+        <button onclick="window.open('check_data_340.html','_blank')" style="margin-left:auto;background:#1e40af;color:#fff;border:none;border-radius:8px;padding:8px 16px;font-size:13px;cursor:pointer;font-family:Prompt,sans-serif;white-space:nowrap">📊 ตรวจสอบบัตร</button>
       </div>
 
       <!-- Vehicle management -->
@@ -161,6 +161,9 @@
       <!-- Data view -->
       <div class="admin-section" id="adminData">
         <div style="font-size:13px;color:#64748b;margin-bottom:8px">ข้อมูลที่บันทึกแล้ว</div>
+        <div style="display:flex;gap:8px;margin-bottom:10px">
+          <input id="adminSearch" placeholder="ค้นหา... (ชื่อ/เบอร์รถ/รหัส/เบอร์โทร)" oninput="filterAdminData(this.value)" style="flex:1;padding:10px 14px;border:2px solid #d1d5db;border-radius:10px;font-size:14px;font-family:Prompt,sans-serif;outline:none;background:#fafafa">
+        </div>
         <div style="display:flex;gap:8px;margin-bottom:10px">
           <button class="admin-tab" onclick="switchAdminDataTab('รถ',this)" style="background:#fff;border:1px solid #e2e8f0;padding:6px 14px;border-radius:8px;cursor:pointer;font-size:13px;font-family:Prompt,sans-serif">🚚 รถ</button>
           <button class="admin-tab active" onclick="switchAdminDataTab('คน',this)" style="background:#fff;border:1px solid #e2e8f0;padding:6px 14px;border-radius:8px;cursor:pointer;font-size:13px;font-family:Prompt,sans-serif;background:#0f172a;color:#fff">🧑 คน</button>
@@ -288,7 +291,7 @@
 
     <script>
     // *** วาง URL จาก Apps Script Deploy ตรงนี้ ***
-    const API = 'https://script.google.com/macros/s/AKfycbyuU-gGfMhIMKlEHbiRTd01Tcd2JGeXIDybGkg9VWPCEMJl6OsUf2qrCAgVudJ_Bg6v1A/exec';
+    const API = 'https://script.google.com/macros/s/AKfycbxanr5YCS0r3RILFFR4s0Ajm4k5K429rBHHPoVaUjc3mXTX0LC-5IgR3YXDi8JEzgWbmg/exec';
 
     function $(id){return document.getElementById(id)}
     function goM(){$('pageMenu').className='page active';$('pageV').className='page';$('pageD').className='page';loadR()}
@@ -369,7 +372,6 @@
       });
     });
 
-    var editKeyV='',editKeyD='',editImgsV='',editImgsD='';
 
     function clr(){
       ['v_ber','v_hua','v_hang','v_tho_e','v_pasi_e',
@@ -378,8 +380,8 @@
       'd_c1_e','d_c2_e','d_c3_e','d_c4_e','d_c5_e','d_c6_e','d_c7_e'].forEach(function(id){$(id).value=''});
       $('vMode').textContent='อัพบัตรรถ';
       $('dMode').textContent='อัพบัตรคน';
-      editKeyV='';editKeyD='';editImgsV='';editImgsD='';
-      removeImgs('v');removeImgs('d');
+      $('v_img').value='';$('v_preview').innerHTML='';$('v_imgCount').textContent='';
+      $('d_img').value='';$('d_preview').innerHTML='';$('d_imgCount').textContent='';
     }
     function apiGet(params){
       var url=API+'?'+Object.keys(params).map(function(k){
@@ -568,213 +570,11 @@
         var reader=new FileReader();
         reader.onload=function(e){
           var div=document.createElement('div');div.className='preview-item';
-          div.innerHTML='<img src="'+e.target.result+'"><button class="del" onclick="removeImgs(\''+prefix+'\')">\u00D7</button>';
+          div.innerHTML='<img src="'+e.target.result+'">';
           container.appendChild(div);
         };
         reader.readAsDataURL(f);
       });
-      // OCR \u0E2D\u0E31\u0E15\u0E42\u0E19\u0E21\u0E31\u0E15\u0E34\u0E40\u0E21\u0E37\u0E48\u0E2D\u0E40\u0E25\u0E37\u0E2D\u0E01\u0E23\u0E39\u0E1B
-      setTimeout(function(){autoRunOCR(prefix)},800);
-    }
-    function removeImgs(prefix){
-      $(prefix+'_img').value='';$(prefix+'_preview').innerHTML='';$(prefix+'_imgCount').textContent='';
-    }
-
-    // ==== OCR Auto-fill (\u0E2D\u0E48\u0E32\u0E19\u0E1A\u0E31\u0E15\u0E23\u0E2D\u0E31\u0E15\u0E42\u0E19\u0E21\u0E31\u0E15\u0E34) ====
-
-    function readFileAsDataURL(file){
-      return new Promise(function(resolve,reject){
-        var r=new FileReader();
-        r.onload=function(e){resolve(e.target.result)};
-        r.onerror=function(){reject('read error')};
-        r.readAsDataURL(file);
-      });
-    }
-
-    async function autoRunOCR(prefix){
-      var input=$(prefix+'_img');
-      var files=input.files;
-      if(!files||files.length===0) return;
-      toast('\u0E01\u0E33\u0E25\u0E31\u0E07\u0E2D\u0E48\u0E32\u0E19\u0E1A\u0E31\u0E15\u0E23...');
-      try{
-        var usePy=false;
-        try{var r=await fetch(PYTHON_OCR+'/ping');if(r.ok) usePy=true;}catch(e){}
-        var allIds=prefix==='v'?['v_c1_e','v_c2_e','v_c3_e','v_c4_e','v_c5_e','v_c6_e','v_c7_e','v_tho_e','v_pasi_e']:['d_c1_e','d_c2_e','d_c3_e','d_c4_e','d_c5_e','d_c6_e'];
-        var filled=0;
-        for(var i=0;i<files.length;i++){
-          var dataUrl=await readFileAsDataURL(files[i]);
-          if(usePy){
-            try{
-              var j=await callPythonOCR(dataUrl);
-              console.log('[OCR] result:',j);
-              // show OCR result for debugging (always)
-              var preview=$(prefix+'_preview');
-              if(preview){
-                var d=document.createElement('div');
-                d.style.cssText='background:#f5f5f5;padding:4px 8px;margin:2px 0;font-size:11px;border-radius:3px;border-left:3px solid '+(j.expiry?'#4caf50':'#f44336')+';white-space:pre-wrap;word-break:break-all';
-                var info='['+files[i].name+']';
-                if(j.expiry) info+=' \u2705 '+j.expiry;
-                else info+=' \u274C no date';
-                if(j.card_type) info+=' | '+j.card_type;
-                if(j.text) info+=' | OCR: '+(j.text||'').substring(0,80);
-                // raw debug: show ALL OCR text so user sees what Tesseract reads
-                if(!j.expiry && j.debug){
-                  var rawTexts=Object.values(j.debug).filter(Boolean).join(' | ');
-                  if(rawTexts) info+='\nRAW: '+rawTexts.substring(0,300);
-                }
-                d.textContent=info;
-                preview.appendChild(d);
-              }
-              if(j.expiry){
-                // card_type mapping — ส่งเข้าฟิลด์ที่ตรงกัน
-                var CARD_FIELD_MAP={
-                  'v':{
-                    'Thaioil SRC':'v_c1_e','Esso SRC':'v_c2_e','PTT-GC':'v_c3_e',
-                    'LLK Thappline':'v_c4_e','SRB Thappline':'v_c5_e','SPRC':'v_c6_e',
-                    'IRPC':'v_c7_e','ธพน.2':'v_tho_e','ภาษี':'v_pasi_e'
-                  },
-                  'd':{
-                    'Esso SRC':'d_c1_e','PTT-GC':'d_c2_e','LLK Thappline':'d_c3_e',
-                    'SRB Thappline':'d_c4_e','SPRC':'d_c5_e','Thaioil SRC':'d_c6_e',
-                    'IRPC':'d_c7_e'
-                  }
-                };
-                var target=null;
-                var map=CARD_FIELD_MAP[prefix]||{};
-                if(j.card_type && map[j.card_type]){
-                  target=map[j.card_type]; // ใช้ card_type จับคู่ฟิลด์
-                }else{
-                  // fallback sequential (กรณีไม่รู้จัก card_type)
-                  for(var fi=0;fi<allIds.length;fi++){var el=$(allIds[fi]);if(el&&!el.value.trim()){target=allIds[fi];break}}
-                }
-                if(target&&$(target)){
-                  $(target).value=normalizeDate(j.expiry);
-                  filled++;
-                }
-              }
-            }catch(e){}
-          }
-        }
-        if(filled>0) toast('\u2705 \u0E2D\u0E48\u0E32\u0E19\u0E1E\u0E1A '+filled+' \u0E23\u0E32\u0E22\u0E01\u0E32\u0E23');
-      }catch(e){console.log('OCR error:',e)}
-    }
-
-    function extractExpiry(text){
-      // 05/05/2028
-      var m=text.match(/(\d{2})\/(\d{2})\/(20\d{2}|25\d{2})/g);
-      if(m){
-        // เลือกวันที่ล่าสุด (มักเป็นวันหมดอายุ)
-        return m[m.length - 1];
-      }
-      // 08 ต.ค. 2570
-      m=text.match(/(\d{1,2})\s*(ม\.ค\.|ก\.พ\.|มี\.ค\.|เม\.ย\.|พ\.ค\.|มิ\.ย\.|ก\.ค\.|ส\.ค\.|ก\.ย\.|ต\.ค\.|พ\.ย\.|ธ\.ค\.)\s*(25\d{2})/);
-      if(m){
-        var monthMap={
-          'ม.ค.':'01','ก.พ.':'02','มี.ค.':'03','เม.ย.':'04',
-          'พ.ค.':'05','มิ.ย.':'06','ก.ค.':'07','ส.ค.':'08',
-          'ก.ย.':'09','ต.ค.':'10','พ.ย.':'11','ธ.ค.':'12'
-        };
-        return m[1].padStart(2,'0')+'/'+monthMap[m[2]]+'/'+m[3];
-      }
-      // 28 ธันวาคม 2569
-      m=text.match(/(\d{1,2})\s*(มกราคม|กุมภาพันธ์|มีนาคม|เมษายน|พฤษภาคม|มิถุนายน|กรกฎาคม|สิงหาคม|กันยายน|ตุลาคม|พฤศจิกายน|ธันวาคม)\s*(25\d{2})/);
-      if(m){
-        var monthMap={
-          'มกราคม':'01','กุมภาพันธ์':'02','มีนาคม':'03',
-          'เมษายน':'04','พฤษภาคม':'05','มิถุนายน':'06',
-          'กรกฎาคม':'07','สิงหาคม':'08','กันยายน':'09',
-          'ตุลาคม':'10','พฤศจิกายน':'11','ธันวาคม':'12'
-        };
-        return m[1].padStart(2,'0')+'/'+monthMap[m[2]]+'/'+m[3];
-      }
-      return null;
-    }
-
-    var TESS_WORKER=null;
-    var PYTHON_OCR='http://localhost:5051';  // Python OCR server
-    var USE_PYTHON_OCR=false;
-
-    function checkPythonOCR(){
-      return fetch(PYTHON_OCR+'/ping').then(function(r){
-        if(r.ok) USE_PYTHON_OCR=true;
-      }).catch(function(){USE_PYTHON_OCR=false});
-    }
-    function callPythonOCR(dataUrl){
-      var b64=dataUrl.split(',')[1];
-      return fetch(PYTHON_OCR+'/ocr',{
-        method:'POST',
-        headers:{'Content-Type':'application/json'},
-        body:JSON.stringify({image:b64})
-      }).then(function(r){return r.json()}).then(function(j){
-        if(j.error) throw new Error(j.error);
-        return j;  // return {text, expiry}
-      });
-    }
-
-    function getTessWorker(){
-      if(TESS_WORKER) return Promise.resolve(TESS_WORKER);
-      toast('.');
-      return Tesseract.createWorker('tha+eng',1,{
-        corePath:'https://cdn.jsdelivr.net/npm/tesseract.js-core@5/tesseract-core.wasm.js',
-        logger:function(){}
-      }).then(function(w){TESS_WORKER=w;toast('');return w});
-    }
-    function tesseractOCR(dataUrl){
-      if(!dataUrl) return Promise.resolve('');
-      return getTessWorker().then(function(w){
-        return w.recognize(dataUrl).then(function(r){return r.data.text});
-      });
-    }
-    // Pre-load OCR
-    window.addEventListener('DOMContentLoaded',function(){
-      checkPythonOCR().then(function(){if(USE_PYTHON_OCR)console.log('')});
-      setTimeout(getTessWorker,2000);
-    });
-
-    function parseCardText(text){
-      var lower=text.toLowerCase();
-      var cards=[
-        {kw:['\u0E18\u0E1E\u0E19.2','\u0E18\u0E1E\u0E19 2','\u0E18\u0E1E\u0E19'],type:'\u0E18\u0E1E\u0E19.2'},
-        {kw:['\u0E20\u0E32\u0E29\u0E35','\u0E20\u0E32\u0E29'],type:'\u0E20\u0E32\u0E29\u0E35'},
-        {kw:['thaioil','\u0E44\u0E17\u0E22\u0E2D\u0E49\u0E2D\u0E22','\u0E44\u0E17\u0E22\u0E2D\u0E49\u0E2D\u0E22\u0E25\u0E4C'],type:'Thaioil SRC'},
-        {kw:['esso','\u0E40\u0E2D\u0E2A\u0E42\u0E0B'],type:'Esso SRC'},
-        {kw:['ptt-gc','ptt gc','ptt','\u0E1E\u0E35\u0E17\u0E35\u0E17\u0E35'],type:'PTT-GC'},
-        {kw:['llk thappline','llk','\u0E41\u0E2D\u0E25\u0E41\u0E2D\u0E25\u0E40\u0E04'],type:'LLK Thappline'},
-        {kw:['srb thappline','srb'],type:'SRB Thappline'},
-        {kw:['sprc'],type:'SPRC'},
-        {kw:['irpc iry','irpc au','irpc','iry'],type:'IRPC'}
-      ];
-      var mt=null;
-      cards.forEach(function(c){c.kw.forEach(function(k){if(lower.indexOf(k)>=0)mt=c.type})});
-      if(!mt) return null;
-      var exp=extractExpiry(text)||'';
-      return {card_type:mt,expiry:exp};
-    }
-
-    function mapCardFieldV(type){
-      var t=type.toLowerCase();
-      if(t.indexOf('\u0E18\u0E1E\u0E19')>=0)return'v_tho_e';
-      if(t.indexOf('\u0E20\u0E32\u0E29')>=0)return'v_pasi_e';
-      if(t.indexOf('thaioil')>=0||t.indexOf('\u0E44\u0E17\u0E22\u0E2D\u0E49\u0E2D\u0E22')>=0)return'v_c1_e';
-      if(t.indexOf('esso')>=0)return'v_c2_e';
-      if(t.indexOf('ptt')>=0)return'v_c3_e';
-      if(t.indexOf('llk')>=0)return'v_c4_e';
-      if(t.indexOf('srb')>=0)return'v_c5_e';
-      if(t.indexOf('sprc')>=0)return'v_c6_e';
-      if(t.indexOf('irpc')>=0||t.indexOf('iry')>=0)return'v_c7_e';
-      return null;
-    }
-
-    function mapCardFieldD(type){
-      var t=type.toLowerCase();
-      if(t.indexOf('esso')>=0)return'd_c1_e';
-      if(t.indexOf('ptt')>=0)return'd_c2_e';
-      if(t.indexOf('llk')>=0)return'd_c3_e';
-      if(t.indexOf('srb')>=0)return'd_c4_e';
-      if(t.indexOf('sprc')>=0)return'd_c5_e';
-      if(t.indexOf('thaioil')>=0||t.indexOf('\u0E44\u0E17\u0E22\u0E2D\u0E49\u0E2D\u0E22')>=0)return'd_c6_e';
-      if(t.indexOf('irpc')>=0||t.indexOf('iry')>=0)return'd_c7_e';
-      return null;
     }
 
     function readImgs(prefix){
@@ -782,14 +582,10 @@
         var input=$(prefix+'_img');var files=input.files;
         if(!files||files.length===0){resolve([]);return}
         var results=[];
-
         function readNext(idx){
           if(idx>=files.length){resolve(results);return}
           var r=new FileReader();
-          r.onload=function(e){
-            results.push(e.target.result);
-            readNext(idx+1);
-          };
+          r.onload=function(e){results.push(e.target.result);readNext(idx+1)};
           r.onerror=function(){readNext(idx+1)};
           r.readAsDataURL(files[idx]);
         }
@@ -798,80 +594,63 @@
     }
 
     async function saveV(){
-      var btn=$('btnSaveV');btn.disabled=true;btn.innerHTML='<span class="spinner"></span>กำลังบันทึก...';
+      var btn=$('btnSaveV');btn.disabled=true;btn.innerHTML='<span class="spinner"></span>\u0E01\u0E33\u0E25\u0E31\u0E07\u0E1A\u0E31\u0E19\u0E17\u0E36\u0E01...';
       var ber=g('v_ber');
-      if(!ber||ber.length<3){toast('กรุณากรอกเบอร์รถให้ครบ 3 หลัก');btn.disabled=false;btn.innerHTML='💾 บันทึกข้อมูลรถ';return}
+      if(!ber||ber.length<3){toast('\u0E01\u0E23\u0E38\u0E13\u0E32\u0E01\u0E23\u0E2D\u0E01\u0E40\u0E1A\u0E2D\u0E23\u0E4C\u0E23\u0E16\u0E43\u0E2B\u0E49\u0E04\u0E23\u0E1A 3 \u0E2B\u0E25\u0E31\u0E01');btn.disabled=false;btn.innerHTML='\uD83D\uDCBE \u0E1A\u0E31\u0E19\u0E17\u0E36\u0E01\u0E02\u0E49\u0E2D\u0E21\u0E39\u0E25\u0E23\u0E16';return}
       var veh=VEHICLE_DATA[ber];
-      if(!veh){toast('❌ เบอร์ '+ber+' ไม่มีในระบบ');btn.disabled=false;btn.innerHTML='💾 บันทึกข้อมูลรถ';return}
-      ['v_hua','v_hang'].forEach(function(id){
-        var el=$(id);if(!el||!el.value)return;
-        var fmt=$(id.replace('v_h','v_fmt_h'));var n=fmt&&fmt.value==='3'?3:2;
-        var raw=el.value.replace(/[^0-9]/g,'').slice(0,n+4);
-        if(raw.length>n) raw=raw.slice(0,n)+'-'+raw.slice(n);
-        var isFront=id==='v_hua';
-        var expected=isFront?veh.h:veh.b;
-        if(expected&&raw!==expected){
-          toast('❌ ทะเบียน'+ (isFront?'หัว':'หาง') +' ไม่ตรงกับเบอร์ '+ber+' (ต้องเป็น '+expected+')');
-          btn.disabled=false;btn.innerHTML='💾 บันทึกข้อมูลรถ';throw'stop'
-        }
-      });
+      if(!veh){toast('\u2755 \u0E40\u0E1A\u0E2D\u0E23\u0E4C '+ber+' \u0E44\u0E21\u0E48\u0E21\u0E35\u0E43\u0E19\u0E23\u0E30\u0E1A\u0E1A');btn.disabled=false;btn.innerHTML='\uD83D\uDCBE \u0E1A\u0E31\u0E19\u0E17\u0E36\u0E01\u0E02\u0E49\u0E2D\u0E21\u0E39\u0E25\u0E23\u0E16';return}
       var data={
-        'เบอร์รถ':ber,'จังหวัด':g('v_province'),'ทะเบียนหัว':g('v_hua'),'ทะเบียนหาง':g('v_hang'),
-        'ธพน.2 หมดอายุบัตร':normalizeDate(g('v_tho_e')),
-        'ภาษี หมดอายุบัตร':normalizeDate(g('v_pasi_e')),
-        'Thaioil SRC หมดอายุบัตร':normalizeDate(g('v_c1_e')),
-        'Esso SRC หมดอายุบัตร':normalizeDate(g('v_c2_e')),
-        'PTT-GC หมดอายุบัตร':normalizeDate(g('v_c3_e')),
-        'LLK Thappline หมดอายุบัตร':normalizeDate(g('v_c4_e')),
-        'SRB Thappline หมดอายุบัตร':normalizeDate(g('v_c5_e')),
-        'SPRC หมดอายุบัตร':normalizeDate(g('v_c6_e')),
-        'IRPC IRY & AU หมดอายุบัตร':normalizeDate(g('v_c7_e'))
+        '\u0E40\u0E1A\u0E2D\u0E23\u0E4C\u0E23\u0E16':ber,'\u0E08\u0E31\u0E07\u0E2B\u0E27\u0E31\u0E14':g('v_province'),'\u0E17\u0E30\u0E40\u0E1A\u0E35\u0E22\u0E19\u0E2B\u0E31\u0E27':g('v_hua'),'\u0E17\u0E30\u0E40\u0E1A\u0E35\u0E22\u0E19\u0E2B\u0E32\u0E07':g('v_hang'),
+        '\u0E18\u0E1E\u0E19.2 \u0E2B\u0E21\u0E14\u0E2D\u0E32\u0E22\u0E38\u0E1A\u0E31\u0E15\u0E23':normalizeDate(g('v_tho_e')),
+        '\u0E20\u0E32\u0E29\u0E35 \u0E2B\u0E21\u0E14\u0E2D\u0E32\u0E22\u0E38\u0E1A\u0E31\u0E15\u0E23':normalizeDate(g('v_pasi_e')),
+        'Thaioil SRC \u0E2B\u0E21\u0E14\u0E2D\u0E32\u0E22\u0E38\u0E1A\u0E31\u0E15\u0E23':normalizeDate(g('v_c1_e')),
+        'Esso SRC \u0E2B\u0E21\u0E14\u0E2D\u0E32\u0E22\u0E38\u0E1A\u0E31\u0E15\u0E23':normalizeDate(g('v_c2_e')),
+        'PTT-GC \u0E2B\u0E21\u0E14\u0E2D\u0E32\u0E22\u0E38\u0E1A\u0E31\u0E15\u0E23':normalizeDate(g('v_c3_e')),
+        'LLK Thappline \u0E2B\u0E21\u0E14\u0E2D\u0E32\u0E22\u0E38\u0E1A\u0E31\u0E15\u0E23':normalizeDate(g('v_c4_e')),
+        'SRB Thappline \u0E2B\u0E21\u0E14\u0E2D\u0E32\u0E22\u0E38\u0E1A\u0E31\u0E15\u0E23':normalizeDate(g('v_c5_e')),
+        'SPRC \u0E2B\u0E21\u0E14\u0E2D\u0E32\u0E22\u0E38\u0E1A\u0E31\u0E15\u0E23':normalizeDate(g('v_c6_e')),
+        'IRPC IRY & AU \u0E2B\u0E21\u0E14\u0E2D\u0E32\u0E22\u0E38\u0E1A\u0E31\u0E15\u0E23':normalizeDate(g('v_c7_e'))
       };
-      var newImgs=await readImgs('v');
-      if(newImgs.length) data['รูปเอกสาร_base64']=newImgs;
-      else if(editImgsV) data['รูปเอกสาร']=editImgsV;
       try{
-        var res=await apiPost({sheet:'รถ',data:data,editKey:editKeyV});
-        if(res.error){toast('ผิดพลาด: '+res.error);btn.disabled=false;btn.innerHTML='💾 บันทึกข้อมูลรถ';return}
-        toast((res.updated?'อัปเดตเบอร์ '+ber:'บันทึกเบอร์ '+ber)+' | รูป: '+((res.created||res.updated)?'ok':'บันทึก'));
+        var newImgs=await readImgs('v');
+        if(newImgs.length) data['\u0E23\u0E39\u0E1B\u0E40\u0E2D\u0E01\u0E2A\u0E32\u0E23_base64']=newImgs;
+        var res=await apiPost({sheet:'\u0E23\u0E16',data:data,editKey:''});
+        if(res.error){toast('\u0E1C\u0E34\u0E14\u0E1E\u0E25\u0E32\u0E14: '+res.error);btn.disabled=false;btn.innerHTML='\u0E1A\u0E31\u0E19\u0E17\u0E36\u0E01\u0E02\u0E49\u0E2D\u0E21\u0E39\u0E25\u0E23\u0E16';return}
+        toast('\u0E1A\u0E31\u0E19\u0E17\u0E36\u0E01\u0E40\u0E1A\u0E2D\u0E23\u0E4C '+ber+' \u0E40\u0E23\u0E35\u0E22\u0E1A\u0E23\u0E49\u0E2D\u0E22');
         clr();setTimeout(loadR,100);
-      }catch(e){toast('เกิดข้อผิดพลาด กรุณาลองใหม่')}
-      btn.disabled=false;btn.innerHTML='💾 บันทึกข้อมูลรถ';
+      }catch(e){toast('\u0E40\u0E01\u0E34\u0E14\u0E02\u0E49\u0E2D\u0E1C\u0E34\u0E14\u0E1E\u0E25\u0E32\u0E14 \u0E01\u0E23\u0E38\u0E13\u0E32\u0E25\u0E2D\u0E07\u0E43\u0E2B\u0E21\u0E48')}
+      btn.disabled=false;btn.innerHTML='\uD83D\uDCBE \u0E1A\u0E31\u0E19\u0E17\u0E36\u0E01\u0E02\u0E49\u0E2D\u0E21\u0E39\u0E25\u0E23\u0E16';
     }
 
-    // ==== SAVE DRIVER ====
     async function saveD(){
-      var btn=$('btnSaveD');btn.disabled=true;btn.innerHTML='<span class="spinner"></span>กำลังบันทึก...';
+      var btn=$('btnSaveD');btn.disabled=true;btn.innerHTML='<span class="spinner"></span>\u0E01\u0E33\u0E25\u0E31\u0E07\u0E1A\u0E31\u0E19\u0E17\u0E36\u0E01...';
       var name=g('d_name');
-      if(!name){toast('กรุณากรอกชื่อ');btn.disabled=false;btn.innerHTML='💾 บันทึกข้อมูลพนักงาน';return}
+      if(!name){toast('\u0E01\u0E23\u0E38\u0E13\u0E32\u0E01\u0E23\u0E2D\u0E01\u0E0A\u0E37\u0E48\u0E2D');btn.disabled=false;btn.innerHTML='\u0E1A\u0E31\u0E19\u0E17\u0E36\u0E01\u0E02\u0E49\u0E2D\u0E21\u0E39\u0E25\u0E1E\u0E19\u0E31\u0E01\u0E07\u0E32\u0E19';return}
       var phone=g('d_phone');
       if(phone&&phone.length==9){phone='0'+phone;g('d_phone').value=phone}
       var ber=g('d_ber');
-      if(ber&&ber.length<3){toast('กรุณากรอกเบอร์รถให้ครบ 3 หลัก');btn.disabled=false;btn.innerHTML='💾 บันทึกข้อมูลพนักงาน';return}
-      if(!ber&&!phone){toast('กรุณากรอกข้อมูล');btn.disabled=false;btn.innerHTML='💾 บันทึกข้อมูลพนักงาน';return}
       var code=g('d_code');
-      if(!code||code.length<4){toast('กรุณากรอกรหัสพนักงาน 4 หลัก');btn.disabled=false;btn.innerHTML='💾 บันทึกข้อมูลพนักงาน';return}
-      if(EMP_LIST.indexOf(code)<0){toast('❌ รหัส '+code+' ไม่มีในระบบ');btn.disabled=false;btn.innerHTML='💾 บันทึกข้อมูลพนักงาน';return}
+      if(!code||code.length<4){toast('\u0E01\u0E23\u0E38\u0E13\u0E32\u0E01\u0E23\u0E2D\u0E01\u0E23\u0E2B\u0E31\u0E2A\u0E1E\u0E19\u0E31\u0E01\u0E07\u0E32\u0E19 4 \u0E2B\u0E25\u0E31\u0E01');btn.disabled=false;btn.innerHTML='\u0E1A\u0E31\u0E19\u0E17\u0E36\u0E01\u0E02\u0E49\u0E2D\u0E21\u0E39\u0E25\u0E1E\u0E19\u0E31\u0E01\u0E07\u0E32\u0E19';return}
+      if(EMP_LIST.indexOf(code)<0){toast('\u2755 \u0E23\u0E2B\u0E31\u0E2A '+code+' \u0E44\u0E21\u0E48\u0E21\u0E35\u0E43\u0E19\u0E23\u0E30\u0E1A\u0E1A');btn.disabled=false;btn.innerHTML='\u0E1A\u0E31\u0E19\u0E17\u0E36\u0E01\u0E02\u0E49\u0E2D\u0E21\u0E39\u0E25\u0E1E\u0E19\u0E31\u0E01\u0E07\u0E32\u0E19';return}
       var data={
-        'รหัสพนักงาน':code,'เบอร์รถ':ber,'ชื่อ':name,'เบอร์โทร':phone.replace(/^0+/, ''),
-        'Esso SRC หมดอายุบัตร':normalizeDate(g('d_c1_e')),
-        'PTT-GC หมดอายุบัตร':normalizeDate(g('d_c2_e')),
-        'LLK Thappline หมดอายุบัตร':normalizeDate(g('d_c3_e')),
-        'SRB Thappline หมดอายุบัตร':normalizeDate(g('d_c4_e')),
-        'SPRC หมดอายุบัตร':normalizeDate(g('d_c5_e')),
-        'Thaioil SRC หมดอายุบัตร':normalizeDate(g('d_c6_e')),
-        'IRPC IRY & AU หมดอายุบัตร':normalizeDate(g('d_c7_e'))
+        '\u0E23\u0E2B\u0E31\u0E2A\u0E1E\u0E19\u0E31\u0E01\u0E07\u0E32\u0E19':code,'\u0E40\u0E1A\u0E2D\u0E23\u0E4C\u0E23\u0E16':ber,'\u0E0A\u0E37\u0E48\u0E2D':name,'\u0E40\u0E1A\u0E2D\u0E23\u0E4C\u0E42\u0E17\u0E23':phone.replace(/^0+/, ''),
+        'Esso SRC \u0E2B\u0E21\u0E14\u0E2D\u0E32\u0E22\u0E38\u0E1A\u0E31\u0E15\u0E23':normalizeDate(g('d_c1_e')),
+        'PTT-GC \u0E2B\u0E21\u0E14\u0E2D\u0E32\u0E22\u0E38\u0E1A\u0E31\u0E15\u0E23':normalizeDate(g('d_c2_e')),
+        'LLK Thappline \u0E2B\u0E21\u0E14\u0E2D\u0E32\u0E22\u0E38\u0E1A\u0E31\u0E15\u0E23':normalizeDate(g('d_c3_e')),
+        'SRB Thappline \u0E2B\u0E21\u0E14\u0E2D\u0E32\u0E22\u0E38\u0E1A\u0E31\u0E15\u0E23':normalizeDate(g('d_c4_e')),
+        'SPRC \u0E2B\u0E21\u0E14\u0E2D\u0E32\u0E22\u0E38\u0E1A\u0E31\u0E15\u0E23':normalizeDate(g('d_c5_e')),
+        'Thaioil SRC \u0E2B\u0E21\u0E14\u0E2D\u0E32\u0E22\u0E38\u0E1A\u0E31\u0E15\u0E23':normalizeDate(g('d_c6_e')),
+        'IRPC IRY & AU \u0E2B\u0E21\u0E14\u0E2D\u0E32\u0E22\u0E38\u0E1A\u0E31\u0E15\u0E23':normalizeDate(g('d_c7_e'))
       };
-      var newImgs=await readImgs('d');
-      if(newImgs.length) data['รูปเอกสาร_base64']=newImgs;
-      else if(editImgsD) data['รูปเอกสาร']=editImgsD;
       try{
-        var res=await apiPost({sheet:'คน',data:data,editKey:editKeyD});
-        if(res.error){toast('ผิดพลาด: '+res.error);btn.disabled=false;btn.innerHTML='💾 บันทึกข้อมูลพนักงาน';return}
-        toast((res.updated?'อัปเดต '+name:'บันทึก '+name)+' | รูป: '+((res.created||res.updated)?'ok':'บันทึก'));
+        var newImgs=await readImgs('d');
+        if(newImgs.length) data['\u0E23\u0E39\u0E1B\u0E40\u0E2D\u0E01\u0E2A\u0E32\u0E23_base64']=newImgs;
+        var res=await apiPost({sheet:'\u0E04\u0E19',data:data,editKey:''});
+        if(res.error){toast('\u0E1C\u0E34\u0E14\u0E1E\u0E25\u0E32\u0E14: '+res.error);btn.disabled=false;btn.innerHTML='\u0E1A\u0E31\u0E19\u0E17\u0E36\u0E01\u0E02\u0E49\u0E2D\u0E21\u0E39\u0E25\u0E1E\u0E19\u0E31\u0E01\u0E07\u0E32\u0E19';return}
+        toast('\u0E1A\u0E31\u0E19\u0E17\u0E36\u0E01 '+name+' \u0E40\u0E23\u0E35\u0E22\u0E1A\u0E23\u0E49\u0E2D\u0E22');
         clr();setTimeout(loadR,100);
-      }catch(e){toast('เกิดข้อผิดพลาด กรุณาลองใหม่')}
-      btn.disabled=false;btn.innerHTML='💾 บันทึกข้อมูลพนักงาน';
+      }catch(e){toast('\u0E40\u0E01\u0E34\u0E14\u0E02\u0E49\u0E2D\u0E1C\u0E34\u0E14\u0E1E\u0E25\u0E32\u0E14 \u0E01\u0E23\u0E38\u0E13\u0E32\u0E25\u0E2D\u0E07\u0E43\u0E2B\u0E21\u0E48')}
+      btn.disabled=false;btn.innerHTML='\u0E1A\u0E31\u0E19\u0E17\u0E36\u0E01\u0E02\u0E49\u0E2D\u0E21\u0E39\u0E25\u0E1E\u0E19\u0E31\u0E01\u0E07\u0E32\u0E19';
     }
 
     // ==== LOAD RECENT ====
@@ -895,7 +674,7 @@
               var escaped=hasImg.replace(/\\/g,'\\\\').replace(/'/g,"\\'").replace(/\n/g,'\\n');
               gal=' <span onclick="event.stopPropagation();openImgs(\''+escaped+'\')" style="display:inline-flex;align-items:center;gap:3px;padding:2px 8px;background:#e0f2fe;color:#0284c7;border-radius:20px;font-size:11px;cursor:pointer;font-weight:500;margin-left:6px">📷 '+imgCount+'</span>';
             }
-            html+='<div class="list-item" onclick="editV(\''+bs+'\')"><div><div class="main">'+b+gal+'</div></div><span style="font-size:11px;color:#64748b">'+exp+'</span></div>';
+            html+='<div class="list-item"><div><div class="main">'+b+gal+'</div></div><span style="font-size:11px;color:#64748b">'+exp+'</span></div>';
           });
           html+='</div>';
         }else{
@@ -913,7 +692,7 @@
               var escaped=hasImg.replace(/\\/g,'\\\\').replace(/'/g,"\\'").replace(/\n/g,'\\n');
               galD=' <span onclick="event.stopPropagation();openImgs(\''+escaped+'\')" style="display:inline-flex;align-items:center;gap:3px;padding:2px 8px;background:#e0f2fe;color:#0284c7;border-radius:20px;font-size:11px;cursor:pointer;font-weight:500;margin-left:6px">📷 '+imgCount+'</span>';
             }
-            html+='<div class="list-item" onclick="editD(\''+cs+'\')"><div><div class="main">'+n+galD+'</div></div></div>';
+            html+='<div class="list-item"><div><div class="main">'+n+galD+'</div></div></div>';
           });
           html+='</div>';
         }else{
@@ -925,50 +704,6 @@
       }catch(e){
         el.innerHTML='<div style="text-align:center;color:#ef4444;padding:20px">⚠️ โหลดไม่ได้ ตรวจสอบการเชื่อมต่อ</div>';
       }
-    }
-
-    // ==== EDIT VEHICLE ====
-    function editV(ber){
-      editKeyV=ber;
-      apiGet({sheet:'รถ',key:ber}).then(function(r){
-        if(!r||r.error)return;if(Array.isArray(r)){r=r[0]}else{r=r.data&&r.data[0]?r.data[0]:r}
-        if(!r||!r['เบอร์รถ'])return;
-        $('v_ber').value=r['เบอร์รถ']||'';
-        $('v_province').value=(r['จังหวัด']||'').indexOf('กทม')>=0?'กทม':'อื่น ๆ';
-        $('v_hua').value=r['ทะเบียนหัว']||'';$('v_hang').value=r['ทะเบียนหาง']||'';
-        $('v_tho_e').value=normalizeDate(r['ธพน.2 หมดอายุบัตร']||'');
-        $('v_pasi_e').value=normalizeDate(r['ภาษี หมดอายุบัตร']||'');
-        $('v_c1_e').value=normalizeDate(r['Thaioil SRC หมดอายุบัตร']||'');
-        $('v_c2_e').value=normalizeDate(r['Esso SRC หมดอายุบัตร']||'');
-        $('v_c3_e').value=normalizeDate(r['PTT-GC หมดอายุบัตร']||'');
-        $('v_c4_e').value=normalizeDate(r['LLK Thappline หมดอายุบัตร']||'');
-        $('v_c5_e').value=normalizeDate(r['SRB Thappline หมดอายุบัตร']||'');
-        $('v_c6_e').value=normalizeDate(r['SPRC หมดอายุบัตร']||'');
-        $('v_c7_e').value=normalizeDate(r['IRPC IRY & AU หมดอายุบัตร']||'');
-        editImgsV=r['รูปเอกสาร']||'';
-        $('vMode').textContent='แก้ไข เบอร์ '+ber;
-        goV();window.scrollTo({top:0,behavior:'smooth'});
-      });
-    }
-
-    // ==== EDIT DRIVER ====
-    function editD(code){
-      editKeyD=code;
-      apiGet({sheet:'คน',key:code}).then(function(r){
-        if(!r||r.error)return;if(Array.isArray(r)){r=r[0]}else{r=r.data&&r.data[0]?r.data[0]:r}
-        if(!r||!r['รหัสพนักงาน'])return;
-        $('d_code').value=r['รหัสพนักงาน']||'';$('d_ber').value=r['เบอร์รถ']||'';$('d_name').value=r['ชื่อ']||'';$('d_phone').value=r['เบอร์โทร']||'';
-        $('d_c1_e').value=normalizeDate(r['Esso SRC หมดอายุบัตร']||'');
-        $('d_c2_e').value=normalizeDate(r['PTT-GC หมดอายุบัตร']||'');
-        $('d_c3_e').value=normalizeDate(r['LLK Thappline หมดอายุบัตร']||'');
-        $('d_c4_e').value=normalizeDate(r['SRB Thappline หมดอายุบัตร']||'');
-        $('d_c5_e').value=normalizeDate(r['SPRC หมดอายุบัตร']||'');
-        $('d_c6_e').value=normalizeDate(r['Thaioil SRC หมดอายุบัตร']||'');
-        $('d_c7_e').value=normalizeDate(r['IRPC IRY & AU หมดอายุบัตร']||'');
-        editImgsD=r['รูปเอกสาร']||'';
-        $('dMode').textContent='แก้ไข '+(r['ชื่อ']||'');
-        goD();window.scrollTo({top:0,behavior:'smooth'});
-      });
     }
 
     // ==== IMAGE VIEWER ====
@@ -990,16 +725,16 @@
     }
 
     loadR();
-    
     // ==== ADMIN ====
     function showLogin(){$('loginModal').classList.add('show');$('adminUser').focus()}
     function hide(id){$(id).classList.remove('show')}
     function doLogin(){
       var u=$('adminUser').value.trim(),p=$('adminPass').value.trim();
-      if(u==='tha1234'&&p==='4858'){
-        hide('loginModal');$('adminPanel').classList.add('show');$('adminBtn').classList.add('ok');
-        renderAdminVeh();renderAdminEmp();
-      }else{toast('❌ Username หรือ Password ไม่ถูกต้อง')}
+      if(!u||!p){toast('❌ กรุณากรอก Username และ Password');return}
+      apiPost({admin:'login',user:u,pass:p}).then(function(res){
+        if(res&&res.ok){hide('loginModal');$('adminPanel').classList.add('show');$('adminBtn').classList.add('ok');renderAdminVeh();renderAdminEmp()}
+        else{toast('❌ Username หรือ Password ไม่ถูกต้อง')}
+      }).catch(function(){toast('❌ ไม่สามารถติดต่อระบบได้')});
     }
     function doLogout(){$('adminPanel').classList.remove('show');$('adminBtn').classList.remove('ok')}
     function switchAdminTab(tab,btn){
@@ -1011,31 +746,52 @@
       else{$('adminData').classList.add('show');renderAdminData()}
     }
     
+    function renderAdminDataList(arr){
+      var el=$('adminDataList');
+      if(!arr||!arr.length){el.innerHTML='<div style="color:#94a3b8;font-size:13px;padding:10px">\u0e44\u0e21\u0e48\u0e21\u0e35\u0e02\u0e49\u0e2d\u0e21\u0e39\u0e25</div>';return}
+      var h='';
+      arr.slice().reverse().forEach(function(r){
+        var name=r['\u0e0a\u0e37\u0e48\u0e2d']||'',code=r['\u0e23\u0e2b\u0e31\u0e2a\u0e1e\u0e19\u0e31\u0e01\u0e07\u0e32\u0e19']||'',ber=r['\u0e40\u0e1a\u0e2d\u0e23\u0e4c\u0e23\u0e16']||'',phone=r['\u0e40\u0e1a\u0e2d\u0e23\u0e4c\u0e42\u0e17\u0e23']||'';
+        var imgs=r['\u0e23\u0e39\u0e1b\u0e40\u0e2d\u0e01\u0e2a\u0e32\u0e23']||'';var gal='';
+        if(imgs){
+          var cnt=imgs.split(/[\n,]+/).filter(function(x){return x.trim()}).length;
+          var esc=imgs.replace(/\\/g,'\\\\').replace(/'/g,"\\'").replace(/\n/g,'\\n');
+          gal=' <span onclick="event.stopPropagation();openImgs(\''+esc+'\')" style="display:inline-flex;align-items:center;gap:3px;padding:2px 8px;background:#e0f2fe;color:#0284c7;border-radius:20px;font-size:11px;cursor:pointer;font-weight:500">\uD83D\uDCF7 '+cnt+'</span>';
+        }
+        h+='<div class="list-item" style="cursor:default"><div><div class="main">'+(code?code+' | ':'')+name+gal+'</div><div style="font-size:11px;color:#64748b">'+(ber?'\uD83D\uDE9A '+ber:'')+(phone?' | \uD83D\uDCF1 '+phone:'')+'</div></div></div>';
+      });
+      el.innerHTML=h;
+    }
     function renderAdminData(){
+      window._adminAllData=null;
       var type=window._adminDataType||'\u0e04\u0e19';
       var el=$('adminDataList');el.innerHTML='<div style="color:#94a3b8;font-size:13px;padding:10px">\u0e01\u0e33\u0e25\u0e31\u0e07\u0e42\u0e2b\u0e25\u0e14...</div>';
       apiGet({sheet:type}).then(function(data){
         var arr=Array.isArray(data)?data:data&&data.data||[];
-        if(!arr||!arr.length){el.innerHTML='<div style="color:#94a3b8;font-size:13px;padding:10px">\u0e44\u0e21\u0e48\u0e21\u0e35\u0e02\u0e49\u0e2d\u0e21\u0e39\u0e25</div>';return}
-        var h='';
-        arr.slice().reverse().forEach(function(r){
-          var name=r['\u0e0a\u0e37\u0e48\u0e2d']||'',code=r['\u0e23\u0e2b\u0e31\u0e2a\u0e1e\u0e19\u0e31\u0e01\u0e07\u0e32\u0e19']||'',ber=r['\u0e40\u0e1a\u0e2d\u0e23\u0e4c\u0e23\u0e16']||'',phone=r['\u0e40\u0e1a\u0e2d\u0e23\u0e4c\u0e42\u0e17\u0e23']||'';
-          var imgs=r['\u0e23\u0e39\u0e1b\u0e40\u0e2d\u0e01\u0e2a\u0e32\u0e23']||'';var gal='';
-          if(imgs){
-            var cnt=imgs.split(/[\n,]+/).filter(function(x){return x.trim()}).length;
-            var esc=imgs.replace(/\\/g,'\\\\').replace(/'/g,"\\'").replace(/\n/g,'\\n');
-            gal=' <span onclick="event.stopPropagation();openImgs(\''+esc+'\')" style="display:inline-flex;align-items:center;gap:3px;padding:2px 8px;background:#e0f2fe;color:#0284c7;border-radius:20px;font-size:11px;cursor:pointer;font-weight:500">\uD83D\uDCF7 '+cnt+'</span>';
-          }
-          h+='<div class="list-item" style="cursor:default"><div><div class="main">'+(code?code+' | ':'')+name+gal+'</div><div style="font-size:11px;color:#64748b">'+(ber?'\uD83D\uDE9A '+ber:'')+(phone?' | \uD83D\uDCF1 '+phone:'')+'</div></div></div>';
-        });
-        el.innerHTML=h;
+        window._adminAllData=arr;
+        renderAdminDataList(arr);
       }).catch(function(){el.innerHTML='<div style="color:#ef4444;font-size:13px;padding:10px">\u0e42\u0e2b\u0e25\u0e14\u0e02\u0e49\u0e2d\u0e21\u0e39\u0e25\u0e25\u0e49\u0e21\u0e40\u0e2b\u0e25\u0e27</div>'});
+    }
+    function filterAdminData(q){
+      q=q.trim().toLowerCase();
+      var arr=window._adminAllData;
+      if(!arr){renderAdminData();return}
+      if(!q){renderAdminDataList(arr);return}
+      var filtered=arr.filter(function(r){
+        var name=(r['\u0e0a\u0e37\u0e48\u0e2d']||'').toLowerCase();
+        var code=(r['\u0e23\u0e2b\u0e31\u0e2a\u0e1e\u0e19\u0e31\u0e01\u0e07\u0e32\u0e19']||'').toLowerCase();
+        var ber=(r['\u0e40\u0e1a\u0e2d\u0e23\u0e4c\u0e23\u0e16']||'').toLowerCase();
+        var phone=(r['\u0e40\u0e1a\u0e2d\u0e23\u0e4c\u0e42\u0e17\u0e23']||'').toLowerCase();
+        return name.indexOf(q)>=0||code.indexOf(q)>=0||ber.indexOf(q)>=0||phone.indexOf(q)>=0;
+      });
+      renderAdminDataList(filtered);
     }
     function switchAdminDataTab(type,btn){
       window._adminDataType=type;
       var parent=btn.parentElement;
       parent.querySelectorAll('.admin-tab').forEach(function(el){el.style.background='#fff';el.style.color='#0f172a'});
       btn.style.background='#0f172a';btn.style.color='#fff';
+      var sq=$('adminSearch');if(sq) sq.value='';
       renderAdminData();
     }
 
@@ -1088,7 +844,7 @@
       if(idx>=0){
         EMP_LIST.splice(idx,1);
         EMP_RAW = EMP_LIST.join('\n');
-        renderAdminEmฟp();
+        renderAdminEmp();
       }
     }
 
