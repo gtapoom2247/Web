@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>ตรวจสอบข้อมูลรถ โอนคลัง-ปั้ม 2024</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <style>
 * { margin:0; padding:0; box-sizing:border-box; font-family:system-ui,-apple-system,sans-serif; }
 body { background:#f1f5f9; color:#1e293b; }
@@ -45,6 +46,20 @@ body { background:#f1f5f9; color:#1e293b; }
   padding-bottom:16px; border-bottom:2px solid #f1f5f9; margin-bottom:16px;
 }
 #expiryPanel .panel-header h2 { font-size:18px; color:#0f172a; }
+
+/* === ADMIN PANEL === */
+#adminPanel{position:fixed;top:0;left:-420px;width:400px;height:100vh;background:#fff;z-index:2002;transition:left .3s ease;box-shadow:4px 0 20px rgba(0,0,0,.15);overflow:hidden}
+#adminPanel.open{left:0}
+#adminPanel .panel-header{background:#1e293b;color:#fff;padding:12px 16px;display:flex;justify-content:space-between;align-items:center}
+#adminPanel .panel-header h2{margin:0;font-size:16px}
+#adminPanel .panel-close{background:transparent;border:none;color:#fff;font-size:24px;cursor:pointer}
+#adminOverlay{display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.3);z-index:2001}
+#adminOverlay.show{display:block}
+#adminList .adm-item{padding:8px 0;border-bottom:1px solid #f1f5f9;display:flex;align-items:center;gap:8px}
+#adminList .adm-item .adm-info{flex:1;min-width:0}
+#adminList .adm-item .adm-info .adm-name{font-weight:600;color:#1e293b;font-size:13px}
+#adminList .adm-item .adm-info .adm-detail{color:#64748b;font-size:11px}
+#adminList .adm-item button{flex-shrink:0;padding:4px 10px;background:#eff6ff;color:#2563eb;border:1px solid #bfdbfe;border-radius:5px;font-size:11px;cursor:pointer}
 #expiryPanel .panel-close { background:none; border:none; font-size:28px; cursor:pointer; color:#94a3b8; }
 #expiryPanel .warn-item {
   display:flex; align-items:center; justify-content:space-between;
@@ -156,10 +171,14 @@ tr:hover td { background:#f8fafc; }
 <body>
 
 <div class="header">
-  <div>
-    <h1>ตรวจสอบข้อมูลรถ โอนคลัง-ปั้ม 2024</h1>
-    <div class="count" id="headerCount">กำลังโหลด...</div>
+  <div style="display:flex;align-items:center;gap:12px">
+    <h1 style="margin:0">ตรวจสอบข้อมูลรถ โอนคลัง-ปั้ม 2024</h1>
+    <button onclick="window.open('index.html','_blank')" style="background:#1e293b;color:#fff;border:none;border-radius:8px;padding:6px 14px;font-size:13px;cursor:pointer;white-space:nowrap">🏠 หน้าหลัก</button>
+    <button onclick="toggleAdminPanel()" style="background:#1e293b;color:#fff;border:none;border-radius:8px;padding:6px 14px;font-size:13px;cursor:pointer;white-space:nowrap">🛠️ แผงควบคุม</button>
+    <button onclick="document.getElementById('xlsxInput').click()" style="background:#16a34a;color:#fff;border:none;border-radius:8px;padding:6px 14px;font-size:13px;cursor:pointer;white-space:nowrap">⬆ อัปโหลด Excel</button>
+    <input type="file" id="xlsxInput" accept=".xlsx,.xls" style="display:none" onchange="handleXlsxUpload(event)">
   </div>
+  <div class="count" id="headerCount">กำลังโหลด...</div>
 </div>
 
 <!-- BIG EXPIRY BANNER -->
@@ -174,6 +193,7 @@ tr:hover td { background:#f8fafc; }
 
 <!-- OVERLAY -->
 <div id="panelOverlay" onclick="togglePanel()"></div>
+<div id="adminOverlay" onclick="toggleAdminPanel()"></div>
 
 <!-- EXPIRY PANEL (slide from right) -->
 <div id="expiryPanel">
@@ -234,7 +254,22 @@ tr:hover td { background:#f8fafc; }
   <div class="modal-content" id="detailContent"></div>
 </div>
 
-<script src="data340_truck.js"></script>
+<!-- ADMIN PANEL -->
+<div id="adminPanel">
+  <div class="panel-header" style="background:#1e293b">
+    <h2>🛠️ แผงควบคุม</h2>
+    <button class="panel-close" onclick="toggleAdminPanel()">&times;</button>
+  </div>
+  <div style="padding:12px 16px">
+    <div style="margin-bottom:12px">
+      <input type="text" id="adminSearch" placeholder="ค้นหาเบอร์รถ, ทะเบียน, คนขับ..." oninput="adminRender()" style="width:100%;padding:8px 12px;border:1px solid #d1d5db;border-radius:6px;font-size:13px;box-sizing:border-box">
+    </div>
+    <div style="font-size:12px;color:#64748b;margin-bottom:8px" id="adminCount"></div>
+    <div id="adminList" style="font-size:13px;max-height:calc(100vh - 200px);overflow-y:auto"></div>
+  </div>
+</div>
+
+<script src="data340_truck.js"></script></script>
 <script>var _PRE_VEHICLES = JSON.parse(JSON.stringify(_VEHICLES));
 // โหลดข้อมูลที่เคยแก้ไขจาก localStorage
 var _EDITS = {};
@@ -424,7 +459,7 @@ function renderTable() {
       '<td ondblclick="event.stopPropagation();openDriverCards('+idx+',\'d2\')" title="ดับเบิ้ลคลิกแก้ไขบัตรคนขับ" style="cursor:default">'+(v.d2.n||'<span class="exp-empty">-</span>')+'</td></tr>';
   });
   document.getElementById('tableBody').innerHTML = html;
-  document.getElementById('headerCount').textContent = filtered.length+'/'+_VEHICLES.length+' รายการ | '+fmtDate(_now);
+  document.getElementById('headerCount').textContent = filtered.length+'/'+_VEHICLES.length+' รายการ | '+fmtDate(_now)+getUploadTs();
 }
 
 function showDetail(id) {
@@ -435,7 +470,8 @@ function showDetail(id) {
   html += '<p style="color:#64748b;margin-bottom:12px">ธพน.2: '+v.rg+' | รถพ่วง: '+v.tr.filter(function(x){return x}).join(', ')+'</p>';
   html += '<h4>บัตรรถ</h4>';
   [['ภาษี','tax'],['Thaioil SRC','to'],['Esso SRC','es'],['PTT-GC','pg'],['LLK Thappline','ll'],['SRB Thappline','sr'],['SPRC','sp'],['IRPC IRY & AU','ir']].forEach(function(k) {
-    html += '<div class="row"><span class="lbl">'+k[0]+'</span><span class="val">'+expDisplay(daysLeft(v.v[k[1]]), v.v[k[1]])+'</span></div>';
+    var idx = _VEHICLES.indexOf(v);
+    html += '<div class="row" ondblclick="event.stopPropagation();openEditPopup('+idx+',\'v\',\''+k[1]+'\')" title="ดับเบิ้ลคลิกแก้ไข" style="cursor:pointer"><span class="lbl">'+k[0]+'</span><span class="val">'+expDisplay(daysLeft(v.v[k[1]]), v.v[k[1]])+'</span></div>';
   });
   if (v.d1.n) {
     html += '<h4>คนขับ 1: '+v.d1.n+' ('+v.d1.p+')</h4>';
@@ -469,13 +505,52 @@ function setFilter(f) {
 
 // Init
 var _refreshing = false;
-document.getElementById('headerCount').textContent = _VEHICLES.length+' รายการ | '+fmtDate(_now)+' | กำลังเชื่อมต่อ...';
+// แสดงเวลาอัปโหลดล่าสุด (ถ้ามี)
+function getUploadTs(){
+  var ts = localStorage.getItem('_XLSX_LAST_UPLOAD');
+  if(!ts) return '';
+  var d = new Date(parseInt(ts));
+  return ' | อัปโหลด: '+fmtDate(d)+' '+('0'+d.getHours()).slice(-2)+':'+('0'+d.getMinutes()).slice(-2);
+}
+document.getElementById('headerCount').textContent = _VEHICLES.length+' รายการ | '+fmtDate(_now)+getUploadTs()+' | กำลังเชื่อมต่อ...';
 
 // === GAS API ===
-const API = 'https://script.google.com/macros/s/AKfycbyuU-gGfMhIMKlEHbiRTd01Tcd2JGeXIDybGkg9VWPCEMJl6OsUf2qrCAgVudJ_Bg6v1A/exec';
+const API = 'https://script.google.com/macros/s/AKfycbxanr5YCS0r3RILFFR4s0Ajm4k5K429rBHHPoVaUjc3mXTX0LC-5IgR3YXDi8JEzgWbmg/exec';
 function apiGet(params) {
   var url = API + '?' + Object.keys(params).map(function(k){return encodeURIComponent(k)+'='+encodeURIComponent(params[k])}).join('&');
   return fetch(url).then(function(r){ return r.json(); });
+}
+function apiPost(body){
+  var payload = JSON.stringify(body);
+  if(payload.length > 5000 || payload.indexOf('data:image') >= 0 || payload.indexOf(';base64,') >= 0){
+    return new Promise(function(resolve){
+      var x = new XMLHttpRequest();
+      x.open('POST', API);
+      x.onload = function(){
+        try { var d = JSON.parse(x.responseText); resolve(Array.isArray(d) ? {created:1,updated:0} : d); }
+        catch(e){ resolve({created:1,updated:0}); }
+      };
+      x.onerror = function(){ resolve({error:'network error'}); };
+      x.send(payload);
+    });
+  }
+  return fetch(API+'?payload='+encodeURIComponent(payload)).then(function(r){ return r.json(); })
+    .then(function(res){
+      if(res && res.error) return res;
+      if(Array.isArray(res)) return {created:1,updated:0};
+      return res;
+    }).catch(function(){
+      return new Promise(function(resolve){
+        var x = new XMLHttpRequest();
+        x.open('POST', API);
+        x.onload = function(){
+          try { var d = JSON.parse(x.responseText); resolve(Array.isArray(d) ? {created:1,updated:0} : d); }
+          catch(e){ resolve({created:1,updated:0}); }
+        };
+        x.onerror = function(){ resolve({error:'network error'}); };
+        x.send(payload);
+      });
+    });
 }
 
 function mergeGasData() {
@@ -533,7 +608,7 @@ function refreshUI() {
   updateExpiryBanner();
   renderWarnings();
   renderTable();
-  document.getElementById('headerCount').textContent = 'อัพเดตจากระบบ | '+_VEHICLES.length+' รายการ | '+fmtDate(_now);
+  document.getElementById('headerCount').textContent = 'อัพเดตจากระบบ | '+_VEHICLES.length+' รายการ | '+fmtDate(_now)+getUploadTs();
 }
 
 // Load GAS data, then render
@@ -573,7 +648,7 @@ Promise.all([
     });
   }).catch(function(){})
 ]).then(function() {
-  document.getElementById('headerCount').textContent = _VEHICLES.length+' รายการ | '+fmtDate(_now)+' | GAS';
+  document.getElementById('headerCount').textContent = _VEHICLES.length+' รายการ | '+fmtDate(_now)+' | GAS'+getUploadTs();
   renderSummary();
   updateExpiryBanner();
   renderWarnings();
@@ -581,7 +656,7 @@ Promise.all([
   if(window.initExpiryTab) initExpiryTab();
 }).catch(function() {
   // Fallback: just render with static data
-  document.getElementById('headerCount').textContent = _VEHICLES.length+' รายการ | '+fmtDate(_now)+' | ไฟล์';
+  document.getElementById('headerCount').textContent = _VEHICLES.length+' รายการ | '+fmtDate(_now)+' | ไฟล์'+getUploadTs();
   renderSummary();
   updateExpiryBanner();
   renderWarnings();
@@ -924,9 +999,327 @@ function toggleDriverMap(){
   if(arrow) arrow.textContent = show ? '▾' : '▸';
 }
 
+// Admin panel
+function toggleAdminPanel(){
+  var p = document.getElementById('adminPanel');
+  var o = document.getElementById('adminOverlay');
+  if(!p) return;
+  if(p.classList.contains('open')){p.classList.remove('open');o.classList.remove('show');return;}
+  p.classList.add('open');o.classList.add('show');adminRender();
+}
+function adminRender(){
+  var q = (document.getElementById('adminSearch').value||'').trim().toLowerCase();
+  var list = document.getElementById('adminList');
+  var count = document.getElementById('adminCount');
+  var res = _VEHICLES.filter(function(v){
+    if(!q) return true;
+    return (v.id||'').toLowerCase().indexOf(q)>=0||(v.no||'').toLowerCase().indexOf(q)>=0||(v.pf||'').toLowerCase().indexOf(q)>=0||(v.pr||'').toLowerCase().indexOf(q)>=0||(v.rg||'').toLowerCase().indexOf(q)>=0||(v.d1&&v.d1.n||'').toLowerCase().indexOf(q)>=0||(v.d1&&v.d1.p||'').toLowerCase().indexOf(q)>=0||(v.d2&&v.d2.n||'').toLowerCase().indexOf(q)>=0||(v.d2&&v.d2.p||'').toLowerCase().indexOf(q)>=0;
+  });
+  count.textContent = 'พบ '+res.length+' รายการ'+(q?' (ค้นหา: '+q+')':'');
+  if(res.length===0){list.innerHTML='<div style="padding:20px;text-align:center;color:#94a3b8;font-size:13px">ไม่พบข้อมูล</div>';return;}
+  var h = res.map(function(v){
+    var expiring = [];
+    var cardLabels = {'tax':'ภาษี','to':'Thaioil SRC','es':'Esso SRC','pg':'PTT-GC','ll':'LLK Thappline','sr':'SRB Thappline','sp':'SPRC','ir':'IRPC IRY & AU'};
+    Object.keys(cardLabels).forEach(function(k){
+      if(v.v&&v.v[k]){var d=daysUntil(v.v[k]);if(d!==null&&d<=30)expiring.push(cardLabels[k]+(d<0?' หมดอายุ':' '+d+'วัน'));}
+    });
+    ['d1','d2'].forEach(function(dp){
+      if(!v[dp])return;
+      ['es','pg','ll','sr','sp','to','ir'].forEach(function(k){
+        if(v[dp][k]){var d=daysUntil(v[dp][k]);if(d!==null&&d<=30)expiring.push('('+dp+') '+cardLabels[k]+(d<0?' หมดอายุ':' '+d+'วัน'));}
+      });
+    });
+    var warn = expiring.length>0?'<span style="color:#ef4444;font-size:11px">⚠️ '+expiring.join(', ')+'</span>':'';
+    var d1name = v.d1&&v.d1.n?v.d1.n:'';
+    var d2name = v.d2&&v.d2.n?v.d2.n:'';
+    return '<div class="adm-item">'+
+      '<div class="adm-info">'+
+        '<div class="adm-name">'+v.no+' — '+v.pf+'</div>'+
+        '<div class="adm-detail">'+(d1name?'👤 '+d1name+' ':'')+(d2name?'| 👤 '+d2name:'')+'</div>'+
+        (warn?'<div>'+warn+'</div>':'')+'</div>'+
+      '<button onclick="showDetail(\''+v.id+'\')">เปิด</button>'+
+    '</div>';
+  }).join('');
+  list.innerHTML = h;
+}
+
 // เรียกหลัง GAS merge
 function initExpiryTab(){
   updateExpiryTab();
+}
+
+/* === อัปโหลด Excel (ไฟล์ 06- June รายชื่อรถเข้าโหลด...) === */
+function xlsxDate(v){
+  if(!v && v!==0) return '';
+  if(typeof v === 'string') return v.trim();
+  if(typeof v === 'number'){
+    var d = new Date((v - 25569) * 86400 * 1000);
+    if(isNaN(d.getTime())) return String(v);
+    return d.getDate()+'/'+(d.getMonth()+1)+'/'+d.getFullYear();
+  }
+  if(v instanceof Date || (typeof v === 'object' && v.getMonth !== undefined)){
+    return v.getDate()+'/'+(v.getMonth()+1)+'/'+v.getFullYear();
+  }
+  return String(v).trim();
+}
+
+function handleXlsxUpload(ev){
+  var file = ev.target.files[0];
+  if(!file) return;
+  ev.target.value = '';
+  var reader = new FileReader();
+  reader.onload = function(e){
+    try {
+      var data = new Uint8Array(e.target.result);
+      var wb = XLSX.read(data, {type:'array', cellDates:true, dateNF:'d/m/yyyy'});
+      // หา sheet ที่มีข้อมูลมากที่สุด (สรุปยอดขาย)
+      var si = 0, maxC = 0;
+      for(var i=0;i<wb.SheetNames.length;i++){
+        var ref = wb.Sheets[wb.SheetNames[i]]['!ref'];
+        if(ref){
+          var cols = XLSX.utils.decode_range(ref).e.c;
+          if(cols > maxC){ maxC = cols; si = i; }
+        }
+      }
+      var ws = wb.Sheets[wb.SheetNames[si]];
+      // ใช้ header:1 ได้ array of arrays
+      var rows = XLSX.utils.sheet_to_json(ws, {header:1, defval:''});
+      // หาแถวที่มีคำว่า "ลำดับ" หรือ "ทะเบียน" → header row
+      var start = -1;
+      for(var i=0;i<rows.length;i++){
+        var r = rows[i];
+        if(r[0] && String(r[0]).match(/ลำดับ|ที่|No/i)){ start = i+1; break; }
+        if(r[1] && String(r[1]).match(/NO\.\d+/)){ start = i; break; }
+      }
+      if(start < 0 || start >= rows.length-1) start = 4; // fallback
+
+      var updated = 0, added = 0;
+      // STEP 1: Normalize NO ของรถเดิมทั้งหมด และสร้าง index
+      var noIndex = {};
+      for(var i=0;i<_VEHICLES.length;i++){
+        var v = _VEHICLES[i];
+        if(v.no) {
+          var m = String(v.no).match(/NO\.?\s*(\d+)/i);
+          if(m) v.no = 'NO.'+String(parseInt(m[1])).padStart(2,'0');
+        }
+        noIndex[v.no] = i;
+      }
+
+      // VEHICLE card key mapping (col → v.key)
+      var vMap = [
+        {col:5, key:'tax'}, {col:6, key:'to'}, {col:7, key:'es'}, {col:8, key:'pg'},
+        {col:9, key:'ll'}, {col:10, key:'sr'}, {col:11, key:'sp'}, {col:12, key:'ir'}
+      ];
+      // DRIVER 1 card key mapping
+      var d1Map = [
+        {col:15, key:'es'}, {col:16, key:'pg'}, {col:17, key:'ll'}, {col:18, key:'sr'},
+        {col:19, key:'sp'}, {col:20, key:'to'}, {col:21, key:'ir'}
+      ];
+      // DRIVER 2 card key mapping
+      var d2Map = [
+        {col:24, key:'es'}, {col:25, key:'pg'}, {col:26, key:'ll'}, {col:27, key:'sr'},
+        {col:28, key:'sp'}, {col:29, key:'to'}, {col:30, key:'ir'}
+      ];
+
+      for(var i=start; i<rows.length; i++){
+        var row = rows[i];
+        var noVal = String(row[1]||'').trim();
+        if(!noVal || !noVal.match(/NO\.?\s*\d+/i)) continue;
+        // Normalize NO.xx format
+        noVal = noVal.replace(/^NO\s*\.?\s*/i, '');
+        if(!noVal.match(/^\d+$/)) continue;
+        noVal = 'NO.'+String(parseInt(noVal)).padStart(2,'0');
+
+        var pf = String(row[2]||'').trim();
+        var pr = String(row[3]||'').trim();
+        var rg = String(row[4]||'').trim();
+
+        var idx = noIndex[noVal];
+        if(idx !== undefined){
+          // อัปเดตข้อมูลเดิมในที่ (ไม่ต้อง rebuild)
+          var vObj = _VEHICLES[idx];
+          vObj.pf = pf;
+          vObj.pr = pr;
+          vObj.rg = rg;
+
+          // Vehicle cards
+          vMap.forEach(function(m){
+            vObj.v[m.key] = xlsxDate(row[m.col]);
+          });
+
+          // Driver 1
+          vObj.d1.n = String(row[13]||'').trim();
+          vObj.d1.p = String(row[14]||'').trim();
+          d1Map.forEach(function(m){
+            vObj.d1[m.key] = xlsxDate(row[m.col]);
+          });
+
+          // Driver 2
+          vObj.d2.n = String(row[22]||'').trim();
+          vObj.d2.p = String(row[23]||'').trim();
+          d2Map.forEach(function(m){
+            vObj.d2[m.key] = xlsxDate(row[m.col]);
+          });
+
+          updated++;
+        } else {
+          // เพิ่มรายการใหม่ต่อท้าย array
+          var vObj = {id:noVal, no:noVal, pf:pf, pr:pr, rg:rg, tr:[], v:{}, d1:{n:'',p:''}, d2:{n:'',p:''}};
+
+          vMap.forEach(function(m){
+            var val = xlsxDate(row[m.col]);
+            if(val) vObj.v[m.key] = val;
+          });
+
+          var d1n = String(row[13]||'').trim();
+          var d1p = String(row[14]||'').trim();
+          if(d1n) vObj.d1.n = d1n;
+          if(d1p) vObj.d1.p = d1p;
+          d1Map.forEach(function(m){
+            var val = xlsxDate(row[m.col]);
+            if(val) vObj.d1[m.key] = val;
+          });
+
+          var d2n = String(row[22]||'').trim();
+          var d2p = String(row[23]||'').trim();
+          if(d2n) vObj.d2.n = d2n;
+          if(d2p) vObj.d2.p = d2p;
+          d2Map.forEach(function(m){
+            var val = xlsxDate(row[m.col]);
+            if(val) vObj.d2[m.key] = val;
+          });
+
+          noIndex[noVal] = _VEHICLES.length;
+          _VEHICLES.push(vObj);
+          added++;
+        }
+      }
+
+      // เรียงลำดับ _VEHICLES ตาม NO (in-place ไม่ต้อง rebuild)
+      _VEHICLES.sort(function(a,b){
+        var na = parseInt((a.no||'').replace(/NO\.?\s*/i,'')) || 0;
+        var nb = parseInt((b.no||'').replace(/NO\.?\s*/i,'')) || 0;
+        return na - nb;
+      });
+
+      showXlsxResult(added, updated, _VEHICLES.length);
+      // บันทึกเวลาอัปโหลด
+      var _ulNow = new Date();
+      localStorage.setItem('_XLSX_LAST_UPLOAD', _ulNow.getTime());
+      // Sync to GAS อัตโนมัติ (ทำในพื้นหลัง)
+      syncXlsxToGAS();
+    } catch(err){
+      alert('เกิดข้อผิดพลาดในการอ่านไฟล์:\n'+err.message);
+    }
+  };
+  reader.readAsArrayBuffer(file);
+}
+
+function showXlsxResult(added, updated, total){
+  var popup = document.getElementById('xlsxResultPopup');
+  var backdrop = document.getElementById('xlsxResultBackdrop');
+  if(!popup){
+    popup = document.createElement('div');
+    popup.id = 'xlsxResultPopup';
+    popup.style.cssText = 'display:none;position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);width:380px;background:#fff;border-radius:14px;box-shadow:0 8px 32px rgba(0,0,0,.25);z-index:5000;overflow:hidden;border:2px solid #16a34a;';
+    document.body.appendChild(popup);
+    backdrop = document.createElement('div');
+    backdrop.id = 'xlsxResultBackdrop';
+    backdrop.style.cssText = 'display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.3);z-index:4999;';
+    backdrop.onclick = function(){ popup.style.display='none'; backdrop.style.display='none'; };
+    document.body.appendChild(backdrop);
+  }
+  popup.style.display = 'block';
+  backdrop.style.display = 'block';
+  var gasStatus = '<span style="color:#94a3b8;font-size:13px">⏳ กำลังส่งไปยัง GAS...</span>';
+  popup.innerHTML =
+    '<div style="background:#16a34a;color:#fff;padding:12px 16px;font-size:14px;font-weight:600;display:flex;justify-content:space-between;align-items:center">'+
+      '<span>✅ อัปโหลดสำเร็จ</span>'+
+      '<span style="cursor:pointer;font-size:20px" onclick="this.parentNode.parentNode.style.display=\'none\';document.getElementById(\'xlsxResultBackdrop\').style.display=\'none\'">&times;</span>'+
+    '</div>'+
+    '<div style="padding:16px;font-size:14px;color:#1e293b">'+
+      '<div style="margin-bottom:8px">📝 อัปเดต: <strong>'+updated+'</strong> รายการ</div>'+
+      '<div style="margin-bottom:8px">➕ เพิ่มใหม่: <strong>'+added+'</strong> รายการ</div>'+
+      '<div style="margin-bottom:8px">📊 รวม: <strong>'+total+'</strong> คัน</div>'+
+      '<div id="xlsxGasStatus" style="margin-bottom:16px;padding:10px 12px;background:#f8fafc;border-radius:8px;font-size:13px">'+gasStatus+'</div>'+
+      '<button onclick="downloadUpdatedJS()" style="width:100%;padding:10px;background:#f1f5f9;color:#475569;border:1px solid #e2e8f0;border-radius:8px;font-size:13px;font-weight:500;cursor:pointer">⬇ ดาวน์โหลด data340_truck.js (สำรอง)</button>'+
+      '<button onclick="renderTable();updateExpiryBanner();updateExpiryTab();this.parentNode.parentNode.style.display=\'none\';document.getElementById(\'xlsxResultBackdrop\').style.display=\'none\'" style="width:100%;padding:10px;background:#2563eb;color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;margin-top:8px">👍 เสร็จแล้ว</button>'+
+    '</div>';
+  document.getElementById('headerCount').textContent = _VEHICLES.length+' รายการ | '+fmtDate(_now)+getUploadTs();
+}
+
+function downloadUpdatedJS(){
+  var js = 'var _VEHICLES = '+JSON.stringify(_VEHICLES, null, 1)+';';
+  var blob = new Blob([js], {type:'text/javascript;charset=utf-8'});
+  var url = URL.createObjectURL(blob);
+  var a = document.createElement('a');
+  a.href = url;
+  a.download = 'data340_truck.js';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+/* === ซิงก์ข้อมูลไป GAS (อัปเดต index.html อัตโนมัติ) === */
+function syncXlsxToGAS(){
+  var rows = [];
+  var labelMap = {
+    v:{tax:'ภาษี',to:'Thaioil SRC',es:'Esso SRC',pg:'PTT-GC',ll:'LLK Thappline',sr:'SRB Thappline',sp:'SPRC',ir:'IRPC IRY & AU'},
+    d1:{es:'Esso SRC',pg:'PTT-GC',ll:'LLK Thappline',sr:'SRB Thappline',sp:'SPRC',to:'Thaioil SRC',ir:'IRPC IRY & AU'},
+    d2:{es:'Esso SRC',pg:'PTT-GC',ll:'LLK Thappline',sr:'SRB Thappline',sp:'SPRC',to:'Thaioil SRC',ir:'IRPC IRY & AU'}
+  };
+
+  _VEHICLES.forEach(function(v){
+    if(!v || !v.v || !v.no) return;
+    var row = {'เบอร์รถ':v.no,'ทะเบียนหัว':v.pf||'','ทะเบียนหาง':v.pr||'','ธพน.2 หมดอายุบัตร':v.rg||''};
+    Object.keys(labelMap.v).forEach(function(k){ if(v.v[k]) row[labelMap.v[k]+' หมดอายุบัตร']=v.v[k]; });
+    rows.push({sheet:'รถ',data:row,editKey:''});
+    if(v.d1 && v.d1.n){
+      var d1row={'รหัสพนักงาน':'','เบอร์รถ':v.no,'ชื่อ':v.d1.n,'เบอร์โทร':v.d1.p||''};
+      Object.keys(labelMap.d1).forEach(function(k){ if(v.d1[k]) d1row[labelMap.d1[k]+' หมดอายุบัตร']=v.d1[k]; });
+      rows.push({sheet:'คน',data:d1row,editKey:''});
+    }
+    if(v.d2 && v.d2.n){
+      var d2row={'รหัสพนักงาน':'','เบอร์รถ':v.no,'ชื่อ':v.d2.n,'เบอร์โทร':v.d2.p||''};
+      Object.keys(labelMap.d2).forEach(function(k){ if(v.d2[k]) d2row[labelMap.d2[k]+' หมดอายุบัตร']=v.d2[k]; });
+      rows.push({sheet:'คน',data:d2row,editKey:''});
+    }
+  });
+
+  // ส่งทั้งหมดพร้อมกัน โดยใช้ POST เสมอ (force doPost ที่ GAS)
+  var statusEl = document.getElementById('xlsxGasStatus');
+  var total = rows.length, sent = 0, failed = 0;
+  if(statusEl) statusEl.innerHTML = '<span style="color:#64748b">⏳ ซิงก์ GAS... 0/'+total+'</span>';
+
+  function postOne(data){
+    return new Promise(function(resolve){
+      var x = new XMLHttpRequest();
+      x.open('POST', API);
+      x.onload = function(){
+        try { var d = JSON.parse(x.responseText); resolve(!d || d.error ? false : true); }
+        catch(e){ resolve(false); }
+      };
+      x.onerror = function(){ resolve(false); };
+      x.send(JSON.stringify(data));
+    });
+  }
+
+  Promise.all(rows.map(function(r){
+    return postOne(r).then(function(ok){
+      if(ok) sent++; else failed++;
+      if(statusEl && (sent+failed)%20===0){
+        statusEl.innerHTML = '<span style="color:#64748b">⏳ ซิงก์ GAS... '+sent+'/'+total+'</span>';
+      }
+    });
+  })).then(function(){
+    if(statusEl){
+      var txt = failed>0
+        ? '⚠️ ซิงก์ GAS '+sent+'/'+total+' รายการ (ล้มเหลว '+failed+')'
+        : '✅ ซิงก์ GAS เสร็จสิ้น '+total+' รายการ';
+      statusEl.innerHTML = '<span style="color:'+(failed>0?'#d97706':'#16a34a')+'">'+txt+'</span>';
+    }
+  });
 }
 </script>
 </body>
