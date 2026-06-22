@@ -1206,8 +1206,6 @@ function handleXlsxUpload(ev){
       // บันทึกเวลาอัปโหลด
       var _ulNow = new Date();
       localStorage.setItem('_XLSX_LAST_UPLOAD', _ulNow.getTime());
-      // Sync to GAS อัตโนมัติ (ทำในพื้นหลัง)
-      syncXlsxToGAS();
     } catch(err){
       alert('เกิดข้อผิดพลาดในการอ่านไฟล์:\n'+err.message);
     }
