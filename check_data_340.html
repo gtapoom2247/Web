@@ -1,0 +1,933 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ตรวจสอบข้อมูลรถ โอนคลัง-ปั้ม 2024</title>
+<style>
+* { margin:0; padding:0; box-sizing:border-box; font-family:system-ui,-apple-system,sans-serif; }
+body { background:#f1f5f9; color:#1e293b; }
+.header { background:#0f172a; color:#fff; padding:16px 20px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px; }
+.header h1 { font-size:20px; font-weight:600; }
+.header .count { font-size:14px; color:#94a3b8; }
+.container { max-width:1400px; margin:0 auto; padding:16px; }
+
+/* === BIG EXPIRY BANNER === */
+#expiryBanner { display:none; position:sticky; top:0; z-index:999; }
+#expiryBanner.show { display:block; }
+.expiry-banner-inner {
+  background: linear-gradient(135deg, #dc2626 0%, #991b1b 100%);
+  color: #fff;
+  padding: 16px 20px;
+  text-align: center;
+  cursor: pointer;
+  box-shadow: 0 4px 20px rgba(220,38,38,.4);
+  animation: pulse-banner 2s ease-in-out infinite;
+}
+@keyframes pulse-banner {
+  0%, 100% { box-shadow: 0 4px 20px rgba(220,38,38,.4); }
+  50% { box-shadow: 0 4px 40px rgba(220,38,38,.7); }
+}
+.expiry-banner-inner .big-num { font-size:48px; font-weight:800; line-height:1; }
+.expiry-banner-inner .big-text { font-size:20px; font-weight:600; margin-top:4px; }
+.expiry-banner-inner .sub-text { font-size:14px; opacity:.8; margin-top:4px; }
+.expiry-banner-inner .click-hint { font-size:12px; opacity:.6; margin-top:8px; }
+
+/* === SIDE PANEL === */
+#expiryPanel {
+  display:none; position:fixed; top:0; right:0; width:420px; height:100%;
+  background:#fff; box-shadow:-4px 0 30px rgba(0,0,0,.15);
+  z-index:1000; overflow-y:auto; padding:20px;
+}
+#expiryPanel.open { display:block; }
+#expiryPanel .panel-header {
+  display:flex; justify-content:space-between; align-items:center;
+  padding-bottom:16px; border-bottom:2px solid #f1f5f9; margin-bottom:16px;
+}
+#expiryPanel .panel-header h2 { font-size:18px; color:#0f172a; }
+#expiryPanel .panel-close { background:none; border:none; font-size:28px; cursor:pointer; color:#94a3b8; }
+#expiryPanel .warn-item {
+  display:flex; align-items:center; justify-content:space-between;
+  padding:12px 16px; margin-bottom:8px; border-radius:10px; border-left:4px solid;
+}
+#expiryPanel .warn-item.red { background:#fef2f2; border-color:#dc2626; }
+#expiryPanel .warn-item.amber { background:#fffbeb; border-color:#d97706; }
+#expiryPanel .warn-item.blue { background:#eff6ff; border-color:#2563eb; }
+#expiryPanel .warn-item .tag { font-size:12px; color:#64748b; }
+#expiryPanel .warn-item .plate { font-weight:600; }
+#expiryPanel .warn-item .days { font-weight:700; font-size:18px; }
+#expiryPanel .warn-item .expiry-date { font-size:12px; color:#94a3b8; }
+
+/* overlay when panel is open */
+#panelOverlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,.3); z-index:999; }
+#panelOverlay.open { display:block; }
+
+.summary { display:grid; grid-template-columns:repeat(auto-fit,minmax(160px,1fr)); gap:12px; margin-bottom:20px; }
+.summary-card { background:#fff; border-radius:12px; padding:16px; text-align:center; box-shadow:0 1px 3px rgba(0,0,0,.08); }
+.summary-card .num { font-size:28px; font-weight:700; color:#0f172a; }
+.summary-card .label { font-size:13px; color:#64748b; margin-top:4px; }
+.summary-card.warn { border:2px solid #dc2626; animation:pulse-card 2s ease-in-out infinite; }
+@keyframes pulse-card { 0%,100%{box-shadow:0 0 0 rgba(220,38,38,.2)} 50%{box-shadow:0 0 20px rgba(220,38,38,.4)} }
+.summary-card.warn .num { color:#dc2626; }
+
+.warn-box { background:#fff; border-radius:12px; padding:16px; margin-bottom:20px; box-shadow:0 1px 3px rgba(0,0,0,.08); }
+.warn-box h3 { font-size:16px; margin-bottom:12px; color:#0f172a; }
+.warn-item { display:flex; align-items:center; justify-content:space-between; padding:10px 14px; margin-bottom:6px; border-radius:10px; border-left:4px solid; }
+.warn-item.danger { background:#fef2f2; border-color:#dc2626; }
+.warn-item.warning { background:#fffbeb; border-color:#d97706; }
+.warn-item.info { background:#eff6ff; border-color:#2563eb; }
+.warn-item .tag { font-size:12px; color:#64748b; }
+.warn-item .plate { font-weight:600; }
+.warn-item .days { font-weight:600; font-size:16px; }
+
+.toolbar { display:flex; gap:8px; margin-bottom:16px; flex-wrap:wrap; }
+.toolbar input { flex:1; min-width:200px; padding:10px 14px; border:1px solid #e2e8f0; border-radius:8px; font-size:14px; }
+.toolbar button { padding:10px 18px; background:#0f172a; color:#fff; border:none; border-radius:8px; cursor:pointer; font-size:14px; }
+.toolbar button.outline { background:#fff; color:#0f172a; border:1px solid #e2e8f0; }
+.tabs { display:flex; gap:4px; margin-bottom:16px; flex-wrap:wrap; }
+.tabs button { padding:8px 16px; border:1px solid #e2e8f0; border-radius:8px; background:#fff; cursor:pointer; font-size:13px; }
+.tabs button.active { background:#0f172a; color:#fff; border-color:#0f172a; }
+.table-wrap { background:#fff; border-radius:12px; overflow-x:auto; box-shadow:0 1px 3px rgba(0,0,0,.08); }
+table { width:100%; border-collapse:collapse; font-size:13px; }
+th { background:#f8fafc; padding:10px 12px; text-align:left; font-weight:600; color:#475569; border-bottom:2px solid #e2e8f0; white-space:nowrap; position:sticky; top:0; z-index:1; }
+td { padding:8px 12px; border-bottom:1px solid #f1f5f9; }
+tr:hover td { background:#f8fafc; }
+.exp-red { color:#dc2626; font-weight:600; }
+.exp-amber { color:#d97706; font-weight:600; }
+.exp-blue { color:#2563eb; font-weight:600; }
+.exp-ok { color:#16a34a; }
+.exp-empty { color:#cbd5e1; }
+.badge { display:inline-block; padding:2px 8px; border-radius:10px; font-size:11px; font-weight:600; }
+.badge-red { background:#fef2f2; color:#dc2626; }
+.badge-amber { background:#fffbeb; color:#d97706; }
+.badge-blue { background:#eff6ff; color:#2563eb; }
+
+.modal { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,.5); z-index:1000; justify-content:center; align-items:center; }
+.modal.show { display:flex; }
+.modal-content { background:#fff; border-radius:16px; padding:24px; max-width:600px; width:90%; max-height:80vh; overflow-y:auto; }
+.modal-content h3 { margin-bottom:8px; }
+.modal-content h4 { margin:12px 0 8px; color:#0f172a; }
+.modal-content .row { display:flex; justify-content:space-between; padding:8px 0; border-bottom:1px solid #f1f5f9; }
+.modal-content .row .lbl { color:#64748b; font-size:13px; }
+.modal-content .row .val { font-weight:500; }
+.modal-close { float:right; background:none; border:none; font-size:24px; cursor:pointer; color:#94a3b8; }
+
+@media(max-width:768px){ .container { padding:8px; } .header h1 { font-size:16px; } th,td { font-size:12px; padding:6px 8px; } #expiryPanel { width:100%; } }
+
+/* === UPDATE POPUP (top-right) === */
+#updatePopup {
+  display:none; position:fixed; top:16px; right:16px; width:380px;
+  background:#fff; border-radius:14px; box-shadow:0 8px 32px rgba(0,0,0,.18);
+  z-index:2000; overflow:hidden; border:2px solid #2563eb;
+  animation: slideInRight .3s ease;
+}
+#updatePopup.show { display:block; }
+@keyframes slideInRight {
+  from { transform:translateX(120%); opacity:0; }
+  to { transform:translateX(0); opacity:1; }
+}
+#updatePopup .up-head {
+  background:#2563eb; color:#fff; padding:12px 16px; font-size:14px; font-weight:600;
+  display:flex; justify-content:space-between; align-items:center;
+}
+#updatePopup .up-head .up-close {
+  background:none; border:none; color:#fff; font-size:20px; cursor:pointer; line-height:1; padding:0 4px;
+}
+#updatePopup .up-body { padding:14px 16px; max-height:400px; overflow-y:auto; }
+#updatePopup .up-body .up-info { font-size:13px; color:#475569; margin-bottom:10px; }
+#updatePopup .up-body .up-info strong { color:#0f172a; }
+#updatePopup .up-body .up-field { margin-bottom:8px; }
+#updatePopup .up-body .up-field label { display:block; font-size:12px; color:#64748b; margin-bottom:2px; }
+#updatePopup .up-body .up-field input {
+  width:100%; padding:7px 10px; border:1px solid #e2e8f0; border-radius:6px; font-size:13px; outline:none;
+  box-sizing:border-box;
+}
+#updatePopup .up-body .up-field input:focus { border-color:#2563eb; }
+#updatePopup .up-body .up-actions { display:flex; gap:8px; margin-top:12px; }
+#updatePopup .up-body .up-actions button {
+  flex:1; padding:8px; border:none; border-radius:8px; font-size:13px; font-weight:600; cursor:pointer;
+}
+#updatePopup .up-body .up-actions .up-save { background:#2563eb; color:#fff; }
+#updatePopup .up-body .up-actions .up-save:hover { background:#1d4ed8; }
+#updatePopup .up-body .up-actions .up-dismiss { background:#f1f5f9; color:#64748b; }
+#updatePopup .up-body .up-actions .up-dismiss:hover { background:#e2e8f0; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div>
+    <h1>ตรวจสอบข้อมูลรถ โอนคลัง-ปั้ม 2024</h1>
+    <div class="count" id="headerCount">กำลังโหลด...</div>
+  </div>
+</div>
+
+<!-- BIG EXPIRY BANNER -->
+<div id="expiryBanner" onclick="togglePanel()">
+  <div class="expiry-banner-inner">
+    <div class="big-num" id="bannerCount">0</div>
+    <div class="big-text">บัตรใกล้หมดอายุ (30 วัน)</div>
+    <div class="sub-text" id="bannerSub">คลิกดูรายละเอียด</div>
+    <div class="click-hint">▼ คลิกเพื่อดูรายการ</div>
+  </div>
+</div>
+
+<!-- OVERLAY -->
+<div id="panelOverlay" onclick="togglePanel()"></div>
+
+<!-- EXPIRY PANEL (slide from right) -->
+<div id="expiryPanel">
+  <div class="panel-header">
+    <h2>⚠️ บัตรใกล้หมดอายุ</h2>
+    <button class="panel-close" onclick="togglePanel()">&times;</button>
+  </div>
+  <div id="panelList"></div>
+</div>
+
+<div class="container">
+  <div class="summary" id="summaryCards"></div>
+
+  <div class="warn-box" id="warnBox">
+    <h3 style="cursor:pointer;display:flex;justify-content:space-between;align-items:center;user-select:none;" onclick="toggleWarnList()">บัตรใกล้หมดอายุ (30 วัน) <span id="warnArrow">▾</span></h3>
+    <div id="warnList"></div>
+  </div>
+
+  <div class="tabs" id="filterTabs">
+    <button class="active" onclick="setFilter('all')">ทั้งหมด</button>
+    <button onclick="setFilter('expiring')">ใกล้หมดอายุ</button>
+  </div>
+
+  <div class="toolbar">
+    <input type="text" id="searchInput" placeholder="ค้นหาเบอร์รถ, ทะเบียน, คนขับ..." oninput="renderTable()">
+  </div>
+
+  <div class="table-wrap">
+    <table>
+      <thead><tr>
+        <th>#</th><th>เบอร์รถ</th><th>ทะเบียนหัว</th><th>ทะเบียนหาง</th><th>ธพน.2</th>
+        <th>ภาษี</th><th>Thaioil SRC</th><th>Esso SRC</th><th>PTT-GC</th>
+        <th>LLK Thappline</th><th>SRB Thappline</th><th>SPRC</th><th>IRPC IRY & AU</th>
+        <th>คนขับ1</th><th>คนขับ2</th>
+      </tr></thead>
+      <tbody id="tableBody"></tbody>
+    </table>
+  </div>
+</div>
+
+<!-- === UPDATE POPUP (top-right) === -->
+<div id="updatePopup">
+  <div class="up-head">
+    <span>📋 พบข้อมูลที่ตรงกัน</span>
+    <button class="up-close" onclick="closeUpdatePopup()">&times;</button>
+  </div>
+  <div class="up-body" id="upBody">
+    <div class="up-info" id="upInfo"></div>
+    <div id="upFields"></div>
+    <div class="up-actions">
+      <button class="up-save" onclick="saveUpdatePopup()">💾 บันทึก</button>
+      <button class="up-dismiss" onclick="closeUpdatePopup()">ปิด</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal" id="detailModal" onclick="if(event.target===this)closeModal()">
+  <div class="modal-content" id="detailContent"></div>
+</div>
+
+<script src="data340_truck.js"></script>
+<script>var _PRE_VEHICLES = JSON.parse(JSON.stringify(_VEHICLES));
+// โหลดข้อมูลที่เคยแก้ไขจาก localStorage
+var _EDITS = {};
+try{
+  var saved = localStorage.getItem('_CHECK_EDITS');
+  if(saved){ _EDITS = JSON.parse(saved); }
+}catch(e){}
+// นำข้อมูลที่เคยแก้ไปใช้
+for(var _ek in _EDITS){
+  var _ep = _ek.split('_');
+  var _ei = parseInt(_ep[0]), _eprefix = _ep[1], _ekey = _ep[2];
+  if(_VEHICLES[_ei] && _VEHICLES[_ei][_eprefix]){
+    _VEHICLES[_ei][_eprefix][_ekey] = _EDITS[_ek];
+  }
+}</script>
+<script>
+var _now = new Date();
+var _filter = 'all';
+var _expiringItems = [];
+
+function fmtDate(d) { return d.getDate()+'/'+(d.getMonth()+1)+'/'+d.getFullYear(); }
+
+function parseDate(str) {
+  if (!str || str=='-') return null;
+  str = str.trim();
+  var parts = str.split('/');
+  if (parts.length !== 3) return null;
+  var d = parseInt(parts[0]), m = parseInt(parts[1]), y = parseInt(parts[2]);
+  if (isNaN(d)||isNaN(m)||isNaN(y)) return null;
+  if (y < 100) y += 2000;
+  if (y > 2400) y -= 543;
+  return new Date(y, m-1, d);
+}
+
+function daysLeft(dateStr) { var d = parseDate(dateStr); if (!d) return null; return Math.ceil((d - _now) / (1000*60*60*24)); }
+function isExpiring(days) { return days !== null && days <= 30 && days >= 0; }
+
+function expDisplay(days, val) {
+  if (days === null) return '<span class="exp-empty">-</span>';
+  if (days < 0) return '<span class="exp-red">'+(val||'')+' <span class="badge badge-red">หมดอายุ</span></span>';
+  if (days <= 7) return '<span class="exp-red">'+(val||'')+' <span class="badge badge-red">'+days+' วัน</span></span>';
+  if (days <= 14) return '<span class="exp-amber">'+(val||'')+' <span class="badge badge-amber">'+days+' วัน</span></span>';
+  if (days <= 30) return '<span class="exp-blue">'+(val||'')+' <span class="badge badge-blue">'+days+' วัน</span></span>';
+  if (days <= 60) return '<span class="exp-ok">'+(val||'')+'</span>';
+  return (val||'');
+}
+
+function collectExpiring() {
+  var items = [];
+  _VEHICLES.forEach(function(v) {
+    [['ภาษี','v','tax'],['Thaioil SRC','v','to'],['Esso SRC','v','es'],['PTT-GC','v','pg'],
+     ['LLK Thappline','v','ll'],['SRB Thappline','v','sr'],['SPRC','v','sp'],['IRPC IRY & AU','v','ir']].forEach(function(k) {
+      var d = daysLeft(v.v[k[2]]);
+      if (isExpiring(d)) items.push({label:'['+v.no+'] '+k[0], plate:v.pf, days:d, expiry:v.v[k[2]], type:'veh', vid:v.id});
+    });
+    if (v.d1.n) {
+      [['Esso SRC','es'],['PTT-GC','pg'],['LLK Thappline','ll'],['SRB Thappline','sr'],['SPRC','sp'],['Thaioil SRC','to'],['IRPC IRY & AU','ir']].forEach(function(k) {
+        var d = daysLeft(v.d1[k[1]]);
+        if (isExpiring(d)) items.push({label:'[คนขับ1 '+v.d1.n+'] '+k[0], plate:v.d1.n, days:d, expiry:v.d1[k[1]], type:'drv', vid:v.id});
+      });
+    }
+    if (v.d2.n) {
+      [['Esso SRC','es'],['PTT-GC','pg'],['LLK Thappline','ll'],['SRB Thappline','sr'],['SPRC','sp'],['Thaioil SRC','to'],['IRPC IRY & AU','ir']].forEach(function(k) {
+        var d = daysLeft(v.d2[k[1]]);
+        if (isExpiring(d)) items.push({label:'[คนขับ2 '+v.d2.n+'] '+k[0], plate:v.d2.n, days:d, expiry:v.d2[k[1]], type:'drv', vid:v.id});
+      });
+    }
+  });
+  items.sort(function(a,b){return a.days-b.days});
+  return items;
+}
+
+function updateExpiryBanner() {
+  _expiringItems = collectExpiring();
+  var banner = document.getElementById('expiryBanner');
+  var count = _expiringItems.length;
+  if (count > 0) {
+    document.getElementById('bannerCount').textContent = count;
+    document.getElementById('bannerSub').textContent = 'คลิกดูรายละเอียด — ใกล้หมดอายุ '+count+' รายการ';
+    banner.classList.add('show');
+  } else {
+    banner.classList.remove('show');
+  }
+  // Update panel
+  var panelList = document.getElementById('panelList');
+  var html = '';
+  _expiringItems.forEach(function(w) {
+    var cls = w.days <= 7 ? 'red' : w.days <= 14 ? 'amber' : 'blue';
+    html += '<div class="warn-item '+cls+'">' +
+      '<div><span class="tag">'+w.label+'</span><br><span class="plate">'+w.plate+'</span></div>' +
+      '<div style="text-align:right"><span class="days">'+w.days+' วัน</span><br><span class="expiry-date">หมดอายุ '+w.expiry+'</span></div></div>';
+  });
+  if (count === 0) html = '<div style="padding:30px;text-align:center;color:#16a34a;font-size:16px">✅ ไม่มีบัตรใกล้หมดอายุ</div>';
+  panelList.innerHTML = html;
+}
+
+function togglePanel() {
+  var panel = document.getElementById('expiryPanel');
+  var overlay = document.getElementById('panelOverlay');
+  panel.classList.toggle('open');
+  overlay.classList.toggle('open');
+}
+
+function renderSummary() {
+  var total = _VEHICLES.length;
+  var d1 = _VEHICLES.filter(function(v){return v.d1.n}).length;
+  var d2 = _VEHICLES.filter(function(v){return v.d2.n}).length;
+  var vehExp = 0, drvExp = 0;
+  _VEHICLES.forEach(function(v) {
+    ['tax','to','es','pg','ll','sr','sp','ir'].forEach(function(k) { if (isExpiring(daysLeft(v.v[k]))) vehExp++; });
+    if (v.d1.n) { ['es','pg','ll','sr','sp','to','ir'].forEach(function(k) { if (isExpiring(daysLeft(v.d1[k]))) drvExp++; }); }
+    if (v.d2.n) { ['es','pg','ll','sr','sp','to','ir'].forEach(function(k) { if (isExpiring(daysLeft(v.d2[k]))) drvExp++; }); }
+  });
+  document.getElementById('summaryCards').innerHTML =
+    '<div class="summary-card"><div class="num">'+total+'</div><div class="label">จำนวนรถ</div></div>'+
+    '<div class="summary-card"><div class="num">'+d1+'</div><div class="label">คนขับ1</div></div>'+
+    '<div class="summary-card"><div class="num">'+d2+'</div><div class="label">คนขับ2</div></div>'+
+    '<div class="summary-card'+(vehExp>0?' warn':'')+'"><div class="num">'+vehExp+'</div><div class="label">⚠️ บัตรรถใกล้หมดอายุ</div></div>'+
+    '<div class="summary-card'+(drvExp>0?' warn':'')+'"><div class="num">'+drvExp+'</div><div class="label">⚠️ บัตรคนขับใกล้หมดอายุ</div></div>';
+}
+
+function toggleWarnList(){
+  var box = document.getElementById('warnBox');
+  var collapsed = box.getAttribute('data-wc') === '1';
+  box.setAttribute('data-wc', collapsed ? '0' : '1');
+  var arrow = document.getElementById('warnArrow');
+  if(arrow) arrow.textContent = collapsed ? '▾' : '▸';
+  var list = document.getElementById('warnList');
+  if(list) renderWarnings();
+}
+
+function renderWarnings() {
+  var el = document.getElementById('warnList');
+  if (_expiringItems.length === 0) {
+    el.innerHTML = '<div style="padding:12px;color:#166534;background:#dcfce7;border-radius:12px">✅ ไม่มีบัตรใกล้หมดอายุ</div>';
+    return;
+  }
+  var collapsed = document.getElementById('warnBox').getAttribute('data-wc') === '1';
+  if(collapsed){
+    var dangerCount = _expiringItems.filter(function(x){return x.days <= 7;}).length;
+    el.innerHTML = '<div style="padding:8px;text-align:center;color:#64748b;font-size:13px">⚠️ '+_expiringItems.length+' รายการ (อันตราย '+dangerCount+' รายการ)</div>';
+    return;
+  }
+  var html = '';
+  var show = _expiringItems.slice(0, 100);
+  show.forEach(function(w) {
+    var cls = w.days <= 7 ? 'danger' : w.days <= 14 ? 'warning' : 'info';
+    html += '<div class="warn-item '+cls+'"><div><span class="tag">'+w.label+'</span><br><span class="plate">'+w.plate+'</span></div><div style="text-align:right"><span class="days">'+w.days+' วัน</span><br><span style="font-size:12px;color:#94a3b8">หมดอายุ '+w.expiry+'</span></div></div>';
+  });
+  if (_expiringItems.length > 100) html += '<div style="text-align:center;padding:8px;color:#64748b;font-size:13px">และอีก '+(_expiringItems.length-100)+' รายการ</div>';
+  el.innerHTML = html;
+}
+
+function matches(v, q) {
+  if (!q) return true;
+  return (v.no||'').toLowerCase().indexOf(q)>=0 || (v.pf||'').toLowerCase().indexOf(q)>=0 || (v.pr||'').toLowerCase().indexOf(q)>=0 || (v.d1.n||'').toLowerCase().indexOf(q)>=0 || (v.d2.n||'').toLowerCase().indexOf(q)>=0;
+}
+
+function hasExpiring(v) {
+  for (var k in v.v) { if (isExpiring(daysLeft(v.v[k]))) return true; }
+  if (v.d1.n) { for (var k in v.d1) { if (k!=='n'&&k!=='p'&&isExpiring(daysLeft(v.d1[k]))) return true; } }
+  if (v.d2.n) { for (var k in v.d2) { if (k!=='n'&&k!=='p'&&isExpiring(daysLeft(v.d2[k]))) return true; } }
+  return false;
+}
+
+function renderTable() {
+  var q = document.getElementById('searchInput').value.trim().toLowerCase();
+  var filtered = _VEHICLES.filter(function(v) {
+    if (!matches(v, q)) return false;
+    if (_filter === 'expiring') return hasExpiring(v);
+    return true;
+  });
+  var html = '';
+  filtered.forEach(function(v) {
+    var idx = _VEHICLES.indexOf(v);
+    html += '<tr onclick="showDetail(\''+v.id+'\')" style="cursor:pointer">' +
+      '<td>'+v.id+'</td><td><strong>'+v.no+'</strong></td><td>'+v.pf+'</td><td>'+v.pr+'</td><td>'+v.rg+'</td>' +
+      '<td ondblclick="event.stopPropagation();openEditPopup('+idx+',\'v\',\'tax\')" title="ดับเบิ้ลคลิกแก้ไข" style="cursor:default">'+expDisplay(daysLeft(v.v.tax), v.v.tax)+'</td>' +
+      '<td ondblclick="event.stopPropagation();openEditPopup('+idx+',\'v\',\'to\')" title="ดับเบิ้ลคลิกแก้ไข" style="cursor:default">'+expDisplay(daysLeft(v.v.to), v.v.to)+'</td>' +
+      '<td ondblclick="event.stopPropagation();openEditPopup('+idx+',\'v\',\'es\')" title="ดับเบิ้ลคลิกแก้ไข" style="cursor:default">'+expDisplay(daysLeft(v.v.es), v.v.es)+'</td>' +
+      '<td ondblclick="event.stopPropagation();openEditPopup('+idx+',\'v\',\'pg\')" title="ดับเบิ้ลคลิกแก้ไข" style="cursor:default">'+expDisplay(daysLeft(v.v.pg), v.v.pg)+'</td>' +
+      '<td ondblclick="event.stopPropagation();openEditPopup('+idx+',\'v\',\'ll\')" title="ดับเบิ้ลคลิกแก้ไข" style="cursor:default">'+expDisplay(daysLeft(v.v.ll), v.v.ll)+'</td>' +
+      '<td ondblclick="event.stopPropagation();openEditPopup('+idx+',\'v\',\'sr\')" title="ดับเบิ้ลคลิกแก้ไข" style="cursor:default">'+expDisplay(daysLeft(v.v.sr), v.v.sr)+'</td>' +
+      '<td ondblclick="event.stopPropagation();openEditPopup('+idx+',\'v\',\'sp\')" title="ดับเบิ้ลคลิกแก้ไข" style="cursor:default">'+expDisplay(daysLeft(v.v.sp), v.v.sp)+'</td>' +
+      '<td ondblclick="event.stopPropagation();openEditPopup('+idx+',\'v\',\'ir\')" title="ดับเบิ้ลคลิกแก้ไข" style="cursor:default">'+expDisplay(daysLeft(v.v.ir), v.v.ir)+'</td>' +
+      '<td ondblclick="event.stopPropagation();openDriverCards('+idx+',\'d1\')" title="ดับเบิ้ลคลิกแก้ไขบัตรคนขับ" style="cursor:default">'+(v.d1.n||'<span class="exp-empty">-</span>')+'</td>' +
+      '<td ondblclick="event.stopPropagation();openDriverCards('+idx+',\'d2\')" title="ดับเบิ้ลคลิกแก้ไขบัตรคนขับ" style="cursor:default">'+(v.d2.n||'<span class="exp-empty">-</span>')+'</td></tr>';
+  });
+  document.getElementById('tableBody').innerHTML = html;
+  document.getElementById('headerCount').textContent = filtered.length+'/'+_VEHICLES.length+' รายการ | '+fmtDate(_now);
+}
+
+function showDetail(id) {
+  var v = _VEHICLES.find(function(x){return x.id===id});
+  if (!v) return;
+  var html = '<button class="modal-close" onclick="closeModal()">&times;</button>';
+  html += '<h3>'+v.no+' | '+v.pf+' | '+v.pr+'</h3>';
+  html += '<p style="color:#64748b;margin-bottom:12px">ธพน.2: '+v.rg+' | รถพ่วง: '+v.tr.filter(function(x){return x}).join(', ')+'</p>';
+  html += '<h4>บัตรรถ</h4>';
+  [['ภาษี','tax'],['Thaioil SRC','to'],['Esso SRC','es'],['PTT-GC','pg'],['LLK Thappline','ll'],['SRB Thappline','sr'],['SPRC','sp'],['IRPC IRY & AU','ir']].forEach(function(k) {
+    html += '<div class="row"><span class="lbl">'+k[0]+'</span><span class="val">'+expDisplay(daysLeft(v.v[k[1]]), v.v[k[1]])+'</span></div>';
+  });
+  if (v.d1.n) {
+    html += '<h4>คนขับ 1: '+v.d1.n+' ('+v.d1.p+')</h4>';
+    [['Esso SRC','es'],['PTT-GC','pg'],['LLK Thappline','ll'],['SRB Thappline','sr'],['SPRC','sp'],['Thaioil SRC','to'],['IRPC IRY & AU','ir']].forEach(function(k) {
+      var idx = _VEHICLES.indexOf(v);
+      html += '<div class="row" ondblclick="event.stopPropagation();openEditPopup('+idx+',\'d1\',\''+k[1]+'\')" title="ดับเบิ้ลคลิกแก้ไข" style="cursor:pointer">'+
+        '<span class="lbl">'+k[0]+'</span><span class="val">'+expDisplay(daysLeft(v.d1[k[1]]), v.d1[k[1]])+'</span></div>';
+    });
+  }
+  if (v.d2.n) {
+    html += '<h4>คนขับ 2: '+v.d2.n+' ('+v.d2.p+')</h4>';
+    [['Esso SRC','es'],['PTT-GC','pg'],['LLK Thappline','ll'],['SRB Thappline','sr'],['SPRC','sp'],['Thaioil SRC','to'],['IRPC IRY & AU','ir']].forEach(function(k) {
+      var idx = _VEHICLES.indexOf(v);
+      html += '<div class="row" ondblclick="event.stopPropagation();openEditPopup('+idx+',\'d2\',\''+k[1]+'\')" title="ดับเบิ้ลคลิกแก้ไข" style="cursor:pointer">'+
+        '<span class="lbl">'+k[0]+'</span><span class="val">'+expDisplay(daysLeft(v.d2[k[1]]), v.d2[k[1]])+'</span></div>';
+    });
+  }
+  document.getElementById('detailContent').innerHTML = html;
+  document.getElementById('detailModal').classList.add('show');
+}
+
+function closeModal() { document.getElementById('detailModal').classList.remove('show'); }
+
+function setFilter(f) {
+  _filter = f;
+  var btns = document.querySelectorAll('#filterTabs button');
+  btns[0].className = f==='all'?'active':'';
+  btns[1].className = f==='expiring'?'active':'';
+  renderTable();
+}
+
+// Init
+var _refreshing = false;
+document.getElementById('headerCount').textContent = _VEHICLES.length+' รายการ | '+fmtDate(_now)+' | กำลังเชื่อมต่อ...';
+
+// === GAS API ===
+const API = 'https://script.google.com/macros/s/AKfycbyuU-gGfMhIMKlEHbiRTd01Tcd2JGeXIDybGkg9VWPCEMJl6OsUf2qrCAgVudJ_Bg6v1A/exec';
+function apiGet(params) {
+  var url = API + '?' + Object.keys(params).map(function(k){return encodeURIComponent(k)+'='+encodeURIComponent(params[k])}).join('&');
+  return fetch(url).then(function(r){ return r.json(); });
+}
+
+function mergeGasData() {
+  // Try to fetch vehicle cards from GAS
+  apiGet({sheet:'รถ'}).then(function(data) {
+    var arr = Array.isArray(data) ? data : (data && data.data) || [];
+    if (!arr || !arr.length) return;
+    var merged = 0;
+    arr.forEach(function(r) {
+      var plate = r['ทะเบียนหัว'];
+      if (!plate) return;
+      // Match by plate_front
+      var v = _VEHICLES.find(function(x) { return x.pf && x.pf.indexOf(plate) >= 0; });
+      if (!v) return;
+      // Update vehicle card dates
+      var mapV = {'ภาษี':'tax','Thaioil SRC':'to','Esso SRC':'es','PTT-GC':'pg','LLK Thappline':'ll','SRB Thappline':'sr','SPRC':'sp','IRPC IRY & AU':'ir'};
+      var vk = Object.keys(mapV);
+      for (var i = 0; i < vk.length; i++) {
+        var gasKey = vk[i] + ' หมดอายุบัตร';
+        if (r[gasKey]) v.v[mapV[vk[i]]] = r[gasKey];
+      }
+      merged++;
+    });
+    if (merged > 0) refreshUI();
+  });
+
+  // Try to fetch driver cards from GAS
+  apiGet({sheet:'คน'}).then(function(data) {
+    var arr = Array.isArray(data) ? data : (data && data.data) || [];
+    if (!arr || !arr.length) return;
+    var merged = 0;
+    arr.forEach(function(r) {
+      var name = r['ชื่อ'];
+      if (!name) return;
+      // Match by driver name in d1 or d2
+      var v = _VEHICLES.find(function(x) { return (x.d1.n && x.d1.n.indexOf(name) >= 0) || (x.d2.n && x.d2.n.indexOf(name) >= 0); });
+      if (!v) return;
+      // Determine if d1 or d2
+      var isD1 = v.d1.n && v.d1.n.indexOf(name) >= 0;
+      var d = isD1 ? v.d1 : v.d2;
+      var mapD = {'Esso SRC':'es','PTT-GC':'pg','LLK Thappline':'ll','SRB Thappline':'sr','SPRC':'sp','Thaioil SRC':'to','IRPC IRY & AU':'ir'};
+      var dk = Object.keys(mapD);
+      for (var j = 0; j < dk.length; j++) {
+        var gasKey = dk[j] + ' หมดอายุบัตร';
+        if (r[gasKey]) d[mapD[dk[j]]] = r[gasKey];
+      }
+      merged++;
+    });
+    if (merged > 0) refreshUI();
+  });
+}
+
+function refreshUI() {
+  renderSummary();
+  updateExpiryBanner();
+  renderWarnings();
+  renderTable();
+  document.getElementById('headerCount').textContent = 'อัพเดตจากระบบ | '+_VEHICLES.length+' รายการ | '+fmtDate(_now);
+}
+
+// Load GAS data, then render
+Promise.all([
+  apiGet({sheet:'รถ'}).then(function(data) {
+    var arr = Array.isArray(data) ? data : (data && data.data) || [];
+    if (!arr || !arr.length) return;
+    var mapV = {'ภาษี':'tax','Thaioil SRC':'to','Esso SRC':'es','PTT-GC':'pg','LLK Thappline':'ll','SRB Thappline':'sr','SPRC':'sp','IRPC IRY & AU':'ir'};
+    var vk = Object.keys(mapV);
+    arr.forEach(function(r) {
+      var plate = r['ทะเบียนหัว'];
+      if (!plate) return;
+      var v = _VEHICLES.find(function(x) { return x.pf && x.pf.indexOf(plate) >= 0; });
+      if (!v) return;
+      for (var i = 0; i < vk.length; i++) {
+        var gasKey = vk[i] + ' หมดอายุบัตร';
+        if (r[gasKey]) v.v[mapV[vk[i]]] = r[gasKey];
+      }
+    });
+  }).catch(function(){}),
+  apiGet({sheet:'คน'}).then(function(data) {
+    var arr = Array.isArray(data) ? data : (data && data.data) || [];
+    if (!arr || !arr.length) return;
+    var mapD = {'Esso SRC':'es','PTT-GC':'pg','LLK Thappline':'ll','SRB Thappline':'sr','SPRC':'sp','Thaioil SRC':'to','IRPC IRY & AU':'ir'};
+    var dk = Object.keys(mapD);
+    arr.forEach(function(r) {
+      var name = r['ชื่อ'];
+      if (!name) return;
+      var v = _VEHICLES.find(function(x) { return (x.d1.n && x.d1.n.indexOf(name) >= 0) || (x.d2.n && x.d2.n.indexOf(name) >= 0); });
+      if (!v) return;
+      var isD1 = v.d1.n && v.d1.n.indexOf(name) >= 0;
+      var d = isD1 ? v.d1 : v.d2;
+      for (var j = 0; j < dk.length; j++) {
+        var gasKey = dk[j] + ' หมดอายุบัตร';
+        if (r[gasKey]) d[mapD[dk[j]]] = r[gasKey];
+      }
+    });
+  }).catch(function(){})
+]).then(function() {
+  document.getElementById('headerCount').textContent = _VEHICLES.length+' รายการ | '+fmtDate(_now)+' | GAS';
+  renderSummary();
+  updateExpiryBanner();
+  renderWarnings();
+  renderTable();
+  if(window.initExpiryTab) initExpiryTab();
+}).catch(function() {
+  // Fallback: just render with static data
+  document.getElementById('headerCount').textContent = _VEHICLES.length+' รายการ | '+fmtDate(_now)+' | ไฟล์';
+  renderSummary();
+  updateExpiryBanner();
+  renderWarnings();
+  renderTable();
+  if(window.initExpiryTab) initExpiryTab();
+});
+
+// Auto-refresh every 60s
+setInterval(function(){
+  _now = new Date();
+  renderSummary();
+  updateExpiryBanner();
+  renderWarnings();
+  renderTable();
+}, 60000);
+
+/* === EXPIRY TAB: เทียบ GAS กับข้อมูลเดิม แสดงบัตรใกล้หมดอายุ === */
+var _upCardLabels = {tax:'ภาษี',to:'Thaioil SRC',es:'Esso SRC',pg:'PTT-GC',ll:'LLK Thappline',sr:'SRB Thappline',sp:'SPRC',ir:'IRPC IRY & AU'};
+var _upVKeys = ['tax','to','es','pg','ll','sr','sp','ir'];
+var _upDKeys = ['es','pg','ll','sr','sp','to','ir'];
+
+function daysUntil(str){
+  if(!str) return 999;
+  var m = str.match(/(\d{1,2})\/(\d{1,2})\/(\d{4})/);
+  if(!m) return 999;
+  var y = parseInt(m[3]);
+  if(y > 2400) y -= 543; // แปลง พ.ศ. -> ค.ศ.
+  var d = new Date(y, parseInt(m[2])-1, parseInt(m[1]));
+  return Math.floor((d - _now) / (1000*60*60*24));
+}
+
+// เปรียบเทียบ _PRE_VEHICLES vs _VEHICLES หลัง GAS merge เสร็จ
+// แสดงบัตรทุกใบที่มีวันที่ เรียงตามวันหมดอายุ (ไม่จำกัดแค่ 30 วัน)
+function buildCompareList(){
+  var items = [];
+  for(var i=0;i<_VEHICLES.length;i++){
+    var v = _VEHICLES[i];
+    var pre = _PRE_VEHICLES[i];
+    if(!pre) continue;
+
+    _upVKeys.forEach(function(k){
+      var newVal = v.v[k] || '';
+      var oldVal = pre.v[k] || '';
+      if(!newVal) return;
+      // ข้ามค่าที่ไม่ใช่วันที่ (เช่น "2562-2563")
+      var dd = daysUntil(newVal);
+      if(dd > 365) return;
+      var changed = newVal !== oldVal;
+      var vDrivers = (v.d1.n||'')+(v.d2.n?' / '+v.d2.n:'');
+      items.push({idx:i, no:v.no, pf:v.pf, section:'🚛 '+_upCardLabels[k], key:k,
+        prefix:'v', driver:vDrivers,
+        newVal:newVal, oldVal:oldVal || '-', days:dd, changed:changed});
+    });
+    // d1 cards
+    if(v.d1.n){
+      var d1Name = v.d1.n;
+      _upDKeys.forEach(function(k){
+        var newVal = v.d1[k] || '';
+        var oldVal = pre.d1[k] || '';
+        if(!newVal) return;
+        var dd = daysUntil(newVal);
+        if(dd > 365) return;
+        var changed = newVal !== oldVal;
+        items.push({idx:i, no:v.no, pf:v.pf, section:'👤1 '+_upCardLabels[k], key:k,
+          prefix:'d1', driver:d1Name,
+          newVal:newVal, oldVal:oldVal || '-', days:dd, changed:changed});
+      });
+    }
+    // d2 cards
+    if(v.d2.n){
+      var d2Name = v.d2.n;
+      _upDKeys.forEach(function(k){
+        var newVal = v.d2[k] || '';
+        var oldVal = pre.d2[k] || '';
+        if(!newVal) return;
+        var dd = daysUntil(newVal);
+        if(dd > 365) return;
+        var changed = newVal !== oldVal;
+        items.push({idx:i, no:v.no, pf:v.pf, section:'👤2 '+_upCardLabels[k], key:k,
+          prefix:'d2', driver:d2Name,
+          newVal:newVal, oldVal:oldVal || '-', days:dd, changed:changed});
+      });
+    }
+  }
+  // Sort: expired first, then near-expiry, then by days ascending
+  items.sort(function(a,b){
+    var aUrg = a.days < 0 ? 0 : (a.days <= 30 ? 1 : 2);
+    var bUrg = b.days < 0 ? 0 : (b.days <= 30 ? 1 : 2);
+    if(aUrg !== bUrg) return aUrg - bUrg;
+    if(a.changed && !b.changed) return -1;
+    if(!a.changed && b.changed) return 1;
+    return a.days - b.days;
+  });
+  return items;
+}
+
+// สร้าง/อัปเดต expiry tab
+function updateExpiryTab(){
+  var items = buildCompareList();
+  var tab = document.getElementById('expiryTab');
+  if(!tab){
+    tab = document.createElement('div');
+    tab.id = 'expiryTab';
+    tab.style.cssText = 'display:none;position:fixed;bottom:16px;right:16px;width:380px;max-height:70vh;background:#fff;border-radius:14px;box-shadow:0 8px 32px rgba(0,0,0,.18);z-index:2000;overflow:hidden;flex-direction:column;border:2px solid #ef4444;animation:slideInRight .3s ease;';
+    document.body.appendChild(tab);
+  }
+
+  if(items.length === 0){
+    tab.style.display = 'none';
+    return;
+  }
+
+  tab.style.display = 'flex';
+  var hasExpiry = items.some(function(x){return x.days >=0 && x.days <=30;});
+  tab.style.borderColor = hasExpiry ? '#ef4444' : '#f59e0b';
+  var headColor = hasExpiry ? '#ef4444' : '#f59e0b';
+  var headLabel = hasExpiry ? '⚠️' : '✨';
+
+  var collapsed = tab.getAttribute('data-collapsed') === 'true';
+  var listHtml = '';
+  for(var i=0;i<items.length;i++){
+    var it = items[i];
+    var dk = it.idx+'_'+it.prefix+'_'+it.key;
+    if(_dismissed[dk]) continue;
+    var badgeColor = it.changed ? (it.days>=0&&it.days<=30?'#ef4444':'#f59e0b') : (it.days>=0&&it.days<=30?'#ef4444':'#94a3b8');
+    var badgeText = it.days < 0 ? 'หมดอายุ' : (it.changed ? (it.days<=30 ? it.days+' วัน ⚡' : it.days+' วัน ✨') : it.days+' วัน');
+    listHtml += '<div class="ei" oncontextmenu="showCtxMenu(event,'+it.idx+',\''+it.prefix+'\',\''+it.key+'\')" onclick="openEditPopup('+it.idx+',\''+it.prefix+'\',\''+it.key+'\')" style="padding:5px 14px;font-size:11px;display:flex;justify-content:space-between;align-items:center;cursor:pointer;border-bottom:1px solid #f1f5f9;gap:6px;">'+
+      '<div style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1;">'+
+        '<strong>'+it.no+'</strong> '+
+        (it.driver?'<span style="color:#64748b;">'+it.driver+'</span> ':'')+
+        '| '+it.section+' → <strong>'+(it.newVal||'<span style="color:#ef4444;">ว่าง</span>')+'</strong>'+
+        (it.changed?' <span style="color:#cbd5e1;font-size:10px;">('+it.oldVal+')</span>':'')+
+      '</div>'+
+      '<span style="background:'+badgeColor+';color:#fff;border-radius:20px;padding:1px 7px;font-size:10px;font-weight:600;white-space:nowrap;flex-shrink:0;">'+badgeText+'</span>'+
+    '</div>';
+  }
+
+  // Build driver-vehicle mapping
+  var dmHtml = '';
+  for(var di=0; di<_VEHICLES.length; di++){
+    var dv = _VEHICLES[di];
+    var dNames = [];
+    if(dv.d1.n) dNames.push(dv.d1.n);
+    if(dv.d2.n) dNames.push(dv.d2.n);
+    if(dNames.length){
+      dmHtml += '<div style="padding:4px 14px;font-size:12px;border-bottom:1px solid #f1f5f9;">'+
+        '<span style="font-weight:600;">'+dv.no+'</span> '+dv.pf+
+        ' → <span style="color:#475569;">'+dNames.join(' / ')+'</span></div>';
+    } else {
+      dmHtml += '<div style="padding:4px 14px;font-size:12px;border-bottom:1px solid #f1f5f9;color:#ef4444;">'+
+        '<span style="font-weight:600;">'+dv.no+'</span> '+dv.pf+
+        ' → <span style="color:#ef4444;">ไม่มีคนขับ</span></div>';
+    }
+  }
+
+  var stateLabel = collapsed ? '▸' : '▾';
+
+  tab.innerHTML =
+    '<div style="background:'+headColor+';color:#fff;padding:8px 14px;font-size:13px;font-weight:600;display:flex;justify-content:space-between;align-items:center;cursor:pointer;" onclick="var l=document.getElementById(\'expiryList\');var c=l.style.display!=\'none\';l.style.display=c?\'none\':\'block\';this.parentNode.setAttribute(\'data-collapsed\',c);var a=document.getElementById(\'ea\');if(a)a.textContent=c?\'▸\':\'▾\'">'+
+      '<span>'+headLabel+' '+items.length+' รายการ</span>'+
+      '<span style="font-size:14px;" id="ea">'+stateLabel+'</span>'+
+    '</div>'+
+    '<div style="border-bottom:1px solid #e2e8f0;">'+
+      '<div style="padding:6px 14px;font-size:12px;font-weight:600;color:#475569;cursor:pointer;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid #f1f5f9;" onclick="toggleDriverMap()">'+
+        '<span>👤 ชื่อคนขับ ⇄ เบอร์รถ</span>'+
+        '<span id="dmArrow">▾</span>'+
+      '</div>'+
+      '<div id="expiryDriverMap">'+dmHtml+'</div>'+
+    '</div>'+
+    '<div id="expiryList" style="overflow-y:auto;max-height:calc(70vh - 38px);display:'+(collapsed?'none':'block')+';">'+
+      listHtml+
+    '</div>';
+}
+
+var _ctxMenu = null;
+function showCtxMenu(e, idx, prefix, key){
+  e.preventDefault();
+  closeCtxMenu();
+  var el = document.createElement('div');
+  el.id = 'ctxMenu';
+  el.style.cssText = 'position:fixed;z-index:5000;background:#fff;border-radius:8px;box-shadow:0 4px 16px rgba(0,0,0,.15);overflow:hidden;font-size:13px;min-width:100px;border:1px solid #e2e8f0;';
+  el.style.left = e.clientX+'px';
+  el.style.top = e.clientY+'px';
+  var dk = idx+'_'+prefix+'_'+key;
+  el.innerHTML =
+    '<div style="padding:8px 14px;cursor:pointer;border-bottom:1px solid #f1f5f9;" onclick="closeCtxMenu();openEditPopup('+idx+',\''+prefix+'\',\''+key+'\')">✏️ แก้ไข</div>'+
+    '<div style="padding:8px 14px;cursor:pointer;color:#ef4444;" onclick="closeCtxMenu();deleteItem(\''+dk+'\','+idx+',\''+prefix+'\',\''+key+'\')">🗑️ ลบ</div>';
+  document.body.appendChild(el);
+  setTimeout(function(){ document.addEventListener('click', closeCtxMenu, {once:true}); }, 0);
+}
+function closeCtxMenu(){
+  var el = document.getElementById('ctxMenu');
+  if(el) el.remove();
+}
+function deleteItem(dk, idx, prefix, key){
+  _dismissed[dk] = 1;
+  try{ localStorage.setItem('_CHECK_DISMISSED', JSON.stringify(_dismissed)); }catch(e){}
+  updateExpiryTab();
+}
+
+// ป็อปอัพแก้ไข
+var _editIdx = -1, _editPrefix = '', _editKey = '';
+
+function openEditPopup(idx, prefix, key){
+  _editIdx = idx; _editPrefix = prefix; _editKey = key;
+  var v = _VEHICLES[idx];
+  if(!v) return;
+  var popup = document.getElementById('editPopup');
+  if(!popup){
+    popup = document.createElement('div');
+    popup.id = 'editPopup';
+    popup.style.cssText = 'display:none;position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);width:360px;background:#fff;border-radius:14px;box-shadow:0 8px 32px rgba(0,0,0,.25);z-index:3000;overflow:hidden;border:2px solid #2563eb;';
+    document.body.appendChild(popup);
+    // backdrop
+    var bk = document.createElement('div');
+    bk.id = 'editBackdrop';
+    bk.style.cssText = 'display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.3);z-index:2999;';
+    bk.onclick = closeEditPopup;
+    document.body.appendChild(bk);
+  }
+  var label = _upCardLabels[key] || key;
+  var oldV = _PRE_VEHICLES[idx] ? (_PRE_VEHICLES[idx][prefix] ? _PRE_VEHICLES[idx][prefix][key] || '' : '') : '';
+  var curV = v[prefix] ? v[prefix][key] || '' : '';
+  var dd = daysUntil(curV);
+  document.getElementById('editPopup').style.display = 'block';
+  document.getElementById('editBackdrop').style.display = 'block';
+  document.getElementById('editPopup').innerHTML =
+    '<div style="background:#2563eb;color:#fff;padding:12px 16px;font-size:14px;font-weight:600;display:flex;justify-content:space-between;">'+
+      '<span>✏️ '+v.no+' — '+label+'</span>'+
+      '<span style="cursor:pointer" onclick="closeEditPopup()">&times;</span>'+
+    '</div>'+
+    '<div style="padding:16px;">'+
+      '<div style="margin-bottom:12px;font-size:13px;color:#475569;">'+
+        '<div><strong>'+v.no+'</strong> | '+v.pf+'</div>'+
+        '<div>พนักงงาน: '+(v.d1.n||'-')+(v.d2.n?' / '+v.d2.n:'')+'</div>'+
+        '<div style="color:#94a3b8;">เดิมใน GAS: '+(oldV||'<span style="color:#ef4444;">ว่าง</span>')+'</div>'+
+        (dd <= 30 && dd >= 0 ? '<div style="color:#ef4444;font-weight:600;">⚠️ เหลือ '+dd+' วัน</div>' : '')+
+      '</div>'+
+      '<label style="display:block;font-size:12px;color:#64748b;margin-bottom:4px;">วันที่ใหม่:</label>'+
+      '<input type="text" id="editNewDate" value="'+curV+'" style="width:100%;padding:10px 12px;border:2px solid #e2e8f0;border-radius:8px;font-size:15px;outline:none;box-sizing:border-box;">'+
+      '<div style="display:flex;gap:8px;margin-top:14px;">'+
+        '<button onclick="saveEditPopup()" style="flex:1;padding:10px;background:#2563eb;color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;">💾 บันทึก</button>'+
+        '<button onclick="closeEditPopup()" style="flex:1;padding:10px;background:#f1f5f9;color:#64748b;border:none;border-radius:8px;font-size:14px;cursor:pointer;">ปิด</button>'+
+      '</div>'+
+    '</div>';
+}
+
+function closeEditPopup(){
+  document.getElementById('editPopup').style.display = 'none';
+  if(document.getElementById('editBackdrop')) document.getElementById('editBackdrop').style.display = 'none';
+}
+
+// Driver cards popup — แสดงบัตรทั้ง 7 ใบของคนขับ พร้อมปุ่มแก้ไข
+function openDriverCards(idx, prefix){
+  var v = _VEHICLES[idx];
+  if(!v) return;
+  var driverName = v[prefix] ? v[prefix].n || prefix : prefix;
+  var popup = document.getElementById('driverCardsPopup');
+  var backdrop = document.getElementById('driverCardsBackdrop');
+  if(!popup){
+    popup = document.createElement('div');
+    popup.id = 'driverCardsPopup';
+    popup.style.cssText = 'display:none;position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);width:420px;max-height:80vh;background:#fff;border-radius:14px;box-shadow:0 8px 32px rgba(0,0,0,.25);z-index:3002;overflow:hidden;border:2px solid #2563eb;';
+    document.body.appendChild(popup);
+    backdrop = document.createElement('div');
+    backdrop.id = 'driverCardsBackdrop';
+    backdrop.style.cssText = 'display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.3);z-index:3001;';
+    backdrop.onclick = closeDriverCards;
+    document.body.appendChild(backdrop);
+  }
+  popup.style.display = 'block';
+  backdrop.style.display = 'block';
+  var html =
+    '<div style="background:#2563eb;color:#fff;padding:12px 16px;font-size:14px;font-weight:600;display:flex;justify-content:space-between;align-items:center">'+
+      '<span>📋 '+v.no+' — '+driverName+'</span>'+
+      '<span style="cursor:pointer;font-size:20px" onclick="closeDriverCards()">&times;</span>'+
+    '</div>'+
+    '<div style="padding:12px 16px;font-size:13px;color:#475569;border-bottom:1px solid #e2e8f0">'+
+      '<div><strong>'+v.no+'</strong> | '+v.pf+'</div>'+
+    '</div>'+
+    '<div style="padding:8px 0;overflow-y:auto;max-height:calc(80vh - 100px)">';
+  _upDKeys.forEach(function(k){
+    var curVal = v[prefix] ? v[prefix][k] || '' : '';
+    var label = _upCardLabels[k] || k;
+    var dd = curVal ? daysUntil(curVal) : null;
+    var color = dd !== null && dd <= 30 ? (dd < 0 ? '#ef4444' : '#f59e0b') : '#475569';
+    var ddText = dd !== null ? (dd < 0 ? 'หมดอายุแล้ว' : 'เหลือ '+dd+' วัน') : '';
+    html +=
+      '<div style="display:flex;align-items:center;padding:8px 16px;border-bottom:1px solid #f1f5f9;">'+
+        '<div style="flex:1">'+
+          '<div style="font-size:13px;font-weight:600;color:#1e293b">'+label+'</div>'+
+          '<div style="font-size:12px;color:'+color+'">'+(curVal||'<span style="color:#94a3b8">ยังไม่มี</span>')+'</div>'+
+          (ddText ? '<div style="font-size:11px;color:'+color+'">'+ddText+'</div>' : '')+
+        '</div>'+
+        '<button onclick="openEditPopup('+idx+',\''+prefix+'\',\''+k+'\')" style="padding:5px 14px;background:#eff6ff;color:#2563eb;border:1px solid #bfdbfe;border-radius:6px;font-size:12px;cursor:pointer;">แก้ไข</button>'+
+      '</div>';
+  });
+  html += '</div>';
+  popup.innerHTML = html;
+}
+
+function closeDriverCards(){
+  document.getElementById('driverCardsPopup').style.display = 'none';
+  if(document.getElementById('driverCardsBackdrop')) document.getElementById('driverCardsBackdrop').style.display = 'none';
+}
+
+function saveEditPopup(){
+  var v = _VEHICLES[_editIdx];
+  if(!v) return;
+  if(!v[_editPrefix]) v[_editPrefix] = {};
+  var newVal = document.getElementById('editNewDate').value.trim();
+  if(newVal){ v[_editPrefix][_editKey] = newVal; }
+  else { delete v[_editPrefix][_editKey]; }
+  // เซฟลง localStorage
+  _EDITS[_editIdx+'_'+_editPrefix+'_'+_editKey] = newVal || '';
+  try{ localStorage.setItem('_CHECK_EDITS', JSON.stringify(_EDITS)); }catch(e){}
+  closeEditPopup();
+  renderTable();
+  updateExpiryBanner();
+  renderWarnings();
+  renderSummary();
+  updateExpiryTab();
+}
+
+// Style for expiry items
+var _es = document.createElement('style');
+_es.textContent = '.ei{padding:8px 14px;border-bottom:1px solid #f1f5f9;cursor:pointer;transition:background .15s;}'+
+  '.ei:hover{background:#f0f4ff;}.ei:last-child{border-bottom:none;}';
+document.head.appendChild(_es);
+
+var _dismissed = {};
+try{ var ds = localStorage.getItem('_CHECK_DISMISSED'); if(ds) _dismissed = JSON.parse(ds); }catch(e){}
+
+function toggleDriverMap(){
+  var el = document.getElementById('expiryDriverMap');
+  if(!el) return;
+  var show = el.style.display !== 'block';
+  el.style.display = show ? 'block' : 'none';
+  var arrow = document.getElementById('dmArrow');
+  if(arrow) arrow.textContent = show ? '▾' : '▸';
+}
+
+// เรียกหลัง GAS merge
+function initExpiryTab(){
+  updateExpiryTab();
+}
+</script>
+</body>
+</html>
