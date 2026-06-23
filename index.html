@@ -325,16 +325,15 @@
       el.value=el.value.replace(/[^0-9]/g,'').slice(0,3);
       var v=el.value;
       if(v.length===3){
-        var key=v.slice(0,1)=='0'?v.slice(1):v; // "001"→"01", "010"→"10", "100"→"100"
-        var d=VEHICLE_DATA[key];
+        var d=VEHICLE_DATA[v];
         if(d){$('v_hua').value=d.h;$('v_hang').value=d.b;}
       }
     }
     function fillBer(el){
       if(!el.value) return;
       el.value=el.value.padStart(3,'0');
-      var v=el.value,key=v.slice(0,1)=='0'?v.slice(1):v;
-      var d=VEHICLE_DATA[key];
+      var v=el.value;
+      var d=VEHICLE_DATA[v];
       if(d){$('v_hua').value=d.h;$('v_hang').value=d.b;}
     }
     function fmtPhone(el){el.value=el.value.replace(/[^0-9]/g,'').slice(0,10)}
