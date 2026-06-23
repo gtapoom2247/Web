@@ -557,6 +557,15 @@
 
     var EMP_LIST = EMP_RAW.split(/[\s\n,]+/).filter(function(s){return s.trim()});
 
+    // restore EMP_LIST from localStorage (ถ้ามี)
+    try {
+      var saved = localStorage.getItem('_empList');
+      if (saved) {
+        var parsed = JSON.parse(saved);
+        if (Array.isArray(parsed) && parsed.length) EMP_LIST = parsed;
+      }
+    } catch(e){}
+
     // ==== SAVE VEHICLE ====
     // ====== Image upload helpers ======
     function onImg(prefix){
@@ -725,6 +734,7 @@
     }
 
     loadR();
+    loadAdminEmpFromGAS(); // โหลดรหัสพนักงานล่าสุดจาก GAS ตั้งแต่เปิดหน้า
     // ==== ADMIN ====
     function showLogin(){$('loginModal').classList.add('show');$('adminUser').focus()}
     function hide(id){$(id).classList.remove('show')}
@@ -832,6 +842,7 @@
         if(list&&Array.isArray(list)&&list.length){
           EMP_LIST=list.slice().sort(function(a,b){return parseInt(a)-parseInt(b)});
           EMP_RAW=EMP_LIST.join('\n');
+          try{localStorage.setItem('_empList',JSON.stringify(EMP_LIST))}catch(e){}
           if($('adminPanel').classList.contains('show')) renderAdminEmp();
         }
       }).catch(function(){});
@@ -843,6 +854,7 @@
       EMP_LIST.push(code);
       EMP_LIST.sort(function(a,b){return parseInt(a)-parseInt(b)});
       EMP_RAW = EMP_LIST.join('\n');
+      try{localStorage.setItem('_empList',JSON.stringify(EMP_LIST))}catch(e){}
       $('aEmpCode').value='';
       renderAdminEmp();
       toast('✅ เพิ่มรหัส '+code+' เรียบร้อย');
@@ -854,6 +866,7 @@
       if(idx>=0){
         EMP_LIST.splice(idx,1);
         EMP_RAW = EMP_LIST.join('\n');
+        try{localStorage.setItem('_empList',JSON.stringify(EMP_LIST))}catch(e){}
         renderAdminEmp();
       }
       apiPost({admin:'delEmp',code:code});
